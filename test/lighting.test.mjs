@@ -70,6 +70,43 @@ test('vision grade falls back to neutral when keys are missing', () => {
   assert.deepEqual(grade.highlight, [1, 1, 1]);
 });
 
+test('horizon seam repair removes a dark band but keeps a large dark mass', async () => {
+  const { repairHorizonSeam } = await import('../.tools/bake_env.mjs');
+  const w = 32, h = 64;
+  const make = (darkFrom, darkTo, value) => {
+    const px = Buffer.alloc(w * h * 3, 200);
+    for (let y = darkFrom; y < darkTo; y++) {
+      for (let x = 0; x < w; x++) px.fill(value, (y * w + x) * 3, (y * w + x) * 3 + 3);
+    }
+    return px;
+  };
+  const rowMean = (px, y) => {
+    let s = 0;
+    for (let x = 0; x < w; x++) s += px[(y * w + x) * 3];
+    return s / w;
+  };
+
+  // A thin dark band - the seam - must be interpolated away.
+  const seam = make(30, 33, 10);
+  const rows = repairHorizonSeam(seam, w, h);
+  assert.equal(rows, 3, 'the three-row band is repaired');
+  for (let y = 30; y < 33; y++) {
+    assert.ok(rowMean(seam, y) > 150, `row ${y} should be filled in, got ${rowMean(seam, y)}`);
+  }
+
+  // A soft dip, not pure black, must also be caught - that is what stayed
+  // visible when the test was on absolute darkness rather than a relative dip.
+  const soft = make(30, 33, 140);
+  assert.ok(repairHorizonSeam(soft, w, h) > 0, 'a soft dark band is still a seam');
+  assert.ok(rowMean(soft, 31) > 180, 'soft band lifted toward its neighbours');
+
+  // A tall dark mass is real content and must survive untouched.
+  const mass = make(20, 50, 10);
+  const before = rowMean(mass, 35);
+  assert.equal(repairHorizonSeam(mass, w, h), 0, 'a 30-row mass exceeds maxRows');
+  assert.equal(rowMean(mass, 35), before, 'and is left exactly as it was');
+});
+
 test('vision tone lifts shadows cool and tints highlights warm', async () => {
   const { visionTone, parseVisionGrade } = await import('../export/web/lighting.js');
   // the real mp_hijacked values

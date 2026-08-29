@@ -213,8 +213,11 @@ export const POST_SHADER = {
       c = toneMap > 0.5 ? hjAcesFilmic(c) : clamp(c * exposure, 0.0, 1.0);
       c = hjLinearToSRGB(c);
       // vision split tone, then the LUT built from the same vision set
-      c = hjVision(c);
+      // LUT first, then the vision split tone. The other order cancels the
+      // shadow lift: the LUT maps black to black, so a lifted 0.026 gets
+      // pulled straight back down to 0 and the crushed look returns.
       c = mix(c, sampleLut(c), amount);
+      c = hjVision(c);
       gl_FragColor = vec4(clamp(hjSaturation(c, saturation), 0.0, 1.0), src.a);
     }`,
 };

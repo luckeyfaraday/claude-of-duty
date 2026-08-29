@@ -149,44 +149,77 @@ function resampleCube(src, size) {
 }
 
 /**
- * Repair the near-black seam the engine's skybox carries at its horizon.
+ * Repair the dark seam the engine's skybox carries at its horizon.
  *
- * The source cubemap has a 1-2 texel row of ~(8,8,8) sitting between bright
- * warm sky above and below - the join between the two halves of the sky art.
- * In game the ocean geometry covers it; here it magnifies into a hard black
- * band across the horizon. Only a run that is far darker than the rows on both
- * sides is touched, so genuine dark detail (a landmass silhouette) survives.
+ * The source cubemap has a band at the horizon whose core is ~(8,8,8) - the
+ * join between the two halves of the sky art. In game the ocean geometry
+ * covers it; here it magnifies into a dark line across the horizon.
+ *
+ * The seam is a soft dark band, not just a run of black texels. Repairing only
+ * the near-black core leaves rows at ~160 luma between neighbours at ~210,
+ * which still reads as a dark line across the horizon. So the test is a
+ * per-row dip against a baseline taken from outside the band, and the whole
+ * row is rebuilt rather than individual texels.
+ *
+ * Runs longer than maxRows are left alone, so a genuine dark mass (a storm
+ * front, a landmass) is not smoothed away - only a thin band that is darker
+ * than both sides qualifies.
  */
-export function repairDarkSeams(px, w, h, { ratio = 0.35, maxRun = 4 } = {}) {
-  const lum = (x, y) => {
-    const o = (y * w + x) * 3;
-    return 0.2126 * px[o] + 0.7152 * px[o + 1] + 0.0722 * px[o + 2];
-  };
-  let repaired = 0;
-  for (let x = 0; x < w; x++) {
-    let y = 1;
-    while (y < h - 1) {
-      const above = lum(x, y - 1);
-      if (above > 8 && lum(x, y) < ratio * above) {
-        let end = y;
-        while (end < h - 1 && end - y < maxRun && lum(x, end) < ratio * above) end++;
-        // require the run to be bracketed by light rows, not just trailing off
-        if (end < h && lum(x, end) > above * ratio) {
-          for (let k = y; k < end; k++) {
-            const t = (k - (y - 1)) / (end - (y - 1));
-            for (let c = 0; c < 3; c++) {
-              px[(k * w + x) * 3 + c] = Math.round(
-                px[((y - 1) * w + x) * 3 + c] * (1 - t) + px[(end * w + x) * 3 + c] * t,
-              );
-            }
-          }
-          repaired += end - y;
-        }
-        y = end + 1;
-        continue;
-      }
-      y++;
+export function repairHorizonSeam(px, w, h, { dip = 0.88, maxRows = 20, gap = 8 } = {}) {
+  const rowMean = new Float64Array(h);
+  for (let y = 0; y < h; y++) {
+    let s = 0;
+    for (let x = 0; x < w; x++) {
+      const o = (y * w + x) * 3;
+      s += 0.2126 * px[o] + 0.7152 * px[o + 1] + 0.0722 * px[o + 2];
     }
+    rowMean[y] = s / w;
+  }
+
+  // baseline from rows well clear of the band on both sides
+  const baselineAt = (y) => {
+    const a = rowMean[Math.max(0, y - gap - 4)];
+    const b = rowMean[Math.min(h - 1, y + gap + 4)];
+    return (a + b) / 2;
+  };
+
+  const suspect = new Uint8Array(h);
+  for (let y = gap; y < h - gap; y++) {
+    if (rowMean[y] < dip * baselineAt(y)) suspect[y] = 1;
+  }
+
+  let repaired = 0;
+  let y = 0;
+  while (y < h) {
+    if (!suspect[y]) { y++; continue; }
+    let end = y;
+    while (end < h && suspect[end]) end++;
+    const above = y - 1;
+    const below = end;
+    // Both brackets must be meaningfully brighter than the run. Testing only
+    // the row above lets the edge of a large dark mass qualify - bright on one
+    // side, still dark on the other - and the repair then eats into real
+    // content instead of a seam.
+    let runMean = 0;
+    for (let k = y; k < end; k++) runMean += rowMean[k];
+    runMean /= (end - y);
+    const bracketed = above >= 0 && below < h
+      && rowMean[above] > runMean / dip
+      && rowMean[below] > runMean / dip;
+    if (end - y <= maxRows && bracketed) {
+      for (let k = y; k < end; k++) {
+        const t = (k - above) / (below - above);
+        for (let x = 0; x < w; x++) {
+          for (let c = 0; c < 3; c++) {
+            px[(k * w + x) * 3 + c] = Math.round(
+              px[(above * w + x) * 3 + c] * (1 - t) + px[(below * w + x) * 3 + c] * t,
+            );
+          }
+        }
+      }
+      repaired += end - y;
+    }
+    y = end;
   }
   return repaired;
 }
@@ -236,9 +269,9 @@ function run() {
     if (src.faces === 6) {
       const faces = resampleCube(src, src.w);
       let fixed = 0;
-      for (const face of faces) fixed += repairDarkSeams(face, src.w, src.w);
+      for (const face of faces) fixed += repairHorizonSeam(face, src.w, src.w);
       writeCube(path.join(OUT, 'env'), faces, src.w);
-      console.log(`  -> textures/env/*.png (${src.w}px, glTF axes), ${fixed} seam texels repaired`);
+      console.log(`  -> textures/env/*.png (${src.w}px, glTF axes), ${fixed} seam rows repaired`);
     }
   } else {
     console.warn('sky: skybox_mp_hijacked_ft.dds not found');
