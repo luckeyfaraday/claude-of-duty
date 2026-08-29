@@ -229,10 +229,29 @@ export class Viewmodel {
     for (const [key, data] of loaded) {
       const tracks = [];
       for (const bone of data.bones) {
-        if (!findNode(this.root, bone.name)) continue;
+        const node = findNode(this.root, bone.name);
+        if (!node) continue;
         if (bone.rot?.values?.length) {
           const times = bone.rot.frames.map((frame) => frame / data.fps);
-          tracks.push(new THREE.QuaternionKeyframeTrack(`${bone.name}.quaternion`, times, bone.rot.values));
+          const values = bone.rot.values.slice();
+          // tag_clip's rotation is authored in the source animation scene just
+          // like its position: the track opens on identity while the magazine
+          // binds at -90 degrees about X, so playing it raw rolls the magazine
+          // onto its side. Re-anchor the channel on the bind orientation and
+          // keep the motion the clip actually describes.
+          if (bone.name === 'tag_clip') {
+            const correction = node.quaternion.clone()
+              .multiply(new THREE.Quaternion(values[0], values[1], values[2], values[3]).invert());
+            const key = new THREE.Quaternion();
+            for (let i = 0; i < values.length; i += 4) {
+              key.set(values[i], values[i + 1], values[i + 2], values[i + 3]).premultiply(correction);
+              values[i] = key.x;
+              values[i + 1] = key.y;
+              values[i + 2] = key.z;
+              values[i + 3] = key.w;
+            }
+          }
+          tracks.push(new THREE.QuaternionKeyframeTrack(`${bone.name}.quaternion`, times, values));
         }
         if (bone.pos?.values?.length) {
           const times = bone.pos.frames.map((frame) => frame / data.fps);
@@ -242,8 +261,7 @@ export class Viewmodel {
           // same way the body xanims place j_mainroot (see enemy-system.js).
           // Applied as authored it throws the magazine out of the world, so
           // rebase it onto the attachment's own bind position in the magwell.
-          const node = findNode(this.root, bone.name);
-          if (bone.name === 'tag_clip' && node) {
+          if (bone.name === 'tag_clip') {
             const offset = [
               node.position.x - values[0],
               node.position.y - values[1],

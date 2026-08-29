@@ -429,13 +429,19 @@ test('Hijacked viewer loads collision, navigation, and walking controls', { time
       // track, so a working reload physically moves it out of the magwell.
       const clip = viewmodel.root.getObjectByName('tag_clip');
       const rest = clip?.position.clone() ?? null;
+      // Idle never animates tag_clip, so this is the attachment's bind pose.
+      const bindQuat = clip?.quaternion.clone() ?? null;
       let magTravel = 0;
+      let magSwing = 0;
 
       const started = api.reloadWeapon();
       const mid = viewmodel.reloading;
       await new Promise((resolve) => {
         const check = () => {
-          if (clip && rest) magTravel = Math.max(magTravel, clip.position.distanceTo(rest));
+          if (clip && rest) {
+            magTravel = Math.max(magTravel, clip.position.distanceTo(rest));
+            magSwing = Math.max(magSwing, clip.quaternion.angleTo(bindQuat));
+          }
           return viewmodel.reloading ? setTimeout(check, 50) : resolve();
         };
         setTimeout(check, 50);
@@ -456,6 +462,11 @@ test('Hijacked viewer loads collision, navigation, and walking controls', { time
         hasMagazine: Boolean(clip),
         magTravel: Number(magTravel.toFixed(2)),
         magReseated: clip && rest ? Number(clip.position.distanceTo(rest).toFixed(2)) : null,
+        magSwingDeg: Number((magSwing * 180 / Math.PI).toFixed(1)),
+        magEndAngleDeg: clip && bindQuat
+          ? Number((clip.quaternion.angleTo(bindQuat) * 180 / Math.PI).toFixed(1))
+          : null,
+        magRestQuat: clip ? clip.quaternion.toArray().map((n) => Number(n.toFixed(3))) : null,
       };
     });
     assert.equal(reload.started, true, 'reload should start on demand');
@@ -489,6 +500,17 @@ test('Hijacked viewer loads collision, navigation, and walking controls', { time
       `the magazine should stay in the magwell, drifted ${reload.magTravel}`);
     assert.ok(reload.magReseated < 0.5,
       `the magazine should end seated, ended ${reload.magReseated} from rest`);
+    // The clip's rotation channel is what actually takes the magazine out of
+    // the well and puts it back, in step with the mag_out/mag_in cues.
+    assert.ok(reload.magSwingDeg > 60,
+      `the magazine should swing out of the well, peaked at ${reload.magSwingDeg} deg`);
+    assert.ok(reload.magEndAngleDeg < 2,
+      `the magazine should end reseated, ended ${reload.magEndAngleDeg} deg off bind`);
+    // Regression: played raw, the track opens on identity and rolls the
+    // magazine onto its side. It must come to rest on its bind orientation.
+    assert.ok(Math.abs(reload.magRestQuat[0] + 0.7071) < 0.01
+      && Math.abs(reload.magRestQuat[3] - 0.7071) < 0.01,
+      `the magazine must rest upright, not flipped: ${JSON.stringify(reload.magRestQuat)}`);
 
     const hud = await page.locator('#hud').innerText();
     assert.match(hud, /nav shown/);
