@@ -6,17 +6,175 @@
 <link rel="icon" href="data:,">
 <title>Hijacked — browser port</title>
 <style>
-  :root { color-scheme: dark; }
+  :root {
+    color-scheme: dark;
+    /* The frontend plates ship white-on-alpha because the game tints them at
+       runtime. The menu does the same through mask-image, so this one value
+       recolours every panel, button and glow. It matches the HUD. */
+    --fe-accent: #7fffc4;
+    --fe-ui: 'Bahnschrift', 'DIN Alternate', 'Oswald', system-ui, sans-serif;
+  }
   * { box-sizing: border-box; }
   html, body { margin: 0; height: 100%; overflow: hidden; background: #05090d; }
   canvas { display: block; }
+
+  /* ---------- frontend shell (loading / title / pause) ---------- */
   #blocker {
     position: fixed; inset: 0; z-index: 3; display: flex; align-items: center;
-    justify-content: center; padding: 24px; background: rgba(2, 8, 13, .72);
-    color: #fff; font: 500 16px/1.55 system-ui, sans-serif; text-align: center;
-    cursor: default; white-space: pre-line;
+    justify-content: center; padding: 24px; overflow: hidden;
+    color: #dfe9f2; font: 500 15px/1.5 var(--fe-ui); text-align: center;
+    cursor: default; font-stretch: condensed;
   }
   #blocker.ready { cursor: pointer; }
+  #blocker > .fe-layer { position: absolute; inset: 0; pointer-events: none; }
+
+  /* The four layers of the original `menu,main`, in the order ui_mp.zone links
+     them: backdrop, scrolling fog, glow, then the content plate. The authored
+     backdrop is hazy and light -- it was drawn to sit behind the game's own
+     dark panels -- so it needs pulling down before the menu text goes over it. */
+  .fe-backdrop {
+    background: #05090d url('ui/menu_mp_background_main2.png') center/cover no-repeat;
+    filter: brightness(.78) contrast(1.14) saturate(.82);
+    animation: fe-drift 54s ease-in-out infinite alternate;
+  }
+  .fe-fog {
+    background: url('ui/bg_fogscrollthin.png') repeat-x 0 50% / auto 72%;
+    mix-blend-mode: screen; opacity: .09;
+    animation: fe-fog-scroll 110s linear infinite;
+  }
+  .fe-fog.slow {
+    background-size: auto 132%; opacity: .05;
+    animation-duration: 190s; animation-direction: reverse;
+  }
+  .fe-glow {
+    -webkit-mask: url('ui/menu_mp_background_glow.png') center/118% 118% no-repeat;
+    mask: url('ui/menu_mp_background_glow.png') center/118% 118% no-repeat;
+    background: var(--fe-accent); opacity: .1; mix-blend-mode: screen;
+  }
+  .fe-vignette {
+    background:
+      radial-gradient(82% 66% at 50% 46%, rgba(4, 10, 15, .12) 0%, rgba(2, 6, 10, .84) 100%),
+      linear-gradient(180deg, rgba(2, 6, 10, .5) 0%, transparent 22%, transparent 72%, rgba(2, 6, 10, .66) 100%);
+  }
+  @keyframes fe-drift {
+    from { transform: scale(1.06) translate3d(-1%, .4%, 0); }
+    to { transform: scale(1.13) translate3d(1%, -1%, 0); }
+  }
+  @keyframes fe-fog-scroll { to { background-position: -2048px 50%; } }
+
+  .fe-content {
+    position: relative; z-index: 1; isolation: isolate;
+    width: min(720px, 92vw); display: flex; flex-direction: column;
+    align-items: center; gap: 28px;
+  }
+  .fe-wordmark {
+    margin: 0; font-size: clamp(34px, 6.4vw, 66px); line-height: 1; font-weight: 600;
+    letter-spacing: .32em; text-indent: .32em; color: #f2f8ff;
+    text-shadow: 0 3px 26px rgba(0, 0, 0, .9);
+  }
+  .fe-wordmark::after {
+    content: ''; display: block; width: 64%; height: 2px; margin: 20px auto 0;
+    background: linear-gradient(90deg, transparent, var(--fe-accent), transparent);
+    opacity: .8;
+  }
+  .fe-sub {
+    margin: 16px 0 0; font-size: 11px; letter-spacing: .34em;
+    text-transform: uppercase; color: rgba(206, 224, 240, .62);
+    text-shadow: 0 1px 8px rgba(0, 0, 0, .9);
+  }
+
+  .fe-track {
+    width: min(430px, 80vw); height: 6px; background: rgba(255, 255, 255, .1);
+    border: 1px solid rgba(255, 255, 255, .18);
+  }
+  .fe-bar {
+    height: 100%; width: 0; background: var(--fe-accent);
+    box-shadow: 0 0 14px var(--fe-accent); transition: width .25s ease-out;
+  }
+  /* No Content-Length anywhere means no percentage to draw, so sweep instead
+     of sitting at zero for the whole load. */
+  #blocker[data-determinate="false"] .fe-bar {
+    width: 32%; transition: none; animation: fe-sweep 1.6s ease-in-out infinite;
+  }
+  @keyframes fe-sweep { from { margin-left: -32%; } to { margin-left: 100%; } }
+  .fe-status {
+    display: flex; justify-content: space-between; width: min(430px, 80vw);
+    margin-top: 10px; font-size: 11px; letter-spacing: .2em;
+    text-transform: uppercase; color: rgba(206, 224, 240, .68);
+  }
+
+  .fe-card { margin: 0; position: relative; padding: 9px; }
+  .fe-card::before {
+    content: ''; position: absolute; inset: 0; z-index: -1;
+    -webkit-mask: url('ui/menu_mp_lobby_frame_outer.png') center/100% 100% no-repeat;
+    mask: url('ui/menu_mp_lobby_frame_outer.png') center/100% 100% no-repeat;
+    background: rgba(9, 19, 27, .72);
+  }
+  .fe-card img { display: block; width: 256px; max-width: 62vw; height: auto; }
+  .fe-card figcaption {
+    margin-top: 8px; font-size: 10px; letter-spacing: .3em;
+    text-transform: uppercase; color: rgba(206, 224, 240, .6);
+  }
+  .fe-prompt {
+    margin: 0; font-size: 13px; letter-spacing: .36em; text-indent: .36em;
+    text-transform: uppercase; color: var(--fe-accent);
+    animation: fe-pulse 2.2s ease-in-out infinite;
+  }
+  @keyframes fe-pulse { 0%, 100% { opacity: .4; } 50% { opacity: 1; } }
+
+  .fe-heading {
+    margin: 0; font-size: 20px; font-weight: 600; letter-spacing: .38em;
+    text-indent: .38em; text-transform: uppercase; color: #eef6ff;
+    text-shadow: 0 2px 14px rgba(0, 0, 0, .9);
+  }
+  /* Pause shares the chrome but should not re-announce the game over the top
+     of it, so the wordmark drops back to a header rather than a title. */
+  #blocker[data-screen="pause"] .fe-wordmark { font-size: clamp(20px, 3vw, 30px); }
+  #blocker[data-screen="pause"] .fe-wordmark::after { margin-top: 14px; }
+  #blocker[data-screen="pause"] .fe-sub { display: none; }
+  .fe-buttons { display: flex; flex-direction: column; gap: 7px; }
+  .fe-btn {
+    position: relative; appearance: none; border: 0; background: none;
+    width: 258px; height: 34px; cursor: pointer; color: #e6f2ff;
+    font: 600 12px/34px var(--fe-ui); font-stretch: condensed;
+    letter-spacing: .24em; text-indent: .24em; text-transform: uppercase;
+    transition: color .12s ease-out;
+  }
+  .fe-btn::before {
+    content: ''; position: absolute; inset: 0; z-index: -1;
+    -webkit-mask: url('ui/menu_button_backing.png') center/100% 100% no-repeat;
+    mask: url('ui/menu_button_backing.png') center/100% 100% no-repeat;
+    background: rgba(139, 173, 198, .26); transition: background .12s ease-out;
+  }
+  .fe-btn:hover, .fe-btn:focus-visible { color: #04140d; outline: none; }
+  .fe-btn:hover::before, .fe-btn:focus-visible::before {
+    -webkit-mask-image: url('ui/menu_button_backing_highlight.png');
+    mask-image: url('ui/menu_button_backing_highlight.png');
+    background: var(--fe-accent);
+  }
+  .fe-btn[data-on="true"]::before { background: rgba(127, 255, 196, .42); }
+
+  .fe-controls {
+    margin: 0; font: 12px/1.75 ui-monospace, SFMono-Regular, Consolas, monospace;
+    color: rgba(205, 224, 240, .72); white-space: pre-line;
+    text-shadow: 0 1px 8px rgba(0, 0, 0, .95);
+  }
+  .fe-message { margin: 0; max-width: 46ch; color: #ff9b90; white-space: pre-line; }
+
+  /* One screen at a time; `render()` sets data-screen on the root. */
+  .fe-load, .fe-start, .fe-pause, .fe-controls, .fe-message { display: none; }
+  #blocker[data-screen="loading"] .fe-load { display: block; }
+  #blocker[data-screen="title"] .fe-start,
+  #blocker[data-screen="pause"] .fe-pause { display: flex; flex-direction: column; align-items: center; gap: 22px; }
+  #blocker[data-screen="title"] .fe-controls,
+  #blocker[data-screen="pause"] .fe-controls { display: block; }
+  #blocker[data-screen="error"] .fe-message { display: block; }
+  #blocker[data-screen="error"] .fe-wordmark::after { background: #ff6a5c; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .fe-backdrop, .fe-fog, .fe-prompt { animation: none; }
+    .fe-bar { transition: none; }
+  }
   #hud {
     position: fixed; top: 12px; left: 12px; z-index: 2; min-width: 260px;
     padding: 9px 11px; border: 1px solid rgba(127, 255, 196, .26);
@@ -56,7 +214,41 @@
 </script>
 </head>
 <body>
-<div id="blocker">Loading Hijacked…</div>
+<div id="blocker" data-screen="loading">
+  <div class="fe-layer fe-backdrop"></div>
+  <div class="fe-layer fe-fog"></div>
+  <div class="fe-layer fe-fog slow"></div>
+  <div class="fe-layer fe-glow"></div>
+  <div class="fe-layer fe-vignette"></div>
+  <div class="fe-content">
+    <header>
+      <h1 class="fe-wordmark">HIJACKED</h1>
+      <p class="fe-sub">Browser reconstruction</p>
+    </header>
+    <div class="fe-load">
+      <div class="fe-track"><div class="fe-bar" id="fe-bar"></div></div>
+      <div class="fe-status"><span id="fe-caption"></span><span id="fe-percent"></span></div>
+    </div>
+    <div class="fe-start">
+      <figure class="fe-card">
+        <img src="ui/menu_mp_map_select_hijacked_final.png" alt="Hijacked" width="256" height="128">
+        <figcaption>mp_hijacked</figcaption>
+      </figure>
+      <p class="fe-prompt">Click to play</p>
+    </div>
+    <div class="fe-pause">
+      <h2 class="fe-heading">Paused</h2>
+      <div class="fe-buttons">
+        <button type="button" class="fe-btn" data-action="resume">Resume</button>
+        <button type="button" class="fe-btn" data-action="respawn">Respawn</button>
+        <button type="button" class="fe-btn" data-action="navmesh">Navmesh overlay</button>
+        <button type="button" class="fe-btn" data-action="collision">Collision overlay</button>
+      </div>
+    </div>
+    <pre class="fe-controls" id="fe-controls"></pre>
+    <p class="fe-message" id="fe-message"></p>
+  </div>
+</div>
 <div id="hud">loading…</div>
 <div id="crosshair"></div>
 <svg id="hitmarker" viewBox="0 0 26 26" data-kind="torso" aria-hidden="true">
@@ -76,6 +268,7 @@ import { WeaponController } from './weapon-controller.js';
 import { WeaponEffects } from './weapon-effects.js';
 import { EnemyManager } from './enemy-system.js';
 import { PlayerHealth } from './player-health.js';
+import { Frontend } from './frontend.js';
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x87a8c8);
@@ -109,12 +302,38 @@ sun.position.set(-800, 1200, 600);
 scene.add(sun);
 
 const blocker = document.getElementById('blocker');
+const menuButtons = [...blocker.querySelectorAll('.fe-btn')];
+const frontend = new Frontend({
+  elements: {
+    root: blocker,
+    bar: document.getElementById('fe-bar'),
+    percent: document.getElementById('fe-percent'),
+    caption: document.getElementById('fe-caption'),
+    message: document.getElementById('fe-message'),
+    controls: document.getElementById('fe-controls'),
+    buttons: menuButtons,
+    onAction: (name) => menuAction(name),
+  },
+  onPlay: () => renderer.domElement.requestPointerLock(),
+  onResume: () => renderer.domElement.requestPointerLock(),
+});
+// Weights are roughly the wall-clock share each stage takes, not its byte
+// size: the map dominates because its 44 MB buffer streams behind a .gltf that
+// reports only 1.25 MB of itself, and the shader warm-up moves no bytes at all.
+frontend.expect({
+  map: 8,
+  textures: 10,
+  collision: 2,
+  navigation: 1,
+  viewmodel: 1,
+  enemy: 2,
+  shaders: 2,
+});
 const hud = document.getElementById('hud');
 const damageOverlay = document.getElementById('damage');
 const crosshair = document.getElementById('crosshair');
 const hitmarker = document.getElementById('hitmarker');
 const keys = Object.create(null);
-const loadProgress = Object.create(null);
 const clock = new THREE.Clock();
 const raycaster = new THREE.Raycaster();
 const down = new THREE.Vector3(0, -1, 0);
@@ -157,22 +376,87 @@ const pathLine = new THREE.Line(
 pathLine.renderOrder = 50;
 scene.add(pathLine);
 
-function loadingText() {
-  const entries = Object.entries(loadProgress);
-  const detail = entries.map(([name, percent]) => `${name} ${percent}`).join('  ·  ');
-  blocker.textContent = `Loading Hijacked…${detail ? `\n${detail}` : ''}`;
-}
-
 function progress(name, event) {
-  loadProgress[name] = event.total
-    ? `${Math.min(100, event.loaded / event.total * 100).toFixed(0)}%`
-    : `${(event.loaded / 1048576).toFixed(1)} MB`;
-  loadingText();
+  frontend.progress(name, event);
 }
 
-const loader = new GLTFLoader();
+// Pause-menu buttons drive the same state the keyboard shortcuts do, so the
+// overlays stay in sync however they were toggled.
+function menuAction(name) {
+  if (name === 'respawn') {
+    if (playerHealth) playerHealth.respawn();
+    else player?.respawn();
+  }
+  if (name === 'navmesh') navigationVisible = !navigationVisible;
+  if (name === 'collision') collisionVisible = !collisionVisible;
+  setDebugVisibility();
+}
+
+function syncMenuButtons() {
+  for (const button of menuButtons) {
+    const action = button.dataset.action;
+    if (action === 'navmesh') button.dataset.on = String(navigationVisible);
+    if (action === 'collision') button.dataset.on = String(collisionVisible);
+  }
+}
+
+// GLTFLoader's progress callback covers the .gltf JSON only; the 44 MB buffer
+// beside it streams with no reporting at all, which is most of the wait.
+// Stream it here for real byte progress and leave it in the loader cache under
+// the names GLTFLoader will resolve it to, so nothing fetches it twice.
+THREE.Cache.enabled = true;
+async function prefetchBuffer(url, label) {
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`${url} HTTP ${response.status}`);
+  const total = Number(response.headers.get('content-length')) || 0;
+  const reader = response.body.getReader();
+  const chunks = [];
+  let loaded = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value);
+    loaded += value.byteLength;
+    progress(label, { loaded, total });
+  }
+  const bytes = new Uint8Array(loaded);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  // GLTFLoader resolves a buffer URI against the .gltf's base path, which for
+  // a bare filename is './', and FileLoader namespaces its cache keys with a
+  // `file:` prefix. Register every plausible spelling -- a miss costs a second
+  // 44 MB download, and `browser-smoke` asserts the request count stays at one.
+  for (const name of [`./${url}`, url, new URL(url, location.href).href]) {
+    THREE.Cache.add(`file:${name}`, bytes.buffer);
+    THREE.Cache.add(name, bytes.buffer);
+  }
+}
+
+// The map's 359 textures are 59 MB, more than the geometry buffer, and none of
+// them reach a per-file progress callback either. The LoadingManager counts
+// them as they complete, which is close enough to even weight to drive a bar.
+const loadingManager = new THREE.LoadingManager();
+const MAP_TEXTURE_QUORUM = 32;
+loadingManager.onProgress = (url, itemsLoaded, itemsTotal) => {
+  // itemsTotal is discovered, not known: it reads 1/1 for the .gltf itself
+  // long before parsing queues the texture set, and a bar taking that at face
+  // value races to full and then falls back. Wait until enough items are known
+  // for the ratio to mean something.
+  if (itemsTotal < MAP_TEXTURE_QUORUM) return;
+  frontend.progress('textures', { loaded: itemsLoaded, total: itemsTotal });
+};
+
+const loader = new GLTFLoader(loadingManager);
 function loadGltf(url, label) {
-  return loader.loadAsync(url, (event) => progress(label, event));
+  // The onProgress callback covers the .gltf only, so the stage is not done
+  // until the promise settles and its referenced buffer has landed with it.
+  return loader.loadAsync(url, (event) => progress(label, event)).then((gltf) => {
+    frontend.stage(label);
+    return gltf;
+  });
 }
 
 function chooseSpawn(hints, collision) {
@@ -259,6 +543,7 @@ function setDebugVisibility() {
       if (object.isMesh && object.material) object.material.visible = collisionVisible;
     });
   }
+  syncMenuButtons();
 }
 
 const debugRound = (value) => Number.isFinite(value)
@@ -272,7 +557,8 @@ function setAutomationActive(active = true) {
   locked = Boolean(active);
   automationPaused = false;
   document.body.classList.toggle('locked', locked);
-  blocker.style.display = locked ? 'none' : 'flex';
+  if (locked) frontend.enter();
+  else frontend.suspend();
   if (!locked) {
     clearKeys();
     weapon.setTrigger(false);
@@ -353,6 +639,7 @@ function getDebugState() {
       drawingBuffer: [size.x, size.y],
       pixelRatio: debugRound(renderer.getPixelRatio()),
     },
+    menu: frontend.getState(),
     hud: hud.textContent,
   };
 }
@@ -384,6 +671,11 @@ function createDebugApi() {
       if (![target.x, target.y, target.z].every(Number.isFinite)) return false;
       camera.lookAt(target);
       return debugVector(camera.getWorldDirection(new THREE.Vector3()));
+    },
+    showMenu(visible = true) {
+      if (visible) frontend.suspend();
+      else frontend.enter();
+      return frontend.getState();
     },
     showNavigation(visible = true) {
       navigationVisible = Boolean(visible);
@@ -426,16 +718,13 @@ function createDebugApi() {
 document.addEventListener('pointerlockchange', () => {
   locked = document.pointerLockElement === renderer.domElement;
   document.body.classList.toggle('locked', locked);
-  blocker.style.display = locked ? 'none' : 'flex';
+  if (locked) frontend.enter();
+  else frontend.suspend();
   if (!locked) {
     clearKeys();
     weapon.setTrigger(false);
     viewmodel.setAiming(false);
   }
-});
-
-blocker.addEventListener('click', () => {
-  if (ready) renderer.domElement.requestPointerLock();
 });
 
 document.addEventListener('mousemove', (event) => {
@@ -467,6 +756,12 @@ document.addEventListener('keydown', (event) => {
     event.preventDefault();
   }
   if (event.repeat || !ready) return;
+  // Any key but Esc starts or resumes from the shell — Esc is what released
+  // the pointer lock to get here, and the browser owns it for a moment after.
+  if (frontend.visible) {
+    if (event.code !== 'Escape') frontend.play();
+    return;
+  }
   if (event.code === 'KeyR' && locked) reloadWeapon();
   if (event.code === 'KeyB' && locked) {
     if (playerHealth) playerHealth.respawn();
@@ -494,7 +789,7 @@ async function start() {
     }).catch((error) => {
       console.error('Navigation unavailable:', error);
       return null;
-    });
+    }).finally(() => frontend.stage('navigation'));
     const viewmodelPromise = viewmodel
       .load(
         'viewmodel/c_usa_mp_fbi_shortsleeve_viewhands_lod0.glb',
@@ -513,15 +808,27 @@ async function start() {
       )
       .catch((error) => {
         console.warn('Viewmodel unavailable:', error);
-      });
+      })
+      .finally(() => frontend.stage('viewmodel'));
+    // Only the map's own .gltf waits on the prefetched buffer; everything else
+    // still downloads alongside it.
+    const mapBuffer = prefetchBuffer('hijacked.bin', 'map').then(() => frontend.stage('map'));
     const [renderGltf, collisionGltf, hints] = await Promise.all([
-      loadGltf('hijacked.gltf', 'render'),
+      mapBuffer.then(() => loadGltf('hijacked.gltf', 'render')).then((gltf) => {
+        // GLTFLoader resolves only once every texture it references has landed.
+        frontend.stage('textures');
+        return gltf;
+      }),
       loadGltf('hijacked_collision.gltf', 'collision'),
       fetch('hijacked_nav_hints.json').then((response) => {
         if (!response.ok) throw new Error(`nav hints HTTP ${response.status}`);
         return response.json();
       }),
     ]);
+    // The buffer is inside the parsed scene now, so stop the cache holding a
+    // second 44 MB copy of it for the rest of the session.
+    THREE.Cache.clear();
+    THREE.Cache.enabled = false;
 
     scene.add(renderGltf.scene);
     collisionRoot = collisionGltf.scene;
@@ -578,7 +885,7 @@ async function start() {
     if (navigation?.crowdHelper) scene.add(navigation.crowdHelper);
     setDebugVisibility();
 
-    const enemyPromise = navigation
+    const enemyPromise = (navigation
       ? (enemies = new EnemyManager({
           scene,
           navigation,
@@ -589,7 +896,8 @@ async function start() {
           hints,
           count: 6,
         })).load({ onProgress: (label, event) => progress(label, event) })
-      : Promise.resolve();
+      : Promise.resolve()
+    ).finally(() => frontend.stage('enemy'));
 
     await Promise.all([viewmodelPromise, weaponEffects.loadAudio(), enemyPromise]);
 
@@ -636,26 +944,25 @@ async function start() {
       warmTarget.dispose();
       parent.add(warmEnemy.root);
     }
+    frontend.stage('shaders');
 
     // Small read/debug surface for automated smoke tests and map tooling.
     globalThis.hijacked = {
       scene, camera, renderer, player, navigation, collisionRoot, hints, viewmodel,
-      weapon, weaponEffects, playerHealth, enemies, reloadWeapon,
+      weapon, weaponEffects, playerHealth, enemies, reloadWeapon, frontend,
       debug: createDebugApi(),
     };
 
     ready = true;
-    blocker.classList.add('ready');
-    blocker.textContent = [
-      'Click to play',
+    frontend.setReady([
       'WASD move · Shift sprint · Space jump · C/Ctrl crouch',
       'Left mouse fire · Right mouse aim · R reload · B respawn',
-      'N navmesh · V collision · P path',
+      'N navmesh · V collision · P path · Esc pause',
       navigation ? '' : 'Navigation failed to load; collision and walking are still available.',
-    ].filter(Boolean).join('\n');
+    ]);
   } catch (error) {
     console.error(error);
-    blocker.textContent = `Unable to start\n${error instanceof Error ? error.message : error}`;
+    frontend.fail(`Unable to start\n${error instanceof Error ? error.message : error}`);
     hud.textContent = 'load failed — see developer console';
   }
 }

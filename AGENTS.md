@@ -28,12 +28,14 @@ Wait until `globalThis.hijacked?.debug?.getState().ready` is true. Prefer the
 stable methods on `globalThis.hijacked.debug` over reaching into Three.js or
 gameplay implementation details:
 
-- `getState()` returns serializable player, weapon, enemy, overlay, HUD, and
-  renderer state.
+- `getState()` returns serializable player, weapon, enemy, overlay, menu, HUD,
+  and renderer state.
 - `setActive(boolean)`, `pause()`, and `resume()` control automated play.
 - `teleportPlayer([x, y, z])` and `lookAt([x, y, z])` arrange reproducible
   scenes.
 - `showNavigation(boolean)` and `showCollision(boolean)` control debug views.
+- `showMenu(boolean)` raises or drops the pause shell without touching pointer
+  lock, which Escape cannot do reliably under automation.
 - `damagePlayer(number)`, `respawnPlayer()`, and `respawnEnemies()` create test
   conditions.
 - `teleportEnemy(index, [x, y, z])` and `alertEnemies(radius)` stage encounters.

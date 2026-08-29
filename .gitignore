@@ -11,6 +11,7 @@
 !/.tools/
 !/.tools/compose_scene.py
 !/.tools/export_collision.py
+!/.tools/export_ui.py
 !/.tools/bake_navmesh.mjs
 !/.tools/xanim_to_json.mjs
 !/.tools/extract_t6_sab_audio.mjs

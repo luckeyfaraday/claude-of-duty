@@ -25,7 +25,41 @@ Controls:
 - `Right mouse`: aim down sights
 - `N`: navmesh overlay; `V`: collision overlay
 - `P`: find and draw a navmesh path to the point under the crosshair
-- `Esc`: release the mouse
+- `Esc`: pause and release the mouse
+
+## Frontend
+
+The viewer opens on a menu shell rather than a bare loading message. It has a
+loading screen, a title screen, and an `Esc` pause menu, all sharing one set of
+layers built from the game's own frontend art in `zone/all/ui_mp.ff`: the
+`menu_mp_background_main2` backdrop, a scrolling `bg_fogscrollthin` strip, the
+`menu_mp_background_glow` plate, and the `menu_mp_map_select_hijacked_final`
+map card. The pause buttons and panel use `menu_button_backing` and
+`menu_mp_lobby_frame_outer`.
+
+Those plates ship white-on-alpha because the game tints them at runtime, so the
+browser does the same through `mask-image`. The single `--fe-accent` custom
+property in `index.html` recolours every panel, button, and glow at once; it is
+set to the HUD's mint rather than the game's blue. The layout is not the
+original: T6 menudefs do not dump (the Unlinker lists all 133 in `ui_mp.ff` and
+writes none of them), so only the art is reused.
+
+The load bar measures stages declared up front with fixed weights rather than
+bytes as they are discovered, because neither of the two largest downloads
+reports itself. `GLTFLoader`'s progress callback covers `hijacked.gltf` alone,
+so `hijacked.bin` is streamed separately for real byte progress and handed to
+the loader through `THREE.Cache`; the 359 map textures are counted through a
+`LoadingManager` instead. A stage is held below its full weight until its
+promise settles, so the bar cannot reach 100% before the game is playable.
+
+Re-export the menu art with:
+
+```powershell
+python .tools/export_ui.py
+```
+
+It dumps `ui_mp.ff` and converts the dozen images the menu uses into
+`export/web/ui/` (~1.4 MB), leaving the other 513 in the zone.
 
 ## First-person viewmodel
 

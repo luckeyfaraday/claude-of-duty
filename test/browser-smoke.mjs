@@ -31,6 +31,13 @@ test('Hijacked viewer loads collision, navigation, and walking controls', { time
   page.on('console', (message) => {
     if (message.type() === 'error') errors.push(message.text());
   });
+  // The loading screen streams the map buffer itself for byte progress and
+  // hands it to GLTFLoader through the loader cache. If that key ever stops
+  // matching, the only symptom is a silent second 44 MB download.
+  let mapBufferRequests = 0;
+  page.on('request', (request) => {
+    if (request.url().endsWith('hijacked.bin')) mapBufferRequests += 1;
+  });
 
   try {
     const response = await page.goto(browserTestUrl, {
@@ -39,9 +46,25 @@ test('Hijacked viewer loads collision, navigation, and walking controls', { time
     });
     assert.equal(response?.status(), 200);
     await page.locator('#blocker.ready').waitFor({ state: 'visible', timeout: 150_000 });
+    // The shell uppercases its prompt through text-transform, so innerText
+    // returns the rendered casing rather than the authored casing.
     const instructions = await page.locator('#blocker').innerText();
-    assert.match(instructions, /Click to play/);
+    assert.match(instructions, /click to play/i);
     assert.doesNotMatch(instructions, /failed/i);
+
+    const menu = await page.evaluate(() => ({
+      state: globalThis.hijacked.debug.getState().menu,
+      screen: document.getElementById('blocker').dataset.screen,
+      backdrop: getComputedStyle(document.querySelector('.fe-backdrop')).backgroundImage,
+      cardLoaded: document.querySelector('.fe-card img')?.naturalWidth ?? 0,
+      barWidth: document.getElementById('fe-bar').style.width,
+    }));
+    assert.equal(menu.screen, 'title', 'a finished load lands on the title screen');
+    assert.deepEqual(menu.state, { screen: 'title', visible: true, percent: 100, caption: '' });
+    assert.match(menu.backdrop, /menu_mp_background_main2\.png/, 'the frontend backdrop should be the extracted plate');
+    assert.equal(menu.cardLoaded, 256, 'the Hijacked map card should decode at its authored width');
+    assert.equal(menu.barWidth, '100%', 'a finished load fills the bar');
+    assert.equal(mapBufferRequests, 1, 'the prefetched map buffer must not be downloaded twice');
 
     const simulation = await page.evaluate(() => {
       const api = globalThis.hijacked;
@@ -484,6 +507,19 @@ test('Hijacked viewer loads collision, navigation, and walking controls', { time
     assert.equal(inputState.bodyLocked, true, `body should reflect pointer lock: ${JSON.stringify(inputState)}`);
     assert.equal(inputState.pointerLocked, true, `canvas should hold pointer lock: ${JSON.stringify(inputState)}`);
     assert.equal(inputState.triggerHeld, true, `left mouse should hold the trigger: ${JSON.stringify(inputState)}`);
+
+    // Pause and resume through the debug API rather than Escape, which the
+    // browser owns and throttles after a pointer-lock exit.
+    const paused = await page.evaluate(() => {
+      const shown = globalThis.hijacked.debug.showMenu(true);
+      const button = document.querySelector('.fe-pause .fe-btn[data-action="resume"]');
+      return { shown, resumeVisible: Boolean(button?.offsetParent) };
+    });
+    assert.equal(paused.shown.screen, 'pause');
+    assert.equal(paused.shown.visible, true);
+    assert.equal(paused.resumeVisible, true, 'the pause screen should show its buttons');
+    const resumed = await page.evaluate(() => globalThis.hijacked.debug.showMenu(false));
+    assert.equal(resumed.visible, false, 'resuming should drop the shell again');
 
     // Headless Chromium can pause requestAnimationFrame even with its timer
     // throttles disabled. Advance the weapon once explicitly after proving the
