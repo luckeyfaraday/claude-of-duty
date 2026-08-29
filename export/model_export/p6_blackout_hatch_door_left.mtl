@@ -1,0 +1,16 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 3
+
+newmtl mc/mtl_p6_blackout_hatch_frame
+map_Kd ../images/~~-gp6_blackout_hatch_frame_c~c13a7188.dds
+map_bump ../images/plain_smooth_n.dds
+
+newmtl mc/mtl_p6_blackout_hatch_door
+map_Kd ../images/~~-gp6_blackout_hatch_door_c-~add0a70d.dds
+map_bump ../images/plain_smooth_n.dds
+
+newmtl mc/mtl_p6_blackout_hatch_seal
+map_Kd ../images/~~-gp6_blackout_hatch_seal_c-~530dce41.dds
+map_bump ../images/p6_blackout_hatch_seal_n.dds

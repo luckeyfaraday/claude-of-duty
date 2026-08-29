@@ -1,0 +1,8 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/mtl_p6_barrel_boat
+map_Kd ../images/~~-gmtl_p6_barrel_boat_c-rgb&~a9225be1.dds
+map_bump ../images/mtl_p6_barrel_boat_n.dds

@@ -1,0 +1,9 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/brush_metal_panel_karma_matte
+map_Kd ../images/~-gbrush_metal_panel_karma_c.dds
+map_bump ../images/brush_metal_panel_karma_n.dds
+map_Ks ../images/~~-gbrush_metal_panel_karma_g~13f83540.dds

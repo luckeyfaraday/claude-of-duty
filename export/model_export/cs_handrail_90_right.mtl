@@ -1,0 +1,8 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/mtl_hand_rail
+map_Kd ../images/~~-ghand_rail_col-rgb&~-rhand~257a48ac.dds
+map_bump ../images/hand_rail_nml.dds

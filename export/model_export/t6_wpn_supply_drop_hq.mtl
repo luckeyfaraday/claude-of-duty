@@ -1,0 +1,9 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/mtl_t6_wpn_supply_drop_hq
+map_Kd ../images/~-gmtl_t6_wpn_supply_drop_hq_col.dds
+map_bump ../images/mtl_t6_wpn_supply_drop_nml.dds
+map_Ks ../images/~~-gmtl_t6_wpn_supply_drop_sp~59f4fa6b.dds

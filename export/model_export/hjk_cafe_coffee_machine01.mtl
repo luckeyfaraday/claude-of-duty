@@ -1,0 +1,14 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 2
+
+newmtl mc/mtl_hjk_cafe_coffee_machine01
+map_Kd ../images/~-ghjk_coffee_machine01_col.dds
+map_bump ../images/hjk_coffee_machine01_nml.dds
+map_Ks ../images/~~-ghjk_coffee_machine01_spc-~a356788c.dds
+
+newmtl mc/mtl_hjk_cafe_coffee_machine02
+map_Kd ../images/~-ghjk_coffee_machine01_col.dds
+map_bump ../images/hjk_coffee_machine01_nml.dds
+map_Ks ../images/~~-ghjk_coffee_machine01_spc-~a356788c.dds

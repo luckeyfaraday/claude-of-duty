@@ -1,0 +1,9 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/metal_trim_aluminum
+map_Kd ../images/~-gmetal_window_trim_c.dds
+map_bump ../images/metal_window_trim_n.dds
+map_Ks ../images/~~-gmetal_window_trim_s-rgb&~~2bc8e35d.dds

@@ -1,0 +1,14 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 2
+
+newmtl mc/metal_brushed
+map_Kd ../images/~-gmetal_brushed_col.dds
+map_bump ../images/$identitynormalmap.dds
+map_Ks ../images/~~-gmetal_brushed_s-rgb&~-rme~7236f323.dds
+
+newmtl mc/wood_floor_glossy
+map_Kd ../images/~-gpent_art_wall_wood01_orange_c.dds
+map_bump ../images/$identitynormalmap.dds
+map_Ks ../images/~~-gpent_art_wall_wood01_glos~7c662e8e.dds

@@ -1,0 +1,13 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 2
+
+newmtl mc/mtl_p6_engine_parts_turbine
+map_Kd ../images/~-gp6_ship_engine_parts_turbine_c.dds
+map_bump ../images/p6_ship_engine_parts_turbine_n.dds
+map_Ks ../images/~~-gp6_ship_engine_parts_turb~69216948.dds
+
+newmtl mc/decal_signage_military_stencils
+map_Kd ../images/~-gt6_military_stencils_c.dds
+map_bump ../images/$identitynormalmap.dds

@@ -1,0 +1,11 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 2
+
+newmtl mc/light_monsoon_celing_led
+map_Kd ../images/~-glight_monsoon_lab_ceiling_led.dds
+
+newmtl mc/mtl_p6_led_spotlight
+map_Kd ../images/~~-gp6_led_spotlight_housing_~58611865.dds
+map_bump ../images/$identitynormalmap.dds

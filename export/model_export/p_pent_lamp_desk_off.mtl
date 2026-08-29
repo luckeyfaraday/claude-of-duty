@@ -1,0 +1,12 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 2
+
+newmtl mc/mtl_p_pent_lamp_desk
+map_Kd ../images/~~-gp_pent_lamp_desk_c-rgb&~-~af9c1ac5.dds
+map_bump ../images/p_pent_lamp_desk_n.dds
+
+newmtl mc/mtl_p_pent_lamp_bulb_off
+map_Kd ../images/~~-gp_pent_lamp_bulb_off_c-rg~3d785d70.dds
+map_bump ../images/p_pent_lamp_bulb_on_n.dds

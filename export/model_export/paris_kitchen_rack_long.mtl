@@ -1,0 +1,9 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/mtl_paris_kitchen_stove_rack
+map_Kd ../images/~-gparis_kitchen_stove_rack_col.dds
+map_bump ../images/$identitynormalmap.dds
+map_Ks ../images/~~-gparis_kitchen_stove_rack_~4104a966.dds

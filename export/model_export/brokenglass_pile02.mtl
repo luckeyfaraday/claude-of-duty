@@ -1,0 +1,9 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/mtl_brokenglass
+map_Kd ../images/~-gbrokenglass_col.dds
+map_bump ../images/brokenglass_nml.dds
+map_Ks ../images/~~-gbrokenglass_spc-rgb&~-rbr~00ca7173.dds

@@ -1,0 +1,13 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 2
+
+newmtl mc/mtl_napkin
+map_Kd ../images/~-gma_napkin_col.dds
+map_bump ../images/ma_napkin_nml.dds
+
+newmtl mc/mtl_vase
+map_Kd ../images/~-gma_vase_col.dds
+map_bump ../images/$identitynormalmap.dds
+map_Ks ../images/~~-gma_vase_spc-rgb&~-rma_vas~49841b8b.dds

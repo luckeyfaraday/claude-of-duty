@@ -1,0 +1,8 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/metal_ram_panels
+map_Kd ../images/~~-gmetal_ram_panels_c-rgb&~-~cccfba41.dds
+map_bump ../images/metal_ram_panels_n.dds

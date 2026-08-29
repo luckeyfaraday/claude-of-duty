@@ -1,0 +1,8 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/mtl_paris_t_shirt_base
+map_Kd ../images/~-gparis_t_shirt_base_col.dds
+map_bump ../images/paris_t_shirt_base_nml.dds

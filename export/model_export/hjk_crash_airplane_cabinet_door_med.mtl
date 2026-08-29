@@ -1,0 +1,18 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 3
+
+newmtl mc/hjk_metal_trim
+map_Kd ../images/~-ghjk_metal_trim_col.dds
+map_bump ../images/$identitynormalmap.dds
+map_Ks ../images/~~-ghjk_metal_trim_spc-rgb&~-~0db4c6dc.dds
+
+newmtl mc/hjk_interior_plastic_tile_lwr_lvl
+map_Kd ../images/~-ghjk_interior_plastic_tile_col.dds
+map_bump ../images/hjk_interior_plastic_tile_nml.dds
+map_Ks ../images/~~-ghjk_interior_plastic_tile~2b689df2.dds
+
+newmtl mc/hjk_cabinet_pull
+map_Kd ../images/~~-ghjk_cabinet_pull_col-rgb&~f2b7a38d.dds
+map_bump ../images/hjk_cabinet_pull_nml.dds

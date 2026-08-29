@@ -1,0 +1,22 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 4
+
+newmtl mc/mtl_p_glo_bomb_stack_01
+map_Kd ../images/~-gp_glo_bomb_stack_01_c.dds
+map_bump ../images/p_glo_bomb_stack_01_n.dds
+map_Ks ../images/~~-gp_glo_bomb_stack_01_s-rgb~a83f56f9.dds
+
+newmtl mc/mtl_p_glo_bomb_stack_05
+map_Kd ../images/~-gp_glo_bomb_stack_05_c.dds
+map_bump ../images/p_glo_bomb_stack_05_n.dds
+map_Ks ../images/~~-gp_glo_bomb_stack_05_q-rgb~6fe29bef.dds
+
+newmtl mc/mtl_p_glo_bomb_stack_04
+map_Kd ../images/~~-gp_glo_bomb_stack_04_c-rgb~cd18a1a3.dds
+map_bump ../images/p_glo_bomb_stack_04_n.dds
+
+newmtl mc/mtl_p_glo_bomb_stack_06
+map_Kd ../images/~~-gp_glo_bomb_stack_06_c-rgb~2132b54a.dds
+map_bump ../images/normal_texture.dds

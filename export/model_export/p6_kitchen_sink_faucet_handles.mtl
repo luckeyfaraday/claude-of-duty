@@ -1,0 +1,13 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 2
+
+newmtl mc/me_office_ceiling_tiles_black
+map_Kd ../images/~~-gme_office_ceiling_tiles_b~9fdff71f.dds
+map_bump ../images/me_office_ceiling_tiles_black_nml.dds
+
+newmtl mc/brush_metal_panel_karma_matte
+map_Kd ../images/~-gbrush_metal_panel_karma_c.dds
+map_bump ../images/brush_metal_panel_karma_n.dds
+map_Ks ../images/~~-gbrush_metal_panel_karma_g~13f83540.dds

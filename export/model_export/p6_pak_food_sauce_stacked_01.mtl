@@ -1,0 +1,8 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/mtl_p6_yemen_canned_goods
+map_Kd ../images/~~-gp6_yemen_canned_goods_c-r~9e845948.dds
+map_bump ../images/$identitynormalmap.dds

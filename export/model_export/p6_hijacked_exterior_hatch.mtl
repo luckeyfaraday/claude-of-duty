@@ -1,0 +1,22 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 4
+
+newmtl mc/decal_trim_square_outline
+map_Kd ../images/~-gdecal_trim_square_outline_c.dds
+map_bump ../images/decal_trim_square_outline_n.dds
+
+newmtl mc/ny_nyse_kiosk_vent_dec_03
+map_Kd ../images/~-gny_nyse_kiosk_vent_dec_03_col.dds
+map_bump ../images/ny_nyse_kiosk_vent_dec_03_nml.dds
+
+newmtl mc/fiberglass_boat_white
+map_Kd ../images/~-gfiberglass_boat_white_c.dds
+map_bump ../images/fiberglass_boat_white_n.dds
+map_Ks ../images/~~-gfiberglass_boat_white_s-r~e6dc84fc.dds
+
+newmtl mc/plastic_boat_door_square
+map_Kd ../images/~-gplastic_boat_door_square_c.dds
+map_bump ../images/plastic_boat_door_square_n.dds
+map_Ks ../images/~~-gplastic_boat_door_square_~9ab73602.dds

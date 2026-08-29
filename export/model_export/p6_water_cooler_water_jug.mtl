@@ -1,0 +1,14 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 2
+
+newmtl mc/mtl_p6_water_cooler_plastic
+map_Kd ../images/~-gp6_water_cooler_plastic_c.dds
+map_bump ../images/p6_water_cooler_plastic_n.dds
+map_Ks ../images/~~-gp6_water_cooler_plastic_s~d705ee7d.dds
+
+newmtl mc/mtl_p6_water_cooler_plastic_interior
+map_Kd ../images/~-gp6_water_cooler_plastic_c.dds
+map_bump ../images/p6_water_cooler_plastic_n.dds
+map_Ks ../images/~~-gp6_water_cooler_plastic_c~d705ee7d.dds

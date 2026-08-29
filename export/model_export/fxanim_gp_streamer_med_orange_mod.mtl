@@ -1,0 +1,9 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/mtl_fxanim_gp_streamer_orange
+map_Kd ../images/~-gfxanim_gp_streamers_orange_c.dds
+map_bump ../images/fxanim_gp_streamers_n.dds
+map_Ks ../images/~$black-rgbl.dds

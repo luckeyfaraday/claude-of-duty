@@ -1,0 +1,12 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 2
+
+newmtl mc/mtl_p6_fan_standing_modern
+map_Kd ../images/~-gp6_fan_standing_modern_c.dds
+map_bump ../images/p6_fan_standing_modern_n.dds
+map_Ks ../images/~~-gp6_fan_standing_modern_c-~bd0d0969.dds
+
+newmtl mc/mtl_p6_fan_standing_modern_on
+map_Kd ../images/~-gp6_fan_standing_modern_on.dds

@@ -1,0 +1,49 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 10
+
+newmtl mlv/me_desktop_granite_gloss
+map_Kd ../images/~~-gme_granite_desktop-rgb&~-~5e5d557b.dds
+map_bump ../images/$identitynormalmap.dds
+
+newmtl mlv/mtl_p6_cushion_boat_bar
+map_Kd ../images/~-gmtl_p6_cushions_boat_bar_c.dds
+map_bump ../images/mtl_p6_cushions_boat_bar_n.dds
+
+newmtl mlv/decal_trim_speaker_black_outline
+map_Kd ../images/~-gdecal_trim_speaker_black_outline_c.dds
+map_bump ../images/decal_trim_speaker_black_outline_n.dds
+map_Ks ../images/~~-gdecal_trim_speaker_white_~7c7fd84a.dds
+
+newmtl mlv/fiberglass_boat_white
+map_Kd ../images/~-gfiberglass_boat_white_c.dds
+map_bump ../images/fiberglass_boat_white_n.dds
+map_Ks ../images/~~-gfiberglass_boat_white_s-r~e6dc84fc.dds
+
+newmtl mlv/metal_chrome_boat
+map_Kd ../images/~-gmetal_chrome_boat_c.dds
+map_bump ../images/$identitynormalmap.dds
+map_Ks ../images/~~-gmetal_chrome_boat_s-rgb&~~1f2579ab.dds
+
+newmtl mlv/plastic_boat_door_square
+map_Kd ../images/~-gplastic_boat_door_square_c.dds
+map_bump ../images/plastic_boat_door_square_n.dds
+map_Ks ../images/~~-gplastic_boat_door_square_~9ab73602.dds
+
+newmtl mlv/decal_trim_square_outline
+map_Kd ../images/~-gdecal_trim_square_outline_c.dds
+map_bump ../images/decal_trim_square_outline_n.dds
+
+newmtl mlv/ny_nyse_kiosk_vent_dec_03
+map_Kd ../images/~-gny_nyse_kiosk_vent_dec_03_col.dds
+map_bump ../images/ny_nyse_kiosk_vent_dec_03_nml.dds
+
+newmtl mlv/decal_trim_seam_clean_boat
+map_Kd ../images/~-gdecal_trim_seam_clean_boat_c.dds
+map_bump ../images/decal_trim_seam_clean_boat_n.dds
+
+newmtl mlv/plastic_boat_door_rectangular
+map_Kd ../images/~-gplastic_boat_door_rectangular_c.dds
+map_bump ../images/plastic_boat_door_rectangular_n.dds
+map_Ks ../images/~~-gplastic_boat_door_rectang~04c74247.dds

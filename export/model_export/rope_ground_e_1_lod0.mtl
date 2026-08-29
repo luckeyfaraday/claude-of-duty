@@ -1,0 +1,8 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/cloth_rope_lbrown_dark
+map_Kd ../images/~~-gglobal_rope_lbrown_dark_c~0a792c0a.dds
+map_bump ../images/global_rope_lbrown_dark_n.dds

@@ -1,0 +1,8 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/mtl_restaurant_plates
+map_Kd ../images/~~-gdining_plate_col-rgb&~-rd~6e3bc7c7.dds
+map_bump ../images/dining_plate_nml.dds

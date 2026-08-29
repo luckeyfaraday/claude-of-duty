@@ -1,0 +1,9 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/paris_wall_outlet_n_lightswitch_01_chrome
+map_Kd ../images/~-gp_wall_outlet_lightswitch_chrome_c.dds
+map_bump ../images/paris_wall_outlet_n_lightswitch_01_nml.dds
+map_Ks ../images/~~-gparis_wall_outlet_n_light~78d401c5.dds

@@ -1,0 +1,22 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 4
+
+newmtl mc/mtl_p6_monitor_small
+map_Kd ../images/~~-gp6_monitor_back_small_c-r~0503bb74.dds
+map_bump ../images/p6_monitor_back_small_n.dds
+
+newmtl mc/mtl_flatscreen_tv_02_d
+map_Kd ../images/~-gflatscreen_02_d_col.dds
+map_bump ../images/flatscreen_02_d_nml.dds
+map_Ks ../images/~~-gflatscreen_02_d_cos-rgb&~~f4526b05.dds
+
+newmtl mc/mtl_p6_monitor_back
+map_Kd ../images/~~-gp6_monitor_back_c-rgb&~-r~18cd19e1.dds
+map_bump ../images/p6_monitor_back_n.dds
+
+newmtl mc/glass_simple
+map_Kd ../images/~-gglobal_color_black.dds
+map_bump ../images/$identitynormalmap.dds
+map_Ks ../images/~~-gglobal_color_black-rgb&~-~d4fe968d.dds

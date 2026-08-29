@@ -1,0 +1,7 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/mtl_p6_computer_keyboard_2020
+map_Kd ../images/~-gp6_computer_keyboard_2020_c.dds

@@ -1,0 +1,9 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/metal_handle_flush
+map_Kd ../images/~-gmetal_handle_flush_c.dds
+map_bump ../images/metal_handle_flush_n.dds
+map_Ks ../images/~~-gmetal_handle_flush_g-rgb&~ab69e398.dds

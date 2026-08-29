@@ -1,0 +1,12 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 2
+
+newmtl mc/dub_gold_shiny_01
+map_Kd ../images/~-gdub_gold_shiny_01_col.dds
+map_bump ../images/$identitynormalmap.dds
+map_Ks ../images/~~-gdub_gold_shiny_01_spe-rgb~021efc13.dds
+
+newmtl mc/light_rice_paper_orange
+map_Kd ../images/~-glight_rice_paper_orange_c.dds

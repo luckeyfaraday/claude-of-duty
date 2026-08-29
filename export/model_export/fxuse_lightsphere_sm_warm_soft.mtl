@@ -1,0 +1,7 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/mtl_fxuse_lightsphere_warm_soft
+map_Kd ../images/led_number_4x4_radiant.dds

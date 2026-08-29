@@ -1,0 +1,65 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 14
+
+newmtl mlv/mtl_p6_hijacked_hottub_fiberglass
+map_Kd ../images/~-gfiberglass_boat_white_c.dds
+map_bump ../images/fiberglass_boat_white_n.dds
+
+newmtl mlv/metal_chrome_boat
+map_Kd ../images/~-gmetal_chrome_boat_c.dds
+map_bump ../images/$identitynormalmap.dds
+map_Ks ../images/~~-gmetal_chrome_boat_s-rgb&~~1f2579ab.dds
+
+newmtl mlv/plastic_boat_door_rectangular
+map_Kd ../images/~-gplastic_boat_door_rectangular_c.dds
+map_bump ../images/plastic_boat_door_rectangular_n.dds
+map_Ks ../images/~~-gplastic_boat_door_rectang~04c74247.dds
+
+newmtl mlv/decal_boat_drain
+map_Kd ../images/~-gdecal_boat_drain_c.dds
+map_bump ../images/decal_boat_drain_n.dds
+map_Ks ../images/~~-gdecal_boat_drain_s-rgb&~-~766802a1.dds
+
+newmtl mlv/decal_trim_speaker_black_outline
+map_Kd ../images/~-gdecal_trim_speaker_black_outline_c.dds
+map_bump ../images/decal_trim_speaker_black_outline_n.dds
+map_Ks ../images/~~-gdecal_trim_speaker_white_~7c7fd84a.dds
+
+newmtl mlv/ny_nyse_kiosk_vent_dec_03
+map_Kd ../images/~-gny_nyse_kiosk_vent_dec_03_col.dds
+map_bump ../images/ny_nyse_kiosk_vent_dec_03_nml.dds
+
+newmtl mlv/wood_teak_decking_light
+map_Kd ../images/~~-gwood_teak_decking_light_c~7cd765f3.dds
+map_bump ../images/wood_teak_decking_n.dds
+
+newmtl mlv/decal_trim_square_outline
+map_Kd ../images/~-gdecal_trim_square_outline_c.dds
+map_bump ../images/decal_trim_square_outline_n.dds
+
+newmtl mlv/cloth_canvas
+map_Kd ../images/~-gcloth_canvas_c.dds
+map_bump ../images/cloth_canvas_n.dds
+
+newmtl mlv/decal_damage_bullet_holes
+map_Kd ../images/~-gdecal_damage_bullet_holes_c.dds
+map_bump ../images/decal_damage_bullet_holes_n.dds
+
+newmtl mlv/jun_ter_water_caustics
+map_Kd ../images/~-gcausticspadded.dds
+
+newmtl mlv/wood_teak_decking_trim_light_512
+map_Kd ../images/~~-gwood_teak_decking_trim_li~a50e83ff.dds
+map_bump ../images/wood_teak_decking_trim_n.dds
+
+newmtl mlv/metal_vent_wide
+map_Kd ../images/~-gmetal_vent_wide_c.dds
+map_bump ../images/metal_vent_wide_n.dds
+map_Ks ../images/~~-gmetal_vent_wide_s-rgb&~-r~68c29919.dds
+
+newmtl mlv/fiberglass_boat_white
+map_Kd ../images/~-gfiberglass_boat_white_c.dds
+map_bump ../images/fiberglass_boat_white_n.dds
+map_Ks ../images/~~-gfiberglass_boat_white_s-r~e6dc84fc.dds

@@ -1,0 +1,9 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/mtl_vodkabottle
+map_Kd ../images/~-gcoffee_mug_02_col.dds
+map_bump ../images/$identitynormalmap.dds
+map_Ks ../images/~~-gcoffee_vodka01_spc-rgb&~-~e377fccb.dds

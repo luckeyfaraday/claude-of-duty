@@ -1,0 +1,17 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 3
+
+newmtl mc/mtl_p6_blackout_panel_flooring
+map_Kd ../images/~~-gmtl_p6_blackout_panel_flo~9a200394.dds
+map_bump ../images/mtl_p6_blackout_panel_flooring_n.dds
+
+newmtl mc/decal_trim_hatch_01
+map_Kd ../images/~-gdecal_trim_hatch_01_c.dds
+map_bump ../images/decal_trim_hatch_01_n.dds
+map_Ks ../images/~~-gdecal_trim_hatch_01_s-rgb~b4c2ea33.dds
+
+newmtl mc/decal_signage_blkout_int
+map_Kd ../images/~-gdecal_blkout_int_c.dds
+map_bump ../images/$identitynormalmap.dds

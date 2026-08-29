@@ -1,0 +1,8 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/mtl_telephone_desk
+map_Kd ../images/~~-gtelephone_desk_col-rgb&~-~0913f5d6.dds
+map_bump ../images/telephone_desk_nml.dds

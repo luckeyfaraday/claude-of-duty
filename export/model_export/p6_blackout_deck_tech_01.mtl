@@ -1,0 +1,22 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 4
+
+newmtl mc/metal_ram_panels
+map_Kd ../images/~~-gmetal_ram_panels_c-rgb&~-~cccfba41.dds
+map_bump ../images/metal_ram_panels_n.dds
+
+newmtl mc/mtl_p6_cic_guages
+map_Kd ../images/~-gcic_guages_c.dds
+map_bump ../images/cic_guages_n.dds
+map_Ks ../images/~~-gcic_guages_s-rgb&~-rcic_g~022879bd.dds
+
+newmtl mc/decal_trim_hatch_01
+map_Kd ../images/~-gdecal_trim_hatch_01_c.dds
+map_bump ../images/decal_trim_hatch_01_n.dds
+map_Ks ../images/~~-gdecal_trim_hatch_01_s-rgb~b4c2ea33.dds
+
+newmtl mc/decal_trim_rivets_01
+map_Kd ../images/~-gdecal_trim_rivits_01_c.dds
+map_bump ../images/decal_trim_rivits_01_n.dds

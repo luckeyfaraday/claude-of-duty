@@ -1,0 +1,9 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/mtl_p6_anim_beer_pack
+map_Kd ../images/~-gp6_anim_beer_pack_c.dds
+map_bump ../images/p6_anim_beer_pack_n.dds
+map_Ks ../images/~~-gp6_anim_beer_pack_s-rgb&~~8580d31c.dds

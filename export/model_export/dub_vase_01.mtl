@@ -1,0 +1,9 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/mtl_dub_vase_01
+map_Kd ../images/~-gdub_vase_01_col.dds
+map_bump ../images/dub_vase_01_nml.dds
+map_Ks ../images/~~-gdub_vase_01_spc-rgb&~-rdu~353d9250.dds

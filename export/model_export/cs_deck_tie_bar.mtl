@@ -1,0 +1,14 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 2
+
+newmtl mc/me_trim_metal_conduit_wet
+map_Kd ../images/~-gme_trim_metal_conduit_col.dds
+map_bump ../images/me_trim_metal_conduit_norm.dds
+map_Ks ../images/~$white-rgb&~-r$white&me_trim~59c95eb8.dds
+
+newmtl mc/me_trim_metal_01_wet
+map_Kd ../images/~-gme_trim_metal01_col.dds
+map_bump ../images/me_trim_metal01_norm.dds
+map_Ks ../images/~$white-rgb&~-r$white&me_trim~71efee00.dds

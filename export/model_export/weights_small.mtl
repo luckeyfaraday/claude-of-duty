@@ -1,0 +1,14 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 2
+
+newmtl mc/mtl_weights_small
+map_Kd ../images/~-gweights_small_col.dds
+map_bump ../images/weights_small_nml.dds
+map_Ks ../images/~~-gweights_small_spc-rgb&~-r~fefd482e.dds
+
+newmtl mc/mtl_weights_small_metal
+map_Kd ../images/~-gweights_small_col.dds
+map_bump ../images/weights_small_nml.dds
+map_Ks ../images/~~-gweights_small_spc-rgb&~-r~fefd482e.dds

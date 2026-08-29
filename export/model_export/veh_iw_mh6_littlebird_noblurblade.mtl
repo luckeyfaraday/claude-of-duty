@@ -1,0 +1,9 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/mtl_mh_6_little_bird_body_civ
+map_Kd ../images/~-gmh6_littlebird_body_civ_c.dds
+map_bump ../images/mh6_littlebird_body_n.dds
+map_Ks ../images/~~-gmh6_littlebird_body_sc-rg~2e31568e.dds

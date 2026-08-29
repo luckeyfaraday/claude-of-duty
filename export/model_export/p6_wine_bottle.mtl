@@ -1,0 +1,8 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/mtl_p6_bottles
+map_Kd ../images/~~-gtrash_bottles_c-rgb&~-rtr~9c42569f.dds
+map_bump ../images/trash_bottles_n.dds

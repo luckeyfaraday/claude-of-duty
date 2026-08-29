@@ -1,0 +1,9 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/mtl_p_jun_bookshelf2_wood
+map_Kd ../images/~-gp_jun_bookshelf2_wood_c.dds
+map_bump ../images/$identitynormalmap.dds
+map_Ks ../images/~~-gp_jun_bookshelf2_wood_g-r~5dbb6106.dds

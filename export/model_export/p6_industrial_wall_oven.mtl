@@ -1,0 +1,9 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/mtl_p6_industrial_wall_oven
+map_Kd ../images/~-gp6_industrial_wall_oven_c.dds
+map_bump ../images/p6_industrial_wall_oven_n.dds
+map_Ks ../images/~~-gp6_industrial_wall_oven_s~e5e9b3e9.dds

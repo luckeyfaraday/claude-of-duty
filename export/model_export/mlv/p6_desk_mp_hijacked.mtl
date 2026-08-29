@@ -1,0 +1,24 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 4
+
+newmtl mlv/trim_metal_mp_hijacked
+map_Kd ../images/~-gtrim_metal_mp_hijacked_c.dds
+map_bump ../images/trim_metal_mp_hijacked_n.dds
+map_Ks ../images/~~-gtrim_metal_mp_hijacked_s-~efb7cf78.dds
+
+newmtl mlv/metal_wall_brushed02
+map_Kd ../images/~-gmetal_wall_brushed02_c.dds
+map_bump ../images/metal_wall_brushed02_n.dds
+map_Ks ../images/~~-gmetal_wall_brushed02_s-rg~33545bee.dds
+
+newmtl mlv/wood_wall_plain_cherry
+map_Kd ../images/~-gwood_wall_plain_cherry_c.dds
+map_bump ../images/$identitynormalmap.dds
+map_Ks ../images/~~-gwood_wall_plain_cherry_s-~62799903.dds
+
+newmtl mlv/decal_trim_screws_01
+map_Kd ../images/~-grus_dec_screws_01_c.dds
+map_bump ../images/rus_dec_screws_01_n.dds
+map_Ks ../images/~~-grus_dec_screws_01_s-rgb&~~e3b3cb8c.dds

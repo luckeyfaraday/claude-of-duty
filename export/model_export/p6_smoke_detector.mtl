@@ -1,0 +1,8 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/mtl_p6_smoke_detector
+map_Kd ../images/~~-gp6_smoke_detector_c-rgb&~~da60bf22.dds
+map_bump ../images/p6_smoke_detector_n.dds

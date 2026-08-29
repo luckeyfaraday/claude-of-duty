@@ -1,0 +1,8 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/mtl_p_glo_books
+map_Kd ../images/~-gberlin_books_c.dds
+map_bump ../images/berlin_books_n.dds

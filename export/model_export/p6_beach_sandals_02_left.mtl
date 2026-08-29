@@ -1,0 +1,8 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/mtl_p6_beach_sandals
+map_Kd ../images/~-gmtl_p6_beach_sandals_c.dds
+map_bump ../images/$identitynormalmap.dds

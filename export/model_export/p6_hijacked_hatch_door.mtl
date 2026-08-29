@@ -1,0 +1,27 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 5
+
+newmtl mc/hjk_interior_plastic_tile
+map_Kd ../images/~-ghjk_interior_plastic_tile_col.dds
+map_bump ../images/hjk_interior_plastic_tile_nml.dds
+map_Ks ../images/~~-ghjk_interior_plastic_tile~9780d0d1.dds
+
+newmtl mc/mtl_hjk_red_latch
+map_Kd ../images/~-ghjk_red_lever_col.dds
+map_bump ../images/hjk_red_lever_nml.dds
+
+newmtl mc/glass_green_frosted
+map_Kd ../images/~-gglass_green_frosted_c.dds
+map_bump ../images/glass_green_frosted_n.dds
+map_Ks ../images/~~-gglass_green_frosted_s-rgb~725b9799.dds
+
+newmtl mc/mtl_p6_blackout_hatch_seal
+map_Kd ../images/~~-gp6_blackout_hatch_seal_c-~530dce41.dds
+map_bump ../images/p6_blackout_hatch_seal_n.dds
+
+newmtl mc/decal_boat_drain
+map_Kd ../images/~-gdecal_boat_drain_c.dds
+map_bump ../images/decal_boat_drain_n.dds
+map_Ks ../images/~~-gdecal_boat_drain_s-rgb&~-~766802a1.dds

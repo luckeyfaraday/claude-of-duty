@@ -1,0 +1,9 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/mtl_fxanim_gp_towel_yellow
+map_Kd ../images/~-gp6_pool_lounge_chair_acc_c.dds
+map_bump ../images/p6_pool_lounge_chair_acc_n.dds
+map_Ks ../images/~$black-rgbl.dds

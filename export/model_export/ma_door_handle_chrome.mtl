@@ -1,0 +1,9 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/mtl_door_handle_chrome
+map_Kd ../images/~-gchrome_doorhandle_col.dds
+map_bump ../images/chrome_doorhandle_nml.dds
+map_Ks ../images/~~-gchrome_doorhandle_spc-rgb~f2ebf7c3.dds

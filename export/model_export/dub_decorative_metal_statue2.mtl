@@ -1,0 +1,9 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/mtl_dub_decorative_metal_statue
+map_Kd ../images/~-gdecorative_metal_statue_col.dds
+map_bump ../images/decorative_metal_statue_nml.dds
+map_Ks ../images/~~-gdecorative_metal_statue_s~f4d4545e.dds

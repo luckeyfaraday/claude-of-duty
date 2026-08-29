@@ -1,0 +1,8 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/mtl_p6_blackout_railing_frame
+map_Kd ../images/~~-gp6_blackout_rail_frame_c-~99e84739.dds
+map_bump ../images/$identitynormalmap.dds

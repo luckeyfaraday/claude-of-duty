@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Hijacked — browser port (WIP)</title>
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #000; }
+  #blocker { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+             background: rgba(0,0,0,.6); color: #fff; font: 16px system-ui; cursor: pointer; }
+  #hud { position: absolute; top: 10px; left: 10px; color: #0f0; font: 12px monospace; white-space: pre; }
+</style>
+<script type="importmap">
+{ "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<div id="blocker">Click to play — WASD move, Q/E down/up, Shift sprint, Esc release</div>
+<div id="hud"></div>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x87a8c8);
+scene.fog = new THREE.Fog(0x87a8c8, 1500, 9000);
+
+const camera = new THREE.PerspectiveCamera(75, innerWidth/innerHeight, 1, 20000);
+camera.position.set(0, 200, 1400);
+camera.lookAt(0, 60, 0);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+document.body.appendChild(renderer.domElement);
+
+scene.add(new THREE.HemisphereLight(0xbfd8ff, 0x3a4a55, 1.1));
+const sun = new THREE.DirectionalLight(0xfff2d8, 1.6);
+sun.position.set(-800, 1200, 600);
+scene.add(sun);
+
+const hud = document.getElementById('hud');
+let loading = true;
+new GLTFLoader().load('hijacked.gltf', (gltf) => {
+  scene.add(gltf.scene);
+  loading = false;
+  document.getElementById('blocker').textContent =
+    'Click to play — WASD move, Q/E down/up, Shift sprint, Esc release';
+}, (ev) => {
+  if (ev.total) document.getElementById('blocker').textContent =
+    `Loading… ${(ev.loaded/ev.total*100).toFixed(0)}%`;
+});
+
+// --- pointer lock + controls ---
+const keys = {};
+const blocker = document.getElementById('blocker');
+let locked = false;
+blocker.onclick = () => renderer.domElement.requestPointerLock();
+document.addEventListener('pointerlockchange', () => {
+  locked = document.pointerLockElement === renderer.domElement;
+  blocker.style.display = locked ? 'none' : 'flex';
+});
+document.addEventListener('mousemove', (e) => {
+  if (!locked) return;
+  const yaw = new THREE.Euler(0, 0, 0, 'YXZ');
+  euler.y -= e.movementX * 0.0022;
+  euler.x -= e.movementY * 0.0022;
+  euler.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, euler.x));
+  camera.quaternion.setFromEuler(euler);
+});
+const euler = new THREE.Euler(0, Math.PI, 0, 'YXZ');
+document.addEventListener('keydown', (e) => keys[e.code] = true);
+document.addEventListener('keyup', (e) => keys[e.code] = false);
+
+const vel = new THREE.Vector3();
+const clock = new THREE.Clock();
+
+function tick() {
+  requestAnimationFrame(tick);
+  const dt = Math.min(clock.getDelta(), 0.05);
+  if (locked) {
+    const speed = (keys.ShiftLeft ? 900 : 380) * dt;
+    const fwd = new THREE.Vector3(); camera.getWorldDirection(fwd);
+    const right = new THREE.Vector3().crossVectors(fwd, camera.up).normalize();
+    vel.set(0,0,0);
+    if (keys.KeyW) vel.add(fwd); if (keys.KeyS) vel.sub(fwd);
+    if (keys.KeyD) vel.add(right); if (keys.KeyA) vel.sub(right);
+    if (keys.KeyE) vel.y += 1; if (keys.KeyQ) vel.y -= 1;
+    if (vel.lengthSq() > 0) vel.normalize().multiplyScalar(speed);
+    camera.position.add(vel);
+  }
+  hud.textContent = loading ? 'loading…' :
+    `xyz ${camera.position.x.toFixed(0)} ${camera.position.y.toFixed(0)} ${camera.position.z.toFixed(0)}`;
+  renderer.render(scene, camera);
+}
+tick();
+
+addEventListener('resize', () => {
+  camera.aspect = innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+</script>
+</body>
+</html>

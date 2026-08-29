@@ -1,0 +1,9 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/mtl_accessories_box_curio_green
+map_Kd ../images/~-gbox_curio_green_col.dds
+map_bump ../images/box_curio_green_nml.dds
+map_Ks ../images/~~-gbox_curio_green_spc-rgb&~~03d223be.dds

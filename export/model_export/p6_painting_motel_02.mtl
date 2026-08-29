@@ -1,0 +1,9 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/mtl_p6_painting_motel_02
+map_Kd ../images/~-gp6_paintings_motel_02_c.dds
+map_bump ../images/p6_paintings_motel_01_n.dds
+map_Ks ../images/~~-gp6_paintings_motel_01_s-r~3d81cd24.dds

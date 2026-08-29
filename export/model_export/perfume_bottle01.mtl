@@ -1,0 +1,9 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/mtl_duty_free_props_glass
+map_Kd ../images/~-gduty_free_props_col.dds
+map_bump ../images/duty_free_props_nml.dds
+map_Ks ../images/~~-gduty_free_props_spc-rgb&~~fe2690b7.dds

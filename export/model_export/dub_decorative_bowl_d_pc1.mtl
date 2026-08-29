@@ -1,0 +1,9 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/mtl_dub_decorative_bowl
+map_Kd ../images/~-gdecorative_bowl_col.dds
+map_bump ../images/decorative_bowl_nml.dds
+map_Ks ../images/~~-gdecorative_bowl_spc-rgb&$black-l.dds

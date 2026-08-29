@@ -1,0 +1,12 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 2
+
+newmtl mc/decal_drone_signage
+map_Kd ../images/~~-gdecal_drone_signage_c-rgb~1b7df4cc.dds
+map_bump ../images/$identitynormalmap.dds
+
+newmtl mc/metal_signs_back
+map_Kd ../images/~~-gmetal_sign_back_c-rgb&~-r~3c03f740.dds
+map_bump ../images/$identitynormalmap.dds

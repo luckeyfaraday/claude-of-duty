@@ -1,0 +1,8 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/metal_ship_wall
+map_Kd ../images/~~-gmetal_wall_panel_painted_~86cf0ee7.dds
+map_bump ../images/metal_wall_panel_painted_white_n.dds

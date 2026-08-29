@@ -1,0 +1,8 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/metal_galvanised_ducting_white
+map_Kd ../images/~~-gmetal_galvanised_ducting_~ad04cf6e.dds
+map_bump ../images/metal_galvanised_ducting_black_n.dds

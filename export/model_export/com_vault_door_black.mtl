@@ -1,0 +1,9 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/mtl_vault_door_black
+map_Kd ../images/~-gvault_door2_col.dds
+map_bump ../images/vault_door_nml.dds
+map_Ks ../images/~~-gvault_door_spc-rgb&~-rvau~61925780.dds

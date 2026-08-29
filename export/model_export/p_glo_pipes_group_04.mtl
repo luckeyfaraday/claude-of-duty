@@ -1,0 +1,8 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/mtl_p_ger_ship_pipes_modular
+map_Kd ../images/~~-gp_ger_ship_pipes_modular_~0282e391.dds
+map_bump ../images/p_ger_ship_pipes_modular_n.dds

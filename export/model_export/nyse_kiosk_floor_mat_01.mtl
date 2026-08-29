@@ -1,0 +1,12 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 2
+
+newmtl mc/ch_countertop_sidetrim
+map_Kd ../images/~~-gch_countertop_sidetrim_co~cb2fba7c.dds
+map_bump ../images/ch_countertop_sidetrim_nml.dds
+
+newmtl mc/ship_rubbermat01
+map_Kd ../images/~~-gcs_rubbermat01_col-rgb&~-~c49e61e0.dds
+map_bump ../images/cs_rubbermat01_nml.dds

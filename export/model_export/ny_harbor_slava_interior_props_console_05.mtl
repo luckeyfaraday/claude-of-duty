@@ -1,0 +1,8 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/mtl_slava_interior_props_console
+map_Kd ../images/~-ginterior_props_console_col.dds
+map_bump ../images/$identitynormalmap.dds

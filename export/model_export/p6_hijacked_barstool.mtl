@@ -1,0 +1,14 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 2
+
+newmtl mc/mtl_p6_hijacked_barstool
+map_Kd ../images/~-gmtl_p6_hijacked_bar_stool_c.dds
+map_bump ../images/mtl_p6_hijacked_bar_stool_n.dds
+map_Ks ../images/~~-gmtl_p6_hijacked_bar_stool~9c72db68.dds
+
+newmtl mc/mtl_p6_hijacked_barstool_cushion
+map_Kd ../images/~-gmtl_p6_hijacked_bar_stool_c.dds
+map_bump ../images/mtl_p6_hijacked_bar_stool_n.dds
+map_Ks ../images/~~-gmtl_p6_hijacked_bar_stool~9c72db68.dds

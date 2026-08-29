@@ -1,0 +1,16 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 3
+
+newmtl mc/mtl_foliage_dub_plant_fern_frons
+map_Kd ../images/~-gfoliage_dub_plant_fern_01_col.dds
+map_bump ../images/$identitynormalmap.dds
+
+newmtl mc/global_white
+map_Kd ../images/~-gglobal_color_white.dds
+map_bump ../images/$identitynormalmap.dds
+
+newmtl mc/core_dirt_dark
+map_Kd ../images/~~-gcore_dirt_dark_c-rgb&~-rc~9596eddb.dds
+map_bump ../images/core_dirt_dark_n.dds

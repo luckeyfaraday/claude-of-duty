@@ -1,0 +1,9 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mlv/mtl_furniture_chair5
+map_Kd ../images/~-gchair5_col.dds
+map_bump ../images/chair5_nml.dds
+map_Ks ../images/~~-gchair5_spc-rgb&~-rchair5_~2bf787cf.dds

@@ -1,0 +1,15 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 3
+
+newmtl mc/mtl_p6_monitor_back
+map_Kd ../images/~~-gp6_monitor_back_c-rgb&~-r~18cd19e1.dds
+map_bump ../images/p6_monitor_back_n.dds
+
+newmtl mc/mtl_p6_monitor_failure
+map_Kd ../images/~-gsystem_failure_screen_c.dds
+
+newmtl mc/mtl_kitchen_sink_rubber
+map_Kd ../images/~-gparis_kitchen_rubber_col.dds
+map_bump ../images/paris_kitchen_rubber_nml.dds

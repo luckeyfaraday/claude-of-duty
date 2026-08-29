@@ -1,0 +1,12 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 2
+
+newmtl mc/mtl_p6_industrial_stove_vent
+map_Kd ../images/~-gp6_industrial_stove_vent_c.dds
+map_bump ../images/p6_industrial_stove_vent_n.dds
+map_Ks ../images/~~-gp6_industrial_stove_vent_~1960f469.dds
+
+newmtl mc/mtl_p6_industrial_stove_vent_unlit
+map_Kd ../images/~-gp6_industrial_stove_vent_c.dds

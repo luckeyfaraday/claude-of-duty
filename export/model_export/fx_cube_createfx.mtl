@@ -1,0 +1,9 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/mtl_fx_cube_createfx
+map_Kd ../images/~-gfxt_fx_gray_alpha.dds
+map_bump ../images/$identitynormalmap.dds
+map_Ks ../images/~~-gfx_bullet_chain_spc-rgb&$black-l.dds

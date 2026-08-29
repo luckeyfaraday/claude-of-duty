@@ -1,0 +1,8 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/mtl_p_pent_manila_folder
+map_Kd ../images/~~-gp_pent_manila_folder_plai~8a583881.dds
+map_bump ../images/p_pent_manila_folder_n.dds

@@ -1,0 +1,12 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 2
+
+newmtl mc/mtl_ny_harbor_sub_int_light
+map_Kd ../images/~-gny_harbor_sub_int_light_col.dds
+map_bump ../images/ny_harbor_sub_int_light_nml.dds
+map_Ks ../images/~~-gny_harbor_sub_int_light_s~a4f339c3.dds
+
+newmtl mc/plastic_fluorescent_cover_lit
+map_Kd ../images/plastic_fluorescent_cover_a_c.dds

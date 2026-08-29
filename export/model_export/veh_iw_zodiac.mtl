@@ -1,0 +1,19 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 3
+
+newmtl mc/mtl_zodiac_outside
+map_Kd ../images/~-gzodiac_boat_c.dds
+map_bump ../images/zodiac_boat_n.dds
+map_Ks ../images/~~-gzodiac_boat_sc-rgb&~-rzod~11bf3a96.dds
+
+newmtl mc/mtl_zodiac
+map_Kd ../images/~-gzodiac_boat_c.dds
+map_bump ../images/zodiac_boat_n.dds
+map_Ks ../images/~~-gzodiac_boat_sc-rgb&~-rzod~11bf3a96.dds
+
+newmtl mc/mtl_zodiac_inside
+map_Kd ../images/~-gzodiac_boat_c.dds
+map_bump ../images/zodiac_boat_n.dds
+map_Ks ../images/~~-gzodiac_boat_sc-rgb&~-rzod~11bf3a96.dds

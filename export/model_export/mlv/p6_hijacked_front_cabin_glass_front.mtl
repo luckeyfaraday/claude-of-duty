@@ -1,0 +1,7 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mlv/glass_blue_boat_interior
+map_Kd ../images/~-gglass_blue_boat_interior_c.dds

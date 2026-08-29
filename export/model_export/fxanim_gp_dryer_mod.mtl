@@ -1,0 +1,17 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 3
+
+newmtl mc/mtl_machinery_washer_green
+map_Kd ../images/~-gwasher_green_col.dds
+map_bump ../images/washer_nml.dds
+map_Ks ../images/~~-gwasher_spc-rgb&~-rwasher_~839e4339.dds
+
+newmtl mc/mtl_hanging_clothes
+map_Kd ../images/~-gxpec_hanging_clothes_col.dds
+map_bump ../images/xpec_hanging_clothes_nml.dds
+
+newmtl mc/mtl_fxanim_gp_alpha
+map_Kd ../images/~-gfxanim_gp_alpha.dds
+map_bump ../images/$identitynormalmap.dds

@@ -1,0 +1,8 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/mtl_p6_karma_pool_umbrella
+map_Kd ../images/~-gp6_karma_pool_umbrella_c.dds
+map_bump ../images/p6_karma_pool_umbrella_n.dds

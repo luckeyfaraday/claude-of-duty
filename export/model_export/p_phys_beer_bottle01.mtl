@@ -1,0 +1,8 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/mtl_p_glo_beer_bottle01_world
+map_Kd ../images/~~-gp_glo_beer_bottle01_world~a66a8a3e.dds
+map_bump ../images/p_glo_beer_bottle01_world_n.dds

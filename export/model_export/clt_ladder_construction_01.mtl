@@ -1,0 +1,9 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/mtl_ny_harbor_russian_oscar2_ladder_a
+map_Kd ../images/~-gny_harbor_russian_oscar2_l~98c18fef.dds
+map_bump ../images/ny_harbor_russian_oscar2_ladder_a_nml.dds
+map_Ks ../images/~~-gny_harbor_russian_oscar2_~406aa4a6.dds

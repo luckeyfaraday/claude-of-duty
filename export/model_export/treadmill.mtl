@@ -1,0 +1,8 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/mtl_treadmill
+map_Kd ../images/~~-gtreadmill_col-rgb&~-rtrea~da1c26cd.dds
+map_bump ../images/treadmill_nml.dds

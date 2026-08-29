@@ -1,0 +1,13 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 2
+
+newmtl mc/mtl_machinery_hose02
+map_Kd ../images/~-gmachinery_hose02_col.dds
+map_bump ../images/machinery_hose01_nml.dds
+map_Ks ../images/~~-gmachinery_hose01_spc-rgb&~02be2c39.dds
+
+newmtl mc/mtl_machinery_hose02_rubber
+map_Kd ../images/~-gmachinery_hose02_col.dds
+map_bump ../images/machinery_hose01_nml.dds

@@ -1,0 +1,9 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/mtl_bathroom_props
+map_Kd ../images/~-gbathroom_chrome_clr.dds
+map_bump ../images/bathroom_chrome_nml.dds
+map_Ks ../images/~~-gbathroom_chrome_spc-rgb&~~1b98cbee.dds

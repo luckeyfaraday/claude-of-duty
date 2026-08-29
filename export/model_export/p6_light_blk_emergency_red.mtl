@@ -1,0 +1,16 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 3
+
+newmtl mc/mtl_p6_light_blk_emergency
+map_Kd ../images/~~-gp6_blk_emergency_light_c-~1625ed12.dds
+map_bump ../images/p6_blk_emergency_light_n.dds
+
+newmtl mc/mtl_p6_light_blk_emergency_case
+map_Kd ../images/~-gp6_blk_emergency_light_case_c.dds
+map_bump ../images/p6_blk_emergency_light_case_n.dds
+map_Ks ../images/~~-gp6_blk_emergency_light_ca~9351269b.dds
+
+newmtl mc/mtl_p6_light_blk_emergency_glow
+map_Kd ../images/~-gp6_blk_emergency_light_e.dds

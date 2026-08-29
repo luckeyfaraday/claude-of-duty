@@ -1,0 +1,12 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 2
+
+newmtl mc/mtl_p_us_patio_table
+map_Kd ../images/~~-gp_us_patio_table_c-rgb&~-~b749406f.dds
+map_bump ../images/p_us_patio_table_n.dds
+
+newmtl mc/mtl_p_us_patio_chair
+map_Kd ../images/~~-gp_us_patio_chair_c-rgb&~-~1b03b7f2.dds
+map_bump ../images/p_us_patio_chair_n.dds

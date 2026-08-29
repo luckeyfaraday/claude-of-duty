@@ -1,0 +1,8 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/mtl_luggage01
+map_Kd ../images/~~-gluggage01_col-rgb&~-rlugg~88a9a35c.dds
+map_bump ../images/luggage01_nml.dds

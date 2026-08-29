@@ -1,0 +1,9 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/mtl_towel
+map_Kd ../images/~-gtowel_clr.dds
+map_bump ../images/towel_nml.dds
+map_Ks ../images/~~-gtowel_spc-rgb&~-rtowel_co~0c7b6034.dds

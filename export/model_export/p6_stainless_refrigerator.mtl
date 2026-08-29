@@ -1,0 +1,12 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 2
+
+newmtl mc/mtl_p6_stainless_refrigerator
+map_Kd ../images/~-gmtl_p6_stainless_refrigerator_c.dds
+map_bump ../images/$identitynormalmap.dds
+map_Ks ../images/~~-gmtl_p6_stainless_refriger~4b5be5fa.dds
+
+newmtl mc/mtl_p6_stainless_refrigerator_light
+map_Kd ../images/~-gmtl_p6_stainless_refrigerator_c.dds

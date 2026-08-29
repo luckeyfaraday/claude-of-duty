@@ -1,0 +1,13 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 2
+
+newmtl mc/mtl_accessories_frames_table_silver1
+map_Kd ../images/~-gframes_table_silver1_col.dds
+map_bump ../images/frames_table_silver1_nml.dds
+map_Ks ../images/~~-gframes_table_silver1_spc-~251862a4.dds
+
+newmtl mc/mtl_accessories_frames_table_silver1_8x10_pic
+map_Kd ../images/~-gframes_silver1_8x10_pic_col.dds
+map_bump ../images/$identitynormalmap.dds

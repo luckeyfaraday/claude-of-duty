@@ -1,0 +1,9 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/mtl_berlin_hotel_lights_wall1_off
+map_Kd ../images/~-gberlin_hotel_lights_wall1_off_col.dds
+map_bump ../images/berlin_hotel_lights_wall1_nml.dds
+map_Ks ../images/~~-gberlin_hotel_lights_wall1~fe742b22.dds

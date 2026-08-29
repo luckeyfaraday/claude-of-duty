@@ -1,0 +1,12 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 2
+
+newmtl mc/mtl_p6_karma_club_ottoman
+map_Kd ../images/~-gp6_karma_club_ottoman_c.dds
+map_bump ../images/p6_karma_club_ottoman_n.dds
+
+newmtl mc/mtl_p6_karma_club_ottoman_wood
+map_Kd ../images/~~-gp6_karma_club_ottoman_woo~606c2fb9.dds
+map_bump ../images/p6_karma_club_ottoman_wood_n.dds

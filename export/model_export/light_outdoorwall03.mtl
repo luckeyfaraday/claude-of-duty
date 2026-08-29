@@ -1,0 +1,8 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/mtl_light_outdoorwall
+map_Kd ../images/~~-glight_outdoorwall_col-rgb~542f7f18.dds
+map_bump ../images/light_outdoorwall_nml.dds

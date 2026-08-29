@@ -1,0 +1,11 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 2
+
+newmtl mlv/decal_cic_sonar_map_opaque
+map_Kd ../images/~-gdecal_cic_sonar_map_01.dds
+
+newmtl mlv/mtl_p6_cic_mech_panel_a_white
+map_Kd ../images/~~-gp6_cic_mech_panel_a_white~8893c252.dds
+map_bump ../images/$identitynormalmap.dds

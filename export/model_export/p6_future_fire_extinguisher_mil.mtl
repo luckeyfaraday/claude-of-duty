@@ -1,0 +1,9 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/mtl_p6_future_fire_extinguisher_mil
+map_Kd ../images/~-gp6_future_fire_extinguisher_mil_c.dds
+map_bump ../images/p6_future_fire_extinguisher_civ_n.dds
+map_Ks ../images/~~-gp6_future_fire_extinguish~a9be6925.dds

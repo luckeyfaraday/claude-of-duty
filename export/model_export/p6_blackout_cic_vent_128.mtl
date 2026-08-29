@@ -1,0 +1,9 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/mtl_p6_karma_vent
+map_Kd ../images/~-gp6_karma_vent_c.dds
+map_bump ../images/p6_karma_vent_n.dds
+map_Ks ../images/~~-gp6_karma_vent_s-rgb&~-rp6~229ef12f.dds

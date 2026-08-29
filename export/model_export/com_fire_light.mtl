@@ -1,0 +1,8 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/mtl_fire_light
+map_Kd ../images/~-gfire_light_c.dds
+map_bump ../images/fire_light_n.dds

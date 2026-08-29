@@ -1,0 +1,9 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mlv/mtl_p6_hijacked_cabin_front_metal
+map_Kd ../images/~-gmetal_chrome_boat_c.dds
+map_bump ../images/global_normal_flat_16x16.dds
+map_Ks ../images/~-gmetal_chrome_boat_s.dds

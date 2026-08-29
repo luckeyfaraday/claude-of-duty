@@ -1,0 +1,16 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 3
+
+newmtl mc/mtl_p6_laundry_hamper
+map_Kd ../images/~~-gmtl_p6_laundry_hamper_c-r~9efb5452.dds
+map_bump ../images/mtl_p6_laundry_hamper_n.dds
+
+newmtl mc/mtl_p6_laundry_hamper_cloth
+map_Kd ../images/~~-gmtl_p6_laundry_hamper_c-r~9efb5452.dds
+map_bump ../images/mtl_p6_laundry_hamper_n.dds
+
+newmtl mc/mtl_p6_beach_towel_pile
+map_Kd ../images/~-gmtl_p6_towel_pile_c.dds
+map_bump ../images/mtl_p6_towel_pile_n.dds

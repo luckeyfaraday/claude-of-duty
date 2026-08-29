@@ -1,0 +1,8 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/mtl_ctl_engine_control
+map_Kd ../images/~~-gctl_engine_control_col-rg~4f2fceb4.dds
+map_bump ../images/ctl_engine_control_nml.dds

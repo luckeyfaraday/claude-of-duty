@@ -1,0 +1,8 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/mtl_hjk_red_latch
+map_Kd ../images/~-ghjk_red_lever_col.dds
+map_bump ../images/hjk_red_lever_nml.dds

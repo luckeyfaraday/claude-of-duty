@@ -1,0 +1,8 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/mtl_yoga_mats_blue
+map_Kd ../images/~~-gyoga_mats_blue_col-rgb&~-~e0ef4c4b.dds
+map_bump ../images/yoga_mats_nml.dds

@@ -1,0 +1,28 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 5
+
+newmtl mc/lambert1
+map_Kd ../images/~-ggrey.dds
+map_bump ../images/$identitynormalmap.dds
+
+newmtl mc/mtl_dub_grand_piano_ext
+map_Kd ../images/~-gdub_grand_piano_ext_col.dds
+map_bump ../images/dub_grand_piano_ext_nml.dds
+map_Ks ../images/~~-gdub_grand_piano_ext_spc-r~55cce4c8.dds
+
+newmtl mc/mtl_dub_grand_piano_int
+map_Kd ../images/~-gdub_grand_piano_int_col.dds
+map_bump ../images/dub_grand_piano_int_nml.dds
+map_Ks ../images/~~-gdub_grand_piano_int_spc-r~9935a8e5.dds
+
+newmtl mc/mtl_dub_grand_piano_ext_g
+map_Kd ../images/~-gdub_grand_piano_ext_col.dds
+map_bump ../images/dub_grand_piano_ext_nml.dds
+map_Ks ../images/~~-gdub_grand_piano_ext_spc-r~39b298c6.dds
+
+newmtl mc/mtl_dub_grand_piano_int_strg
+map_Kd ../images/~-gdub_grand_piano_int_col.dds
+map_bump ../images/dub_grand_piano_int_nml.dds
+map_Ks ../images/~~-gdub_grand_piano_int_spc-r~9935a8e5.dds

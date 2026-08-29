@@ -1,0 +1,13 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 2
+
+newmtl mc/mtl_ctl_locker_military
+map_Kd ../images/~-gctl_locker_military_col.dds
+map_bump ../images/ctl_locker_military_nml.dds
+
+newmtl mc/mtl_ctl_locker_military_opaque
+map_Kd ../images/~-gctl_locker_military_col.dds
+map_bump ../images/ctl_locker_military_nml.dds
+map_Ks ../images/~~-gclt_locker_military_spc-r~ca83c1c0.dds

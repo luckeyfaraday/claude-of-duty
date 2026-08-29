@@ -1,0 +1,9 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/mtl_pipes_silver_clean
+map_Kd ../images/~-gmetal_pipe_silver_clean_c.dds
+map_bump ../images/metal_pipe_nml.dds
+map_Ks ../images/~~-gmetal_pipe_silver_clean_g~1645d31f.dds

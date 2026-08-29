@@ -1,0 +1,12 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 2
+
+newmtl mc/mtl_ctl_biometric_lock_unlit
+map_Kd ../images/~-gctl_biometric_lock_col.dds
+
+newmtl mc/mtl_ctl_biometric_lock
+map_Kd ../images/~-gctl_biometric_lock_col.dds
+map_bump ../images/ctl_biometric_lock_nml.dds
+map_Ks ../images/~~-gctl_biometric_lock_spc-rg~7ad76bb0.dds

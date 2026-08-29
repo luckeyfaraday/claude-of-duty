@@ -1,0 +1,9 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/mtl_food_snacks01
+map_Kd ../images/~-gfood_snacks01_col.dds
+map_bump ../images/food_snacks01_nml.dds
+map_Ks ../images/~~-gfood_snacks01_col-rgb&~-r~8a84a384.dds

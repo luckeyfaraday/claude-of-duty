@@ -1,0 +1,9 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/mtl_p6_microwave_oven_flush
+map_Kd ../images/~-gp6_microwave_oven_flush_c.dds
+map_bump ../images/p6_microwave_oven_flush_n.dds
+map_Ks ../images/~~-gp6_microwave_oven_flush_s~3b5dc316.dds

@@ -1,0 +1,13 @@
+*
+!/.gitignore
+!/README.md
+!/.tools/
+!/.tools/compose_scene.py
+!/export/
+!/export/web/
+!/export/web/**
+!/export/model_export/
+!/export/model_export/**
+!/export/maps/
+!/export/maps/mp/
+!/export/maps/mp/mp_hijacked.d3dbsp.gfxworld.*

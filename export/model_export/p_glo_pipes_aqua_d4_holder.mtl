@@ -1,0 +1,8 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/mtl_p_glo_pipes_aqua
+map_Kd ../images/~~-gp_glo_pipes_aqua_c-rgb&~-~5564af40.dds
+map_bump ../images/p_glo_pipes_n.dds

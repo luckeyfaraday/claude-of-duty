@@ -1,0 +1,8 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/mtl_p_rus_door_metal_white
+map_Kd ../images/~~-gp_rus_door_white_c-rgb&~-~2335d38b.dds
+map_bump ../images/p_rus_door_white_n.dds

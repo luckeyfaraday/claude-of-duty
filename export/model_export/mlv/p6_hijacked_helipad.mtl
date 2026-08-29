@@ -1,0 +1,52 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 10
+
+newmtl mlv/fiberglass_boat_white
+map_Kd ../images/~-gfiberglass_boat_white_c.dds
+map_bump ../images/fiberglass_boat_white_n.dds
+map_Ks ../images/~~-gfiberglass_boat_white_s-r~e6dc84fc.dds
+
+newmtl mlv/decal_trim_seam_clean_boat
+map_Kd ../images/~-gdecal_trim_seam_clean_boat_c.dds
+map_bump ../images/decal_trim_seam_clean_boat_n.dds
+
+newmtl mlv/plastic_boat_door_square
+map_Kd ../images/~-gplastic_boat_door_square_c.dds
+map_bump ../images/plastic_boat_door_square_n.dds
+map_Ks ../images/~~-gplastic_boat_door_square_~9ab73602.dds
+
+newmtl mlv/ny_nyse_kiosk_vent_dec_03
+map_Kd ../images/~-gny_nyse_kiosk_vent_dec_03_col.dds
+map_bump ../images/ny_nyse_kiosk_vent_dec_03_nml.dds
+
+newmtl mlv/fiberglass_boat_blue
+map_Kd ../images/~-gfiberglass_boat_blue_c.dds
+map_bump ../images/fiberglass_boat_white_n.dds
+map_Ks ../images/~~-gfiberglass_boat_white_s-r~e6dc84fc.dds
+
+newmtl mlv/t6_plastic_trim_boat_02
+map_Kd ../images/~-gt6_plastic_trim_boat_02_c.dds
+map_bump ../images/t6_plastic_trim_boat_02_n.dds
+map_Ks ../images/~~-gt6_plastic_trim_boat_02_s~0e99bb65.dds
+
+newmtl mlv/metal_chrome_boat
+map_Kd ../images/~-gmetal_chrome_boat_c.dds
+map_bump ../images/$identitynormalmap.dds
+map_Ks ../images/~~-gmetal_chrome_boat_s-rgb&~~1f2579ab.dds
+
+newmtl mlv/decal_boat_drain
+map_Kd ../images/~-gdecal_boat_drain_c.dds
+map_bump ../images/decal_boat_drain_n.dds
+map_Ks ../images/~~-gdecal_boat_drain_s-rgb&~-~766802a1.dds
+
+newmtl mlv/metal_vent_tileable_glossy
+map_Kd ../images/~-gmetal_vent_tileable_glossy_c.dds
+map_bump ../images/metal_vent_tileable_glossy_n.dds
+map_Ks ../images/~~-gmetal_vent_tileable_gloss~8b02c0f0.dds
+
+newmtl mlv/metal_wall_panel_rounded_light
+map_Kd ../images/~-gmetal_wall_panel_rounded_light_c.dds
+map_bump ../images/metal_wall_panel_rounded_n2.dds
+map_Ks ../images/~~-gmetal_wall_panel_rounded_~5cae5a44.dds

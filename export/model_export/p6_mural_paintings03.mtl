@@ -1,0 +1,8 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/mtl_p6_mural_paintings
+map_Kd ../images/~~-gp6_mural_paintings_c-rgb&~05f3673e.dds
+map_bump ../images/global_normal_flat_16x16.dds

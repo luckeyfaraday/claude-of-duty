@@ -1,0 +1,32 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 6
+
+newmtl mc/ny_nyse_wood_floor_01
+map_Kd ../images/~~-gwood_floor_nyse-rgb&~-rny~4a51abcd.dds
+map_bump ../images/global_normal_flat_16x16.dds
+
+newmtl mc/metal_chrome_boat
+map_Kd ../images/~-gmetal_chrome_boat_c.dds
+map_bump ../images/$identitynormalmap.dds
+map_Ks ../images/~~-gmetal_chrome_boat_s-rgb&~~1f2579ab.dds
+
+newmtl mc/glass_green_frosted
+map_Kd ../images/~-gglass_green_frosted_c.dds
+map_bump ../images/glass_green_frosted_n.dds
+map_Ks ../images/~~-gglass_green_frosted_s-rgb~725b9799.dds
+
+newmtl mc/mtl_p6_door_frame_metal_58
+map_Kd ../images/~-gp6_door_frame_metal_58_c.dds
+map_bump ../images/p6_door_frame_metal_58_n.dds
+map_Ks ../images/~~-gp6_door_frame_metal_58_s-~4f6058fd.dds
+
+newmtl mc/glass_door_pattern
+map_Kd ../images/~-gmov_vault_glass_pattern_c.dds
+map_bump ../images/mov_vault_glass_pattern_n.dds
+map_Ks ../images/~~-gmov_vault_glass_pattern_s~d291fdc3.dds
+
+newmtl mc/mtl_hologram_keypad
+map_Kd ../images/~-ghologram_keypad_c.dds
+map_bump ../images/hologram_keypad_n.dds

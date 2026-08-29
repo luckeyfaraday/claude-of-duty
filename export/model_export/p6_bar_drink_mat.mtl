@@ -1,0 +1,12 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 2
+
+newmtl mc/plastic_floor_tiles_industrial
+map_Kd ../images/~~-gpalstic_floor_tiles_indus~92ef1204.dds
+map_bump ../images/palstic_floor_tiles_industrial_n.dds
+
+newmtl mc/plastic_floor_mat_01
+map_Kd ../images/~~-gplastic_floor_mat_01_c-rg~97b78eca.dds
+map_bump ../images/plastic_floor_mat_01_n.dds

@@ -1,0 +1,8 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/mtl_prague_china_plates
+map_Kd ../images/~~-gprague_china_plates_col-r~94e53814.dds
+map_bump ../images/prague_china_plates_nml.dds

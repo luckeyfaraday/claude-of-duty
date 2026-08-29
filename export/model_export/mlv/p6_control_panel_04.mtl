@@ -1,0 +1,14 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 3
+
+newmtl mlv/plastic_black_rough
+map_Kd ../images/~~-gplastic_black_c-rgb&~-rpl~553c142e.dds
+map_bump ../images/plastic_black_n.dds
+
+newmtl mlv/mtl_p6_control_panel_04
+map_Kd ../images/~-gconsole_pad_c.dds
+
+newmtl mlv/mtl_p6_control_panel_circle_04
+map_Kd ../images/~-gconsole_pad_circle_c.dds

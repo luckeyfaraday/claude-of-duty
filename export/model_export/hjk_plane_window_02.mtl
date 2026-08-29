@@ -1,0 +1,14 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 2
+
+newmtl mc/mtl_hjk_plane_window_01
+map_Kd ../images/~-ghjk_plane_window_01_col.dds
+map_bump ../images/hjk_plane_window_01_nml.dds
+map_Ks ../images/~~-ghjk_plane_window_01_spc-r~2e97c55a.dds
+
+newmtl mc/mtl_hjk_window_trim
+map_Kd ../images/~-gmtl_hjk_window_trim_col.dds
+map_bump ../images/mtl_hjk_window_trim_nml.dds
+map_Ks ../images/~~-gmtl_hjk_window_trim_spc-r~16016c54.dds

@@ -1,0 +1,18 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 3
+
+newmtl mlv/fiberglass_boat_white
+map_Kd ../images/~-gfiberglass_boat_white_c.dds
+map_bump ../images/fiberglass_boat_white_n.dds
+map_Ks ../images/~~-gfiberglass_boat_white_s-r~e6dc84fc.dds
+
+newmtl mlv/decal_trim_seam_clean_boat
+map_Kd ../images/~-gdecal_trim_seam_clean_boat_c.dds
+map_bump ../images/decal_trim_seam_clean_boat_n.dds
+
+newmtl mlv/fiberglass_boat_blue
+map_Kd ../images/~-gfiberglass_boat_blue_c.dds
+map_bump ../images/fiberglass_boat_white_n.dds
+map_Ks ../images/~~-gfiberglass_boat_white_s-r~e6dc84fc.dds

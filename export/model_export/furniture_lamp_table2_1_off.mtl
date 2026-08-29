@@ -1,0 +1,9 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/mtl_furniture_lamp_table2_sh_off
+map_Kd ../images/~-glamp_table2_off_col.dds
+map_bump ../images/lamp_table2_nml.dds
+map_Ks ../images/~~-glamp_table2_spc-rgb&~-rla~4a30db48.dds

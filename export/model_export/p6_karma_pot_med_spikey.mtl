@@ -1,0 +1,22 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 4
+
+newmtl mc/mtl_foliage_dub_potted_spikey_plant
+map_Kd ../images/~-gfoliage_dub_potted_spikey_plant_col.dds
+map_bump ../images/$identitynormalmap.dds
+map_Ks ../images/~~-gfoliage_dub_potted_spikey~980de041.dds
+
+newmtl mc/global_white
+map_Kd ../images/~-gglobal_color_white.dds
+map_bump ../images/$identitynormalmap.dds
+
+newmtl mc/glass_clear
+map_Kd ../images/~-gdecal_glass02_c.dds
+map_bump ../images/$identitynormalmap.dds
+map_Ks ../images/~~-gdecal_glass01_s-rgb&~-rde~6939bce8.dds
+
+newmtl mc/core_dirt_dark
+map_Kd ../images/~~-gcore_dirt_dark_c-rgb&~-rc~9596eddb.dds
+map_bump ../images/core_dirt_dark_n.dds

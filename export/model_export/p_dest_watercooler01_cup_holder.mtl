@@ -1,0 +1,8 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/mtl_p_dest_watercooler01
+map_Kd ../images/~~-gwatercooler01_c-rgb&~-rwa~9c1df253.dds
+map_bump ../images/watercooler01_n.dds

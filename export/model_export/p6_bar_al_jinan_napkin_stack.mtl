@@ -1,0 +1,8 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/mtl_p6_bar_al_jinan_napkin
+map_Kd ../images/~~-gp6_bar_al_jinan_napkin_c-~8fd3827a.dds
+map_bump ../images/p6_bar_al_jinan_napkin_n.dds

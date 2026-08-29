@@ -1,0 +1,8 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/mtl_hanging_clothes_aqua
+map_Kd ../images/~-gxpec_hanging_clothes_col.dds
+map_bump ../images/xpec_hanging_clothes_nml.dds

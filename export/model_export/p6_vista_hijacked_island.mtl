@@ -1,0 +1,10 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 2
+
+newmtl mc/mtl_p6_vista_hijacked_island
+map_Kd ../images/~-gp6_vista_hijacked_island.dds
+
+newmtl mc/mtl_p6_vista_hijacked_island_blend
+map_Kd ../images/~-gp6_vista_hijacked_island.dds

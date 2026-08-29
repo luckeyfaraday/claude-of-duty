@@ -1,0 +1,12 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 2
+
+newmtl mc/mtl_p6_high_contrast_art_01
+map_Kd ../images/~-gmtl_p6_high_contrast_art_01_c.dds
+map_bump ../images/mtl_p6_high_contrast_art_n.dds
+
+newmtl mc/wood_wall_planks_vertical
+map_Kd ../images/~~-gus_art_wall_woodplank_cle~1b722b33.dds
+map_bump ../images/us_art_wall_woodplank_clean_n.dds

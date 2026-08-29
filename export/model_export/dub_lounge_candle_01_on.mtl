@@ -1,0 +1,8 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/mtl_dub_lounge_candle_01_on
+map_Kd ../images/~-gdub_lounge_candle_01_on_col.dds
+map_bump ../images/$identitynormalmap.dds

@@ -1,0 +1,13 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 2
+
+newmtl mc/metal_monsoon_painted_white
+map_Kd ../images/~~-gmetal_monsoon_painted_whi~9a41dc83.dds
+map_bump ../images/$identitynormalmap.dds
+
+newmtl mc/metal_corrugated_wide_bars
+map_Kd ../images/~-gmetal_corrugated_wide_bars_c.dds
+map_bump ../images/metal_corrugated_wide_bars_n.dds
+map_Ks ../images/~~-gmetal_corrugated_wide_bar~4e879a92.dds

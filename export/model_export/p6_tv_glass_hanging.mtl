@@ -1,0 +1,14 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 2
+
+newmtl mc/mtl_p6_tv_glass_hanging_metal
+map_Kd ../images/~-gp6_tv_glass_hanging_c.dds
+map_bump ../images/p6_tv_glass_hanging_n.dds
+map_Ks ../images/~~-gp6_tv_glass_hanging_s-rgb~4f5bb066.dds
+
+newmtl mc/mtl_p6_tv_glass_hanging
+map_Kd ../images/~-gp6_tv_glass_hanging_c.dds
+map_bump ../images/p6_tv_glass_hanging_n.dds
+map_Ks ../images/~~-gp6_tv_glass_hanging_s-rgb~4f5bb066.dds

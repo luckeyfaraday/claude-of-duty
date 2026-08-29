@@ -1,0 +1,19 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 3
+
+newmtl mc/mtl_dub_grand_piano_bench
+map_Kd ../images/~-gdub_grand_piano_bench_col.dds
+map_bump ../images/dub_grand_piano_bench_nml.dds
+map_Ks ../images/~~-gdub_grand_piano_bench_spc~58b57edd.dds
+
+newmtl mc/mtl_dub_grand_piano_bench_fb
+map_Kd ../images/~-gdub_grand_piano_bench_col.dds
+map_bump ../images/dub_grand_piano_bench_nml.dds
+map_Ks ../images/~~-gdub_grand_piano_bench_spc~58b57edd.dds
+
+newmtl mc/mtl_dub_grand_piano_bench_gld
+map_Kd ../images/~-gdub_grand_piano_bench_col.dds
+map_bump ../images/dub_grand_piano_bench_nml.dds
+map_Ks ../images/~~-gdub_grand_piano_bench_spc~58b57edd.dds

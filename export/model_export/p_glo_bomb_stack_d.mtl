@@ -1,0 +1,12 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 2
+
+newmtl mc/mtl_p_glo_bomb_stack_02
+map_Kd ../images/~~-gp_glo_bomb_stack_02_c-rgb~3318c37d.dds
+map_bump ../images/p_glo_bomb_stack_02_n.dds
+
+newmtl mc/metal_charred
+map_Kd ../images/~~-grus_metal_dark_charred_c-~70dad620.dds
+map_bump ../images/rus_metal_dark_charred_n.dds

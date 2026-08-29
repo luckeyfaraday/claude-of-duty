@@ -1,0 +1,12 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 2
+
+newmtl mc/mtl_p6_console_chair_cushion_plastic
+map_Kd ../images/~~-gp6_console_chair_cushion_~743eb477.dds
+map_bump ../images/p6_console_chair_cushion_n.dds
+
+newmtl mc/mtl_p6_console_chair_comb
+map_Kd ../images/~~-gp6_console_chair_base_com~c8eba834.dds
+map_bump ../images/p6_console_chair_base_comb_n.dds

@@ -1,0 +1,8 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/mtl_p_jun_dinnerware
+map_Kd ../images/~~-gp_jun_dinnerware_c-rgb&~-~b8d99368.dds
+map_bump ../images/p_jun_dinnerware_n.dds

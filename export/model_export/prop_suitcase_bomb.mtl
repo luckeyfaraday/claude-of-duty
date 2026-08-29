@@ -1,0 +1,14 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 5
+
+newmtl mc/mtl_t6_wpn_briefcase_bomb
+
+newmtl mc/mtl_t6_wpn_briefcase_bomb_detail
+
+newmtl mc/mtl_t6_wpn_laster_cutter
+
+newmtl mc/mtl_t6_wpn_briefcase_bomb_alpha
+
+newmtl mc/mtl_t6_wpn_tablet

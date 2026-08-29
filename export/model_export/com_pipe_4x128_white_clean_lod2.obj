@@ -1,0 +1,32 @@
+# OpenAssetTools OBJ File ( com_pipe_4x128_white_clean.mtl)
+# Game Origin: com_pipe_4x128_white_clean.mtl
+# Zone Origin: T6
+mtllib mp_hijacked
+o surf0
+v -64 -4 -0
+v -64 -2e-06 -4
+v 64 -4 -0
+v 64 -2e-06 -4
+v -64 4 -2e-06
+v 64 4 -2e-06
+v 64 1e-06 4
+v -64 1e-06 4
+vt 4.58203 0.601807
+vt 4.58203 0.800415
+vt 0.414307 0.601807
+vt 0.414307 0.800415
+vt 4.58203 0.996855
+vt 0.414307 0.996855
+vn 0 -1 -0
+vn 0 0 -1
+vn 0 1 -0
+vn 0 0 1
+usemtl mc/mtl_pipes_white_clean
+f 1/1/1 2/2/2 3/3/1
+f 4/4/2 3/3/1 2/2/2
+f 2/2/2 5/5/3 4/4/2
+f 6/6/3 4/4/2 5/5/3
+f 7/4/4 6/6/3 8/2/4
+f 5/5/3 8/2/4 6/6/3
+f 3/3/1 7/4/4 1/1/1
+f 8/2/4 1/1/1 7/4/4

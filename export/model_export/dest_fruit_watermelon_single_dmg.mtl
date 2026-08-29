@@ -1,0 +1,8 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 1
+
+newmtl mc/mtl_p_jun_fruit_watermelon
+map_Kd ../images/~~-gp_jun_fruit_watermelon_c-~4884c1d4.dds
+map_bump ../images/p_jun_fruit_watermelon_n.dds

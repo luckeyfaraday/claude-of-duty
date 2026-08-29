@@ -1,0 +1,11 @@
+# OpenAssetTools MAT File ( T6)
+# Game Origin: T6
+# Zone Origin: mp_hijacked
+# Material count: 2
+
+newmtl mc/light_downtown_screen01
+map_Kd ../images/~-glight_downtown_screen03_c.dds
+
+newmtl mc/mtl_p6_tv_led
+map_Kd ../images/~~-gp6_tv_led_c-rgb&~-rp6_tv_~3e587e18.dds
+map_bump ../images/p6_tv_led_n.dds
