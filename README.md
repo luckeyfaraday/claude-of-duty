@@ -25,7 +25,39 @@ Controls:
 - `Right mouse`: aim down sights
 - `N`: navmesh overlay; `V`: collision overlay
 - `P`: find and draw a navmesh path to the point under the crosshair
-- `Esc`: release the mouse
+- `Esc`: pause and release the mouse
+
+## Frontend
+
+The viewer opens on a menu shell rather than a bare loading message. It has a
+loading screen, a title screen, and an `Esc` pause menu, all sharing one set of
+layers built from the game's own frontend art in `zone/all/ui_mp.ff`: the
+`menu_mp_background_main2` backdrop, a scrolling `bg_fogscrollthin` strip, the
+`menu_mp_background_glow` plate, and the `menu_mp_map_select_hijacked_final`
+map card. The pause buttons and panel use `menu_button_backing` and
+`menu_mp_lobby_frame_outer`.
+
+Those plates ship white-on-alpha because the game tints them at runtime, so the
+browser does the same through `mask-image`. The single `--fe-accent` custom
+property in `index.html` recolours every panel, button, and glow at once; it is
+set to the HUD's mint rather than the game's blue. The layout is not the
+original: T6 menudefs do not dump (the Unlinker lists all 133 in `ui_mp.ff` and
+writes none of them), so only the art is reused.
+
+The load bar measures stages declared up front with fixed weights. The visible
+map ships as one Meshopt-compressed GLB containing GPU-compressed KTX2 textures,
+so its progress callback covers the dominant transfer. A stage is held below
+its full weight until its promise settles, preventing the bar from reaching
+100% before the game is playable.
+
+Re-export the menu art with:
+
+```powershell
+python .tools/export_ui.py
+```
+
+It dumps `ui_mp.ff` and converts the dozen images the menu uses into
+`export/web/ui/` (~1.4 MB), leaving the other 513 in the zone.
 
 ## First-person viewmodel
 
@@ -57,7 +89,11 @@ that earned it.
 Six PLA assault enemies spawn from the map's authored multiplayer markers and
 move with the baked Detour crowd. They patrol, acquire the player through
 field-of-view and collision-based line-of-sight checks, pursue, fire, remember
-the last seen position, die, and respawn. The browser uses the exported PLA
+the last seen position, search nearby navigation points after losing contact,
+die, and respawn. Every enemy with visibility and a teammate-safe firing line
+can shoot; individual reaction delays, bursts, reloads, movement-sensitive
+accuracy, suppression, and tactical repositioning keep the fight readable
+without an artificial attacker cap. The browser uses the exported PLA
 body, M27 world model, and converted `pb_*` body animations, with separate
 head, torso, and leg damage zones. The HUD shows player health and the current
 alive enemy count.
@@ -78,17 +114,22 @@ Python 3 is required. The scene composer also runs the collision exporter:
 
 ```powershell
 python .tools/compose_scene.py
+npm run bake:map
+npm run bake:collision
 npm run bake:navmesh
 ```
 
-The first command rebuilds the render scene, the collision-only glTF, and the
-spawn/pathnode navigation hints. The second command turns that collision mesh
-into the serialized Recast navmesh loaded by the browser.
+The first command rebuilds the source render scene, collision-only glTF, and
+spawn/pathnode navigation hints. The bake commands then create the optimized
+render GLB, collision BVH, and serialized Recast navmesh loaded by the browser.
+`bake:map` requires Khronos KTX-Software's `ktx` executable on `PATH`.
 
 Generated runtime assets are in `export/web`:
 
 - `hijacked.gltf` / `hijacked.bin`: visible map
 - `hijacked_collision.gltf` / `.bin`: physics-only geometry
+- `hijacked_optimized.glb`: Meshopt/KTX2 runtime render map
+- `hijacked_collision_bvh.bin` / `.json`: runtime collision BVH
 - `hijacked_nav_hints.json`: spawns, pathnodes, and traversal links
 - `hijacked.navmesh.bin` / `.json`: baked Recast mesh and build metadata
 
@@ -112,3 +153,36 @@ npm run test:browser
 ```
 
 `npm test` runs both sets.
+
+## AI visual testing
+
+The repository includes a Playwright harness that gives coding agents both a
+rendered view of the game and a JSON snapshot of its internal state. It starts
+its own local server and headless Chrome/Edge, so no manual setup is required:
+
+```powershell
+npm run ai:state
+npm run ai:screenshot
+npm run ai:test
+npm run ai:enemy
+npm run ai:record -- 10
+```
+
+Outputs are written to `artifacts/ai-game/`:
+
+- `before.png` and `screenshot.png`: visual before/after evidence
+- `before-state.json` and `state.json`: player, weapon, enemy, overlay, and
+  renderer state
+- `console.log`: browser console, page, and network failures
+- `trace.zip`: a Playwright trace with screenshots and DOM snapshots
+- `recording.webm`: video produced by `ai:record`
+- `report.json`: machine-readable checks and pass/fail status
+
+Set `AI_GAME_HEADED=1` to watch the controlled browser. `BROWSER_TEST_URL` can
+point the harness at an existing server, and `BROWSER_PATH` can select a custom
+Chrome/Edge executable.
+
+At runtime, `globalThis.hijacked.debug` provides a stable automation surface:
+`getState`, `setActive`, `pause`, `resume`, `teleportPlayer`, `lookAt`, overlay
+toggles, damage/respawn controls, and enemy reset. Keep this surface stable when
+changing runtime internals because tests and coding agents depend on it.

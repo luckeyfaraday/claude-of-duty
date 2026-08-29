@@ -6,17 +6,176 @@
 <link rel="icon" href="data:,">
 <title>Hijacked — browser port</title>
 <style>
-  :root { color-scheme: dark; }
+  :root {
+    color-scheme: dark;
+    /* The frontend plates ship white-on-alpha because the game tints them at
+       runtime. The menu does the same through mask-image, so this one value
+       recolours every panel, button and glow. It matches the HUD. */
+    --fe-accent: #7fffc4;
+    --fe-ui: 'Bahnschrift', 'DIN Alternate', 'Oswald', system-ui, sans-serif;
+  }
   * { box-sizing: border-box; }
   html, body { margin: 0; height: 100%; overflow: hidden; background: #05090d; }
   canvas { display: block; }
+
+  /* ---------- frontend shell (loading / title / pause) ---------- */
   #blocker {
     position: fixed; inset: 0; z-index: 3; display: flex; align-items: center;
-    justify-content: center; padding: 24px; background: rgba(2, 8, 13, .72);
-    color: #fff; font: 500 16px/1.55 system-ui, sans-serif; text-align: center;
-    cursor: default; white-space: pre-line;
+    justify-content: center; padding: 24px; overflow: hidden;
+    color: #dfe9f2; font: 500 15px/1.5 var(--fe-ui); text-align: center;
+    cursor: default; font-stretch: condensed;
   }
   #blocker.ready { cursor: pointer; }
+  #blocker > .fe-layer { position: absolute; inset: 0; pointer-events: none; }
+
+  /* The four layers of the original `menu,main`, in the order ui_mp.zone
+     links them: backdrop, scrolling fog, glow, then the content plate. */
+  /* The authored plate is already hazy and light. It was drawn to sit behind
+     the game's own dark panels, so it needs pulling down before the fog and
+     the menu text go over it. */
+  .fe-backdrop {
+    background: #05090d url('ui/menu_mp_background_main2.png') center/cover no-repeat;
+    filter: brightness(.78) contrast(1.14) saturate(.82);
+    animation: fe-drift 54s ease-in-out infinite alternate;
+  }
+  .fe-fog {
+    background: url('ui/bg_fogscrollthin.png') repeat-x 0 50% / auto 72%;
+    mix-blend-mode: screen; opacity: .09;
+    animation: fe-fog-scroll 110s linear infinite;
+  }
+  .fe-fog.slow {
+    background-size: auto 132%; opacity: .05;
+    animation-duration: 190s; animation-direction: reverse;
+  }
+  .fe-glow {
+    -webkit-mask: url('ui/menu_mp_background_glow.png') center/118% 118% no-repeat;
+    mask: url('ui/menu_mp_background_glow.png') center/118% 118% no-repeat;
+    background: var(--fe-accent); opacity: .1; mix-blend-mode: screen;
+  }
+  .fe-vignette {
+    background:
+      radial-gradient(82% 66% at 50% 46%, rgba(4, 10, 15, .12) 0%, rgba(2, 6, 10, .84) 100%),
+      linear-gradient(180deg, rgba(2, 6, 10, .5) 0%, transparent 22%, transparent 72%, rgba(2, 6, 10, .66) 100%);
+  }
+  @keyframes fe-drift {
+    from { transform: scale(1.06) translate3d(-1%, .4%, 0); }
+    to { transform: scale(1.13) translate3d(1%, -1%, 0); }
+  }
+  @keyframes fe-fog-scroll { to { background-position: -2048px 50%; } }
+
+  .fe-content {
+    position: relative; z-index: 1; isolation: isolate;
+    width: min(720px, 92vw); display: flex; flex-direction: column;
+    align-items: center; gap: 28px;
+  }
+  .fe-wordmark {
+    margin: 0; font-size: clamp(34px, 6.4vw, 66px); line-height: 1; font-weight: 600;
+    letter-spacing: .32em; text-indent: .32em; color: #f2f8ff;
+    text-shadow: 0 3px 26px rgba(0, 0, 0, .9);
+  }
+  .fe-wordmark::after {
+    content: ''; display: block; width: 64%; height: 2px; margin: 20px auto 0;
+    background: linear-gradient(90deg, transparent, var(--fe-accent), transparent);
+    opacity: .8;
+  }
+  .fe-sub {
+    margin: 16px 0 0; font-size: 11px; letter-spacing: .34em;
+    text-transform: uppercase; color: rgba(206, 224, 240, .62);
+    text-shadow: 0 1px 8px rgba(0, 0, 0, .9);
+  }
+
+  .fe-track {
+    width: min(430px, 80vw); height: 6px; background: rgba(255, 255, 255, .1);
+    border: 1px solid rgba(255, 255, 255, .18);
+  }
+  .fe-bar {
+    height: 100%; width: 0; background: var(--fe-accent);
+    box-shadow: 0 0 14px var(--fe-accent); transition: width .25s ease-out;
+  }
+  /* No Content-Length anywhere means no percentage to draw, so sweep instead
+     of sitting at zero for the whole load. */
+  #blocker[data-determinate="false"] .fe-bar {
+    width: 32%; transition: none; animation: fe-sweep 1.6s ease-in-out infinite;
+  }
+  @keyframes fe-sweep { from { margin-left: -32%; } to { margin-left: 100%; } }
+  .fe-status {
+    display: flex; justify-content: space-between; width: min(430px, 80vw);
+    margin-top: 10px; font-size: 11px; letter-spacing: .2em;
+    text-transform: uppercase; color: rgba(206, 224, 240, .68);
+  }
+
+  .fe-card { margin: 0; position: relative; padding: 9px; }
+  .fe-card::before {
+    content: ''; position: absolute; inset: 0; z-index: -1;
+    -webkit-mask: url('ui/menu_mp_lobby_frame_outer.png') center/100% 100% no-repeat;
+    mask: url('ui/menu_mp_lobby_frame_outer.png') center/100% 100% no-repeat;
+    background: rgba(9, 19, 27, .72);
+  }
+  .fe-card img { display: block; width: 256px; max-width: 62vw; height: auto; }
+  .fe-card figcaption {
+    margin-top: 8px; font-size: 10px; letter-spacing: .3em;
+    text-transform: uppercase; color: rgba(206, 224, 240, .6);
+  }
+  .fe-prompt {
+    margin: 0; font-size: 13px; letter-spacing: .36em; text-indent: .36em;
+    text-transform: uppercase; color: var(--fe-accent);
+    animation: fe-pulse 2.2s ease-in-out infinite;
+  }
+  @keyframes fe-pulse { 0%, 100% { opacity: .4; } 50% { opacity: 1; } }
+
+  .fe-heading {
+    margin: 0; font-size: 20px; font-weight: 600; letter-spacing: .38em;
+    text-indent: .38em; text-transform: uppercase; color: #eef6ff;
+    text-shadow: 0 2px 14px rgba(0, 0, 0, .9);
+  }
+  /* Pause shares the chrome but should not re-announce the game over the top
+     of it, so the wordmark drops back to a header rather than a title. */
+  #blocker[data-screen="pause"] .fe-wordmark { font-size: clamp(20px, 3vw, 30px); }
+  #blocker[data-screen="pause"] .fe-wordmark::after { margin-top: 14px; }
+  #blocker[data-screen="pause"] .fe-sub { display: none; }
+  .fe-buttons { display: flex; flex-direction: column; gap: 7px; }
+  .fe-btn {
+    position: relative; appearance: none; border: 0; background: none;
+    width: 258px; height: 34px; cursor: pointer; color: #e6f2ff;
+    font: 600 12px/34px var(--fe-ui); font-stretch: condensed;
+    letter-spacing: .24em; text-indent: .24em; text-transform: uppercase;
+    transition: color .12s ease-out;
+  }
+  .fe-btn::before {
+    content: ''; position: absolute; inset: 0; z-index: -1;
+    -webkit-mask: url('ui/menu_button_backing.png') center/100% 100% no-repeat;
+    mask: url('ui/menu_button_backing.png') center/100% 100% no-repeat;
+    background: rgba(139, 173, 198, .26); transition: background .12s ease-out;
+  }
+  .fe-btn:hover, .fe-btn:focus-visible { color: #04140d; outline: none; }
+  .fe-btn:hover::before, .fe-btn:focus-visible::before {
+    -webkit-mask-image: url('ui/menu_button_backing_highlight.png');
+    mask-image: url('ui/menu_button_backing_highlight.png');
+    background: var(--fe-accent);
+  }
+  .fe-btn[data-on="true"]::before { background: rgba(127, 255, 196, .42); }
+
+  .fe-controls {
+    margin: 0; font: 12px/1.75 ui-monospace, SFMono-Regular, Consolas, monospace;
+    color: rgba(205, 224, 240, .72); white-space: pre-line;
+    text-shadow: 0 1px 8px rgba(0, 0, 0, .95);
+  }
+  .fe-message { margin: 0; max-width: 46ch; color: #ff9b90; white-space: pre-line; }
+
+  /* One screen at a time; `render()` sets data-screen on the root. */
+  .fe-load, .fe-start, .fe-pause, .fe-controls, .fe-message { display: none; }
+  #blocker[data-screen="loading"] .fe-load { display: block; }
+  #blocker[data-screen="title"] .fe-start,
+  #blocker[data-screen="pause"] .fe-pause { display: flex; flex-direction: column; align-items: center; gap: 22px; }
+  #blocker[data-screen="title"] .fe-controls,
+  #blocker[data-screen="pause"] .fe-controls { display: block; }
+  #blocker[data-screen="error"] .fe-message { display: block; }
+  #blocker[data-screen="error"] .fe-wordmark::after { background: #ff6a5c; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .fe-backdrop, .fe-fog, .fe-prompt { animation: none; }
+    .fe-bar { transition: none; }
+  }
   #hud {
     position: fixed; top: 12px; left: 12px; z-index: 2; min-width: 260px;
     padding: 9px 11px; border: 1px solid rgba(127, 255, 196, .26);
@@ -48,6 +207,7 @@
 { "imports": {
   "three": "https://cdn.jsdelivr.net/npm/three@0.185.1/build/three.module.js",
   "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.185.1/examples/jsm/",
+  "three-mesh-bvh": "https://cdn.jsdelivr.net/npm/three-mesh-bvh@0.9.14/src/index.js",
   "@recast-navigation/core": "https://cdn.jsdelivr.net/npm/@recast-navigation/core@0.43.1/dist/index.mjs",
   "@recast-navigation/generators": "https://cdn.jsdelivr.net/npm/@recast-navigation/generators@0.43.1/dist/index.mjs",
   "@recast-navigation/wasm": "https://cdn.jsdelivr.net/npm/@recast-navigation/wasm@0.43.1/dist/recast-navigation.wasm-compat.js",
@@ -56,7 +216,41 @@
 </script>
 </head>
 <body>
-<div id="blocker">Loading Hijacked…</div>
+<div id="blocker" data-screen="loading">
+  <div class="fe-layer fe-backdrop"></div>
+  <div class="fe-layer fe-fog"></div>
+  <div class="fe-layer fe-fog slow"></div>
+  <div class="fe-layer fe-glow"></div>
+  <div class="fe-layer fe-vignette"></div>
+  <div class="fe-content">
+    <header>
+      <h1 class="fe-wordmark">HIJACKED</h1>
+      <p class="fe-sub">Browser reconstruction</p>
+    </header>
+    <div class="fe-load">
+      <div class="fe-track"><div class="fe-bar" id="fe-bar"></div></div>
+      <div class="fe-status"><span id="fe-caption"></span><span id="fe-percent"></span></div>
+    </div>
+    <div class="fe-start">
+      <figure class="fe-card">
+        <img src="ui/menu_mp_map_select_hijacked_final.png" alt="Hijacked" width="256" height="128">
+        <figcaption>mp_hijacked</figcaption>
+      </figure>
+      <p class="fe-prompt">Click to play</p>
+    </div>
+    <div class="fe-pause">
+      <h2 class="fe-heading">Paused</h2>
+      <div class="fe-buttons">
+        <button type="button" class="fe-btn" data-action="resume">Resume</button>
+        <button type="button" class="fe-btn" data-action="respawn">Respawn</button>
+        <button type="button" class="fe-btn" data-action="navmesh">Navmesh overlay</button>
+        <button type="button" class="fe-btn" data-action="collision">Collision overlay</button>
+      </div>
+    </div>
+    <pre class="fe-controls" id="fe-controls"></pre>
+    <p class="fe-message" id="fe-message"></p>
+  </div>
+</div>
 <div id="hud">loading…</div>
 <div id="crosshair"></div>
 <svg id="hitmarker" viewBox="0 0 26 26" data-kind="torso" aria-hidden="true">
@@ -69,6 +263,8 @@
 <script type="module">
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { KTX2Loader } from 'three/addons/loaders/KTX2Loader.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { PlayerController } from './player-controller.js';
 import { loadNavigation } from './navigation.js';
 import { Viewmodel } from './viewmodel.js';
@@ -76,6 +272,9 @@ import { WeaponController } from './weapon-controller.js';
 import { WeaponEffects } from './weapon-effects.js';
 import { EnemyManager } from './enemy-system.js';
 import { PlayerHealth } from './player-health.js';
+import { Frontend } from './frontend.js';
+import { loadCollisionWorld } from './collision-world.js';
+import { optimizeStaticScene } from './scene-optimizer.js';
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x87a8c8);
@@ -109,14 +308,41 @@ sun.position.set(-800, 1200, 600);
 scene.add(sun);
 
 const blocker = document.getElementById('blocker');
+const menuButtons = [...blocker.querySelectorAll('.fe-btn')];
+const frontend = new Frontend({
+  elements: {
+    root: blocker,
+    bar: document.getElementById('fe-bar'),
+    percent: document.getElementById('fe-percent'),
+    caption: document.getElementById('fe-caption'),
+    message: document.getElementById('fe-message'),
+    controls: document.getElementById('fe-controls'),
+    buttons: menuButtons,
+    onAction: (name) => menuAction(name),
+  },
+  onPlay: () => renderer.domElement.requestPointerLock(),
+  onResume: () => renderer.domElement.requestPointerLock(),
+});
+// Weights are roughly the wall-clock share each stage takes, not its byte size.
+frontend.expect({
+  map: 14,
+  textures: 4,
+  collision: 2,
+  navigation: 1,
+  viewmodel: 1,
+  enemy: 2,
+  shaders: 2,
+});
 const hud = document.getElementById('hud');
 const damageOverlay = document.getElementById('damage');
 const crosshair = document.getElementById('crosshair');
 const hitmarker = document.getElementById('hitmarker');
 const keys = Object.create(null);
-const loadProgress = Object.create(null);
 const clock = new THREE.Clock();
+const bootStartedAt = performance.now();
+const frameWorkSamples = new Float32Array(180);
 const raycaster = new THREE.Raycaster();
+raycaster.firstHitOnly = true;
 const down = new THREE.Vector3(0, -1, 0);
 const lookCenter = new THREE.Vector2(0, 0);
 const yawPitch = new THREE.Euler(0, 0, 0, 'YXZ');
@@ -126,6 +352,8 @@ let locked = false;
 let player = null;
 let navigation = null;
 let collisionRoot = null;
+let collisionWorld = null;
+let mapOptimization = null;
 let navigationVisible = false;
 let collisionVisible = false;
 let pathPoints = 0;
@@ -133,6 +361,14 @@ let enemies = null;
 let playerHealth = null;
 let hitmarkerLife = 0;
 let hitmarkerMaxLife = 0.18;
+let automationPaused = false;
+let startupMilliseconds = null;
+let frameWorkSampleCount = 0;
+let frameWorkSampleIndex = 0;
+let frameWorkWarmupUntil = Number.POSITIVE_INFINITY;
+let hudElapsed = 1;
+let lastDamageOpacity = '';
+let lastAdsState = false;
 
 const weaponEffects = new WeaponEffects(scene);
 // Reload audio is authored into the clip as notetracks, so the cues play from
@@ -156,22 +392,42 @@ const pathLine = new THREE.Line(
 pathLine.renderOrder = 50;
 scene.add(pathLine);
 
-function loadingText() {
-  const entries = Object.entries(loadProgress);
-  const detail = entries.map(([name, percent]) => `${name} ${percent}`).join('  ·  ');
-  blocker.textContent = `Loading Hijacked…${detail ? `\n${detail}` : ''}`;
-}
-
 function progress(name, event) {
-  loadProgress[name] = event.total
-    ? `${Math.min(100, event.loaded / event.total * 100).toFixed(0)}%`
-    : `${(event.loaded / 1048576).toFixed(1)} MB`;
-  loadingText();
+  frontend.progress(name, event);
 }
 
-const loader = new GLTFLoader();
+// Pause-menu buttons drive the same state the keyboard shortcuts do, so the
+// overlays stay in sync however they were toggled.
+function menuAction(name) {
+  if (name === 'respawn') {
+    if (playerHealth) playerHealth.respawn();
+    else player?.respawn();
+  }
+  if (name === 'navmesh') navigationVisible = !navigationVisible;
+  if (name === 'collision') collisionVisible = !collisionVisible;
+  setDebugVisibility();
+}
+
+function syncMenuButtons() {
+  for (const button of menuButtons) {
+    const action = button.dataset.action;
+    if (action === 'navmesh') button.dataset.on = String(navigationVisible);
+    if (action === 'collision') button.dataset.on = String(collisionVisible);
+  }
+}
+
+const loadingManager = new THREE.LoadingManager();
+const loader = new GLTFLoader(loadingManager);
+const ktx2Loader = new KTX2Loader(loadingManager)
+  .setTranscoderPath('https://cdn.jsdelivr.net/npm/three@0.185.1/examples/jsm/libs/basis/')
+  .detectSupport(renderer);
+loader.setKTX2Loader(ktx2Loader);
+loader.setMeshoptDecoder(MeshoptDecoder);
 function loadGltf(url, label) {
-  return loader.loadAsync(url, (event) => progress(label, event));
+  return loader.loadAsync(url, (event) => progress(label, event)).then((gltf) => {
+    frontend.stage(label);
+    return gltf;
+  });
 }
 
 function chooseSpawn(hints, collision) {
@@ -253,26 +509,205 @@ function reloadWeapon() {
 
 function setDebugVisibility() {
   navigation?.setDebugVisible(navigationVisible);
-  if (collisionRoot) {
-    collisionRoot.traverse((object) => {
-      if (object.isMesh && object.material) object.material.visible = collisionVisible;
-    });
-  }
+  collisionWorld?.setDebugVisible(collisionVisible);
+  syncMenuButtons();
 }
 
-document.addEventListener('pointerlockchange', () => {
-  locked = document.pointerLockElement === renderer.domElement;
+const debugRound = (value) => Number.isFinite(value)
+  ? Math.round(value * 1000) / 1000
+  : null;
+const debugVector = (vector) => vector
+  ? [debugRound(vector.x), debugRound(vector.y), debugRound(vector.z)]
+  : null;
+
+function frameWorkStats() {
+  const count = Math.min(frameWorkSampleCount, frameWorkSamples.length);
+  if (!count) return { startupMilliseconds, samples: 0, averageMilliseconds: 0, p95Milliseconds: 0 };
+  const values = Array.from(frameWorkSamples.subarray(0, count)).sort((a, b) => a - b);
+  const total = values.reduce((sum, value) => sum + value, 0);
+  return {
+    startupMilliseconds,
+    samples: count,
+    averageMilliseconds: debugRound(total / count),
+    p95Milliseconds: debugRound(values[Math.min(count - 1, Math.floor(count * 0.95))]),
+  };
+}
+
+function setAutomationActive(active = true) {
+  locked = Boolean(active);
+  automationPaused = false;
   document.body.classList.toggle('locked', locked);
-  blocker.style.display = locked ? 'none' : 'flex';
+  if (locked) frontend.enter();
+  else frontend.suspend();
   if (!locked) {
     clearKeys();
     weapon.setTrigger(false);
     viewmodel.setAiming(false);
   }
-});
+  return locked;
+}
 
-blocker.addEventListener('click', () => {
-  if (ready) renderer.domElement.requestPointerLock();
+function getDebugState() {
+  const feet = player?.feetPosition ?? null;
+  const forward = camera.getWorldDirection(new THREE.Vector3());
+  const render = renderer.info.render;
+  const size = renderer.getDrawingBufferSize(new THREE.Vector2());
+  return {
+    ready,
+    active: locked,
+    paused: automationPaused,
+    player: player ? {
+      feet: debugVector(feet),
+      eye: debugVector(player.position),
+      velocity: debugVector(player.velocity),
+      forward: debugVector(forward),
+      grounded: player.isGrounded,
+      crouched: player.crouched,
+      enabled: player.enabled,
+      health: debugRound(playerHealth?.health ?? 0),
+      maxHealth: debugRound(playerHealth?.maxHealth ?? 0),
+      dead: Boolean(playerHealth?.dead),
+      protected: (playerHealth?.protectionTimer ?? 0) > 0,
+    } : null,
+    weapon: {
+      magazine: weapon.magazine,
+      magazineSize: weapon.magazineSize,
+      reserveAmmo: weapon.reserveAmmo,
+      reloading: weapon.reloading,
+      triggerHeld: weapon.triggerHeld,
+      fireCount: weapon.fireCount,
+      aiming: viewmodel.aimBlend > 0.5,
+    },
+    enemies: enemies?.enemies.map((enemy) => ({
+      index: enemy.index,
+      position: debugVector(enemy.root.position),
+      health: debugRound(enemy.health),
+      maxHealth: debugRound(enemy.maxHealth),
+      dead: enemy.dead,
+      state: enemy.state,
+      playerVisible: enemy.playerVisible,
+      lineOfFireClear: enemy.lineOfFireClear,
+      reactionSeconds: debugRound(enemy.reactionTimer),
+      burstShotsRemaining: enemy.burstShotsRemaining,
+      burstPauseSeconds: debugRound(enemy.burstPauseTimer),
+      reloadSeconds: debugRound(enemy.reloadTimer),
+      magazine: enemy.magazine,
+      shotsFired: enemy.shotsFired,
+      suppressedSeconds: debugRound(enemy.suppressionTimer),
+      lastSeenSeconds: debugRound(enemy.lastSeenTimer),
+      searchSeconds: debugRound(enemy.searchTimer),
+      combatTarget: debugVector(enemy.combatTarget),
+      searchTarget: debugVector(enemy.searchTarget),
+      distanceToPlayer: player
+        ? debugRound(enemy.root.position.distanceTo(player.position))
+        : null,
+      visualState: enemy.visualState,
+      visualFrame: enemy.visualFrameIndex,
+    })) ?? [],
+    overlays: {
+      navigation: navigationVisible,
+      collision: collisionVisible,
+      pathPoints,
+    },
+    performance: {
+      drawCalls: render.calls,
+      triangles: render.triangles,
+      lines: render.lines,
+      points: render.points,
+      geometries: renderer.info.memory.geometries,
+      textures: renderer.info.memory.textures,
+      drawingBuffer: [size.x, size.y],
+      pixelRatio: debugRound(renderer.getPixelRatio()),
+      frameWork: frameWorkStats(),
+      collision: collisionWorld?.stats ?? null,
+      scene: mapOptimization,
+    },
+    menu: frontend.getState(),
+    hud: hud.textContent,
+  };
+}
+
+function createDebugApi() {
+  return {
+    getState: getDebugState,
+    setActive: setAutomationActive,
+    pause() {
+      automationPaused = true;
+      clearKeys();
+      weapon.setTrigger(false);
+      return getDebugState();
+    },
+    resume() {
+      automationPaused = false;
+      return getDebugState();
+    },
+    teleportPlayer(position) {
+      if (!player || !Array.isArray(position) || position.length !== 3) return false;
+      const target = new THREE.Vector3(...position.map(Number));
+      if (![target.x, target.y, target.z].every(Number.isFinite)) return false;
+      player.reset(target, { eye: false, resolve: true });
+      return debugVector(player.feetPosition);
+    },
+    lookAt(position) {
+      if (!Array.isArray(position) || position.length !== 3) return false;
+      const target = new THREE.Vector3(...position.map(Number));
+      if (![target.x, target.y, target.z].every(Number.isFinite)) return false;
+      camera.lookAt(target);
+      return debugVector(camera.getWorldDirection(new THREE.Vector3()));
+    },
+    showMenu(visible = true) {
+      if (visible) frontend.suspend();
+      else frontend.enter();
+      return frontend.getState();
+    },
+    showNavigation(visible = true) {
+      navigationVisible = Boolean(visible);
+      setDebugVisibility();
+      return navigationVisible;
+    },
+    showCollision(visible = true) {
+      collisionVisible = Boolean(visible);
+      setDebugVisibility();
+      return collisionVisible;
+    },
+    damagePlayer(amount) {
+      if (!playerHealth) return 0;
+      playerHealth.protectionTimer = 0;
+      return playerHealth.takeDamage(amount, { type: 'debug' });
+    },
+    respawnPlayer() {
+      playerHealth?.respawn();
+      return getDebugState().player;
+    },
+    respawnEnemies() {
+      enemies?.enemies.forEach((enemy) => enemy.spawnAt(enemy.spawnPoint));
+      return enemies?.aliveCount ?? 0;
+    },
+    teleportEnemy(index, position) {
+      const enemy = enemies?.enemies[Math.trunc(Number(index))];
+      if (!enemy || !Array.isArray(position) || position.length !== 3) return false;
+      const target = new THREE.Vector3(...position.map(Number));
+      if (![target.x, target.y, target.z].every(Number.isFinite)) return false;
+      return enemy.teleport(target) ? debugVector(enemy.root.position) : false;
+    },
+    alertEnemies(radius = 2000) {
+      if (!enemies || !player) return 0;
+      enemies.alert(player.position, Math.max(0, Number(radius) || 0), player.position);
+      return enemies.enemies.filter((enemy) => enemy.engaged).length;
+    },
+  };
+}
+
+document.addEventListener('pointerlockchange', () => {
+  locked = document.pointerLockElement === renderer.domElement;
+  document.body.classList.toggle('locked', locked);
+  if (locked) frontend.enter();
+  else frontend.suspend();
+  if (!locked) {
+    clearKeys();
+    weapon.setTrigger(false);
+    viewmodel.setAiming(false);
+  }
 });
 
 document.addEventListener('mousemove', (event) => {
@@ -304,6 +739,12 @@ document.addEventListener('keydown', (event) => {
     event.preventDefault();
   }
   if (event.repeat || !ready) return;
+  // Any key but Esc starts or resumes from the shell — Esc is what released
+  // the pointer lock to get here, and the browser owns it for a moment after.
+  if (frontend.visible) {
+    if (event.code !== 'Escape') frontend.play();
+    return;
+  }
   if (event.code === 'KeyR' && locked) reloadWeapon();
   if (event.code === 'KeyB' && locked) {
     if (playerHealth) playerHealth.respawn();
@@ -331,7 +772,7 @@ async function start() {
     }).catch((error) => {
       console.error('Navigation unavailable:', error);
       return null;
-    });
+    }).finally(() => frontend.stage('navigation'));
     const viewmodelPromise = viewmodel
       .load(
         'viewmodel/c_usa_mp_fbi_shortsleeve_viewhands_lod0.glb',
@@ -350,37 +791,30 @@ async function start() {
       )
       .catch((error) => {
         console.warn('Viewmodel unavailable:', error);
-      });
-    const [renderGltf, collisionGltf, hints] = await Promise.all([
-      loadGltf('hijacked.gltf', 'render'),
-      loadGltf('hijacked_collision.gltf', 'collision'),
+      })
+      .finally(() => frontend.stage('viewmodel'));
+    const [renderGltf, loadedCollisionWorld, hints] = await Promise.all([
+      loadGltf('hijacked_optimized.glb', 'map').then((gltf) => {
+        // KTX2 texture decoding is complete when GLTFLoader resolves.
+        frontend.stage('textures');
+        return gltf;
+      }),
+      loadCollisionWorld({ onProgress: (event) => progress('collision', event) })
+        .finally(() => frontend.stage('collision')),
       fetch('hijacked_nav_hints.json').then((response) => {
         if (!response.ok) throw new Error(`nav hints HTTP ${response.status}`);
         return response.json();
       }),
     ]);
-
+    mapOptimization = optimizeStaticScene(renderGltf.scene);
     scene.add(renderGltf.scene);
-    collisionRoot = collisionGltf.scene;
-    collisionRoot.updateWorldMatrix(true, true);
-
-    // Keep the collision source raycastable but visually hidden. V toggles a
-    // translucent wireframe without rebuilding the player Octree.
-    const collisionMaterial = new THREE.MeshBasicMaterial({
-      color: 0xff3b30, wireframe: true, transparent: true, opacity: .24,
-      depthTest: false, visible: false,
-    });
-    collisionRoot.traverse((object) => {
-      if (object.isMesh) {
-        object.material = collisionMaterial;
-        object.renderOrder = 40;
-      }
-    });
+    collisionWorld = loadedCollisionWorld;
+    collisionRoot = collisionWorld.mesh;
     scene.add(collisionRoot);
 
     const spawn = chooseSpawn(hints, collisionRoot);
     camera.quaternion.setFromEuler(new THREE.Euler(0, spawn.yaw, 0, 'YXZ'));
-    player = new PlayerController(camera, collisionRoot, {
+    player = new PlayerController(camera, collisionWorld, {
       spawn: spawn.position,
       radius: 16,
       height: 72,
@@ -415,18 +849,19 @@ async function start() {
     if (navigation?.crowdHelper) scene.add(navigation.crowdHelper);
     setDebugVisibility();
 
-    const enemyPromise = navigation
+    const enemyPromise = (navigation
       ? (enemies = new EnemyManager({
           scene,
           navigation,
-          collisionRoot,
+          collisionWorld,
           player,
           playerHealth,
           weaponEffects,
           hints,
           count: 6,
         })).load({ onProgress: (label, event) => progress(label, event) })
-      : Promise.resolve();
+      : Promise.resolve()
+    ).finally(() => frontend.stage('enemy'));
 
     await Promise.all([viewmodelPromise, weaponEffects.loadAudio(), enemyPromise]);
 
@@ -473,33 +908,37 @@ async function start() {
       warmTarget.dispose();
       parent.add(warmEnemy.root);
     }
+    frontend.stage('shaders');
 
     // Small read/debug surface for automated smoke tests and map tooling.
     globalThis.hijacked = {
-      scene, camera, renderer, player, navigation, collisionRoot, hints, viewmodel,
-      weapon, weaponEffects, playerHealth, enemies, reloadWeapon,
+      scene, camera, renderer, player, navigation, collisionRoot, collisionWorld, hints, viewmodel,
+      weapon, weaponEffects, playerHealth, enemies, reloadWeapon, frontend,
+      debug: createDebugApi(),
     };
 
+    startupMilliseconds = debugRound(performance.now() - bootStartedAt);
+    frameWorkWarmupUntil = performance.now() + 1000;
     ready = true;
-    blocker.classList.add('ready');
-    blocker.textContent = [
-      'Click to play',
+    frontend.setReady([
       'WASD move · Shift sprint · Space jump · C/Ctrl crouch',
       'Left mouse fire · Right mouse aim · R reload · B respawn',
-      'N navmesh · V collision · P path',
+      'N navmesh · V collision · P path · Esc pause',
       navigation ? '' : 'Navigation failed to load; collision and walking are still available.',
-    ].filter(Boolean).join('\n');
+    ]);
   } catch (error) {
     console.error(error);
-    blocker.textContent = `Unable to start\n${error instanceof Error ? error.message : error}`;
+    frontend.fail(`Unable to start\n${error instanceof Error ? error.message : error}`);
     hud.textContent = 'load failed — see developer console';
   }
 }
 
 function tick() {
   requestAnimationFrame(tick);
+  const frameWorkStartedAt = performance.now();
   const dt = Math.min(clock.getDelta(), 0.1);
-  if (player && locked) {
+  const simulationActive = locked && !automationPaused;
+  if (player && simulationActive) {
     player.update(dt, {
       forward: keys.KeyW,
       backward: keys.KeyS,
@@ -509,12 +948,12 @@ function tick() {
       jump: keys.Space,
     });
   }
-  if (locked) navigation?.update(1 / 60, dt, 5);
-  enemies?.update(dt, { active: locked });
-  playerHealth?.update(locked ? dt : 0);
+  if (simulationActive) navigation?.update(1 / 60, dt, 5);
+  if (simulationActive) enemies?.update(dt);
+  playerHealth?.update(simulationActive ? dt : 0);
   weaponEffects.update(dt);
   // Panned enemy fire is only meaningful while the listener tracks the camera.
-  weaponEffects.updateListener(camera);
+  if (simulationActive) weaponEffects.updateListener(camera);
 
   if (player) {
     const p = player.position;
@@ -529,21 +968,34 @@ function tick() {
       moving,
     });
     if (weapon.reloading && !viewmodel.reloading) weapon.finishReload();
-    weapon.update(dt, { canFire: locked && !sprinting && !playerHealth?.dead });
+    weapon.update(dt, { canFire: simulationActive && !sprinting && !playerHealth?.dead });
 
-    hud.textContent =
-      `xyz ${p.x.toFixed(1)} ${p.y.toFixed(1)} ${p.z.toFixed(1)}\n` +
-      `speed ${speed.toFixed(0)}  ${player.isGrounded ? 'grounded' : 'air'}${player.crouched ? '  crouched' : ''}\n` +
-      `health ${Math.ceil(playerHealth?.health ?? 100)}${playerHealth?.dead ? '  respawning' :
-        playerHealth?.protectionTimer > 0 ? '  protected' : ''}  ` +
-      `enemies ${enemies?.aliveCount ?? 0}/${enemies?.enemies.length ?? 0}\n` +
-      `weapon ${viewmodel.ready ? 'm27' : 'none'}${viewmodel.reloading ? ' reloading' : ''}  ` +
-      `ammo ${weapon.magazine}/${weapon.reserveAmmo}\n` +
-      `nav ${navigation ? (navigationVisible ? 'shown' : 'ready') : 'unavailable'}  ` +
-      `collision ${collisionVisible ? 'shown' : 'ready'}  path ${pathPoints}`;
+    hudElapsed += dt;
+    if (hudElapsed >= 0.1) {
+      hudElapsed = 0;
+      const nextHud =
+        `xyz ${p.x.toFixed(1)} ${p.y.toFixed(1)} ${p.z.toFixed(1)}\n` +
+        `speed ${speed.toFixed(0)}  ${player.isGrounded ? 'grounded' : 'air'}${player.crouched ? '  crouched' : ''}\n` +
+        `health ${Math.ceil(playerHealth?.health ?? 100)}${playerHealth?.dead ? '  respawning' :
+          playerHealth?.protectionTimer > 0 ? '  protected' : ''}  ` +
+        `enemies ${enemies?.aliveCount ?? 0}/${enemies?.enemies.length ?? 0}\n` +
+        `weapon ${viewmodel.ready ? 'm27' : 'none'}${viewmodel.reloading ? ' reloading' : ''}  ` +
+        `ammo ${weapon.magazine}/${weapon.reserveAmmo}\n` +
+        `nav ${navigation ? (navigationVisible ? 'shown' : 'ready') : 'unavailable'}  ` +
+        `collision ${collisionVisible ? 'shown' : 'ready'}  path ${pathPoints}`;
+      if (hud.textContent !== nextHud) hud.textContent = nextHud;
+    }
   }
-  damageOverlay.style.opacity = String((playerHealth?.hitFlash ?? 0) * 0.55);
-  crosshair.classList.toggle('ads', viewmodel.aimBlend > 0.5);
+  const damageOpacity = String((playerHealth?.hitFlash ?? 0) * 0.55);
+  if (damageOpacity !== lastDamageOpacity) {
+    damageOverlay.style.opacity = damageOpacity;
+    lastDamageOpacity = damageOpacity;
+  }
+  const adsState = viewmodel.aimBlend > 0.5;
+  if (adsState !== lastAdsState) {
+    crosshair.classList.toggle('ads', adsState);
+    lastAdsState = adsState;
+  }
 
   if (hitmarkerLife > 0) {
     hitmarkerLife = Math.max(0, hitmarkerLife - dt);
@@ -559,6 +1011,11 @@ function tick() {
   renderer.clear();
   renderer.render(scene, camera);
   viewmodel.render(renderer);
+  if (ready && performance.now() >= frameWorkWarmupUntil) {
+    frameWorkSamples[frameWorkSampleIndex] = performance.now() - frameWorkStartedAt;
+    frameWorkSampleIndex = (frameWorkSampleIndex + 1) % frameWorkSamples.length;
+    frameWorkSampleCount += 1;
+  }
 }
 
 start();

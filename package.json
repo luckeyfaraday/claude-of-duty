@@ -4,9 +4,18 @@
   "private": true,
   "description": "Browser-based Three.js viewer and navigation tools for the Hijacked map export.",
   "scripts": {
+    "ai:game": "node .tools/ai-game.mjs",
+    "ai:state": "node .tools/ai-game.mjs state",
+    "ai:screenshot": "node .tools/ai-game.mjs screenshot",
+    "ai:test": "node .tools/ai-game.mjs test",
+    "ai:enemy": "node .tools/ai-game.mjs enemy-test",
+    "ai:record": "node .tools/ai-game.mjs record",
+    "bake:map": "node .tools/bake_map.mjs",
+    "bake:collision": "node .tools/bake_collision_bvh.mjs",
     "bake:navmesh": "node .tools/bake_navmesh.mjs",
+    "perf:probe": "node .tools/perf_probe.mjs",
     "test": "node --test",
-    "test:unit": "node --test test/player-controller.test.mjs test/player-health.test.mjs test/weapon-controller.test.mjs test/t6-sab-audio.test.mjs test/xanim-to-json.test.mjs test/notetracks.test.mjs tests/navmesh-bake.test.mjs",
+    "test:unit": "node --test test/collision-world.test.mjs test/scene-optimizer.test.mjs test/player-controller.test.mjs test/player-health.test.mjs test/weapon-controller.test.mjs test/enemy-tactics.test.mjs test/frontend.test.mjs test/t6-sab-audio.test.mjs test/xanim-to-json.test.mjs test/notetracks.test.mjs tests/navmesh-bake.test.mjs",
     "test:browser": "node --test test/browser-smoke.mjs"
   },
   "repository": {
@@ -25,7 +34,8 @@
     "@recast-navigation/core": "0.43.1",
     "@recast-navigation/generators": "0.43.1",
     "@recast-navigation/three": "0.43.1",
-    "three": "0.185.1"
+    "three": "0.185.1",
+    "three-mesh-bvh": "^0.9.14"
   },
   "devDependencies": {
     "playwright-core": "^1.62.1"

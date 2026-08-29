@@ -1,5 +1,6 @@
 *
 !/.gitignore
+!/AGENTS.md
 !/README.md
 !/package.json
 !/package-lock.json
@@ -10,9 +11,14 @@
 !/.tools/
 !/.tools/compose_scene.py
 !/.tools/export_collision.py
+!/.tools/export_ui.py
 !/.tools/bake_navmesh.mjs
+!/.tools/bake_collision_bvh.mjs
+!/.tools/bake_map.mjs
+!/.tools/perf_probe.mjs
 !/.tools/xanim_to_json.mjs
 !/.tools/extract_t6_sab_audio.mjs
+!/.tools/ai-game.mjs
 !/export/
 !/export/web/
 !/export/web/**

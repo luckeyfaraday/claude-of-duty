@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
+import { enemyShotSpread, engagementPlan } from './enemy-tactics.js';
 
 const UP = new THREE.Vector3(0, 1, 0);
 const MODEL_FORWARD_OFFSET = Math.PI / 2;
@@ -10,6 +11,8 @@ const _origin = new THREE.Vector3();
 const _target = new THREE.Vector3();
 const _velocity = new THREE.Vector3();
 const _point = new THREE.Vector3();
+const _friendCenter = new THREE.Vector3();
+const _friendClosest = new THREE.Vector3();
 const _sphere = new THREE.Sphere();
 
 function findNode(root, name) {
@@ -331,9 +334,24 @@ class Enemy {
     this.lastSeen = new THREE.Vector3();
     this.lastSeenTimer = 0;
     this.decisionTimer = Math.random() * 0.2;
-    this.fireTimer = 0.4 + Math.random() * 0.7;
+    this.fireTimer = 0;
+    this.reactionTimer = 0;
+    this.burstShotsRemaining = 0;
+    this.burstPauseTimer = 0;
+    this.reloadTimer = 0;
+    this.magazine = manager.enemyMagazineSize;
+    this.shotsFired = 0;
+    this.suppressionTimer = 0;
+    this.lineOfFireClear = false;
+    this.movementSpeed = 0;
     this.respawnTimer = 0;
     this.patrolTarget = null;
+    this.combatTarget = null;
+    this.combatTargetTimer = 0;
+    this.searchTarget = null;
+    this.searchTimer = 0;
+    this.searchStep = 0;
+    this.engaged = false;
     this.walkTime = Math.random() * Math.PI * 2;
     this.deathBlend = 0;
     this.playerVisible = false;
@@ -442,8 +460,23 @@ class Enemy {
     this.respawnTimer = 0;
     this.lastSeenTimer = 0;
     this.patrolTarget = null;
+    this.combatTarget = null;
+    this.combatTargetTimer = 0;
+    this.searchTarget = null;
+    this.searchTimer = 0;
+    this.searchStep = 0;
+    this.engaged = false;
     this.decisionTimer = Math.random() * 0.25;
-    this.fireTimer = 0.4 + Math.random() * 0.6;
+    this.fireTimer = 0;
+    this.reactionTimer = 0;
+    this.burstShotsRemaining = 0;
+    this.burstPauseTimer = 0;
+    this.reloadTimer = 0;
+    this.magazine = this.manager.enemyMagazineSize;
+    this.shotsFired = 0;
+    this.suppressionTimer = 0;
+    this.lineOfFireClear = false;
+    this.movementSpeed = 0;
     this.deathBlend = 0;
     this.playerVisible = false;
     this.modelRoot.position.y = 0;
@@ -480,6 +513,10 @@ class Enemy {
     this.health -= applied;
     this.lastSeen.copy(this.manager.player.position);
     this.lastSeenTimer = 6;
+    this.engaged = true;
+    this.searchTimer = 0;
+    this.suppressionTimer = Math.max(this.suppressionTimer, 1.25);
+    this.reactionTimer = Math.min(this.reactionTimer, 0.12);
     if (this.health <= 0) this.die();
     else {
       this.state = 'chase';
@@ -492,6 +529,7 @@ class Enemy {
     if (this.dead) return;
     this.dead = true;
     this.state = 'dead';
+    this.lineOfFireClear = false;
     this.respawnTimer = this.manager.respawnDelay;
     if (this.agent) {
       this.agent.resetMoveTarget();
@@ -515,10 +553,25 @@ class Enemy {
     if (this.patrolTarget) this.agent?.requestMoveTarget(this.patrolTarget);
   }
 
+  chooseCombatTarget() {
+    this.combatTarget = this.manager.findEngagementPoint(this);
+    this.combatTargetTimer = 3.2 + (this.index % 3) * 0.45 + Math.random() * 0.6;
+    if (this.combatTarget) this.agent?.requestMoveTarget(this.combatTarget);
+  }
+
+  chooseSearchTarget() {
+    this.searchTarget = this.manager.findSearchPoint(this.lastSeen, this.index, this.searchStep);
+    this.searchStep += 1;
+    if (this.searchTarget) this.agent?.requestMoveTarget(this.searchTarget);
+  }
+
   decide() {
     const playerHealth = this.manager.playerHealth;
     if (playerHealth?.dead) {
       this.playerVisible = false;
+      this.engaged = false;
+      this.searchTimer = 0;
+      this.lineOfFireClear = false;
       this.state = 'patrol';
       if (!this.patrolTarget) this.choosePatrolTarget();
       return;
@@ -526,19 +579,44 @@ class Enemy {
 
     const playerPosition = this.manager.player.position;
     const distance = this.root.position.distanceTo(playerPosition);
-    const alreadyAlerted = this.lastSeenTimer > 0 || this.state === 'chase' || this.state === 'attack';
+    const alreadyAlerted = this.engaged || this.lastSeenTimer > 0 ||
+      ['chase', 'attack', 'reposition', 'search'].includes(this.state);
+    const wasVisible = this.playerVisible;
     const visible = distance <= this.manager.visionRange &&
       this.manager.canSeePlayer(this, alreadyAlerted ? -0.2 : this.manager.visionCosine);
     this.playerVisible = visible;
 
     if (visible) {
+      if (!wasVisible) {
+        this.reactionTimer = this.manager.reactionTimeMin + Math.random() *
+          (this.manager.reactionTimeMax - this.manager.reactionTimeMin);
+      }
       this.lastSeen.copy(playerPosition);
       this.lastSeenTimer = this.manager.memoryTime;
+      this.engaged = true;
+      this.searchTimer = 0;
+      this.searchTarget = null;
+      this.lineOfFireClear = !this.manager.hasFriendlyLineBlock(this);
       if (distance <= this.manager.attackRange) {
-        this.state = 'attack';
-        this.agent?.resetMoveTarget();
+        const targetPending = this.combatTarget &&
+          planarDistance(this.root.position, this.combatTarget) >= 70;
+        const shouldReposition = distance < this.manager.minAttackRange ||
+          !this.lineOfFireClear || this.manager.isCombatCrowded(this) ||
+          (this.state === 'reposition' && targetPending) || this.combatTargetTimer <= 0;
+        if (shouldReposition) {
+          this.state = 'reposition';
+          if (!targetPending || this.combatTargetTimer <= 0 ||
+              planarDistance(this.root.position, this.combatTarget) < 70) {
+            this.chooseCombatTarget();
+          }
+        } else {
+          this.state = 'attack';
+          this.combatTarget = null;
+          this.agent?.resetMoveTarget();
+        }
       } else {
         this.state = 'chase';
+        this.combatTarget = null;
         const projected = this.manager.navigation.projectPoint(this.manager.player.feetPosition);
         if (projected.success && projected.point) this.agent?.requestMoveTarget(projected.point);
       }
@@ -546,15 +624,83 @@ class Enemy {
     }
 
     if (this.lastSeenTimer > 0) {
+      this.lineOfFireClear = false;
       this.state = 'chase';
+      this.combatTarget = null;
       const projected = this.manager.navigation.projectPoint(this.lastSeen);
       if (projected.success && projected.point) this.agent?.requestMoveTarget(projected.point);
       return;
     }
 
+    if (this.engaged && this.state !== 'search') {
+      this.lineOfFireClear = false;
+      this.state = 'search';
+      this.searchTimer = this.manager.searchDuration;
+      this.searchStep = 0;
+      this.chooseSearchTarget();
+      return;
+    }
+
+    if (this.state === 'search' && this.searchTimer > 0) {
+      if (!this.searchTarget || planarDistance(this.root.position, this.searchTarget) < 65) {
+        this.chooseSearchTarget();
+      }
+      return;
+    }
+
+    this.engaged = false;
+    this.searchTarget = null;
     this.state = 'patrol';
     if (!this.patrolTarget || planarDistance(this.root.position, this.patrolTarget) < 50) {
       this.choosePatrolTarget();
+    }
+  }
+
+  updateWeapon(deltaSeconds) {
+    const dt = Math.max(0, Number(deltaSeconds) || 0);
+    const wasReloading = this.reloadTimer > 0;
+    this.fireTimer = Math.max(0, this.fireTimer - dt);
+    this.reactionTimer = Math.max(0, this.reactionTimer - dt);
+    this.burstPauseTimer = Math.max(0, this.burstPauseTimer - dt);
+    this.reloadTimer = Math.max(0, this.reloadTimer - dt);
+    this.suppressionTimer = Math.max(0, this.suppressionTimer - dt);
+    if (wasReloading && this.reloadTimer === 0) this.magazine = this.manager.enemyMagazineSize;
+
+    const combatState = this.state === 'attack' || this.state === 'reposition';
+    if (!combatState || !this.playerVisible || this.manager.playerHealth?.dead ||
+        this.reactionTimer > 0 || this.reloadTimer > 0 || this.burstPauseTimer > 0) return;
+
+    if (this.magazine <= 0) {
+      this.reloadTimer = this.manager.enemyReloadTime * (0.9 + Math.random() * 0.2);
+      this.burstShotsRemaining = 0;
+      return;
+    }
+    if (this.fireTimer > 0) return;
+
+    if (!this.manager.canEnemyFire(this)) {
+      this.lineOfFireClear = false;
+      this.combatTargetTimer = 0;
+      this.burstPauseTimer = 0.18;
+      return;
+    }
+
+    this.lineOfFireClear = true;
+    if (this.burstShotsRemaining <= 0) {
+      const span = this.manager.burstShotMax - this.manager.burstShotMin + 1;
+      this.burstShotsRemaining = this.manager.burstShotMin + Math.floor(Math.random() * span);
+    }
+    this.manager.enemyFire(this);
+    this.magazine -= 1;
+    this.shotsFired += 1;
+    this.burstShotsRemaining -= 1;
+    this.fireTimer = this.manager.enemyShotInterval * (0.9 + Math.random() * 0.2);
+
+    if (this.magazine <= 0) {
+      this.reloadTimer = this.manager.enemyReloadTime * (0.9 + Math.random() * 0.2);
+      this.burstShotsRemaining = 0;
+    } else if (this.burstShotsRemaining <= 0) {
+      this.burstPauseTimer = this.manager.burstPauseMin + Math.random() *
+        (this.manager.burstPauseMax - this.manager.burstPauseMin);
     }
   }
 
@@ -588,7 +734,8 @@ class Enemy {
 
     if (!active) return;
     this.lastSeenTimer = Math.max(0, this.lastSeenTimer - dt);
-    this.fireTimer = Math.max(0, this.fireTimer - dt);
+    this.combatTargetTimer = Math.max(0, this.combatTargetTimer - dt);
+    if (this.state === 'search') this.searchTimer = Math.max(0, this.searchTimer - dt);
     this.decisionTimer -= dt;
     if (this.decisionTimer <= 0) {
       // Full-map collision raycasts are deliberately staggered and cached.
@@ -599,20 +746,23 @@ class Enemy {
     }
 
     const horizontalSpeed = Math.hypot(_velocity.x, _velocity.z);
-    if (this.state === 'attack') {
+    this.movementSpeed = horizontalSpeed;
+    const combatFacing = this.playerVisible &&
+      (this.state === 'attack' || this.state === 'reposition');
+    if (combatFacing) {
       _direction.subVectors(this.manager.player.position, this.root.position).setY(0);
       if (_direction.lengthSq() > 1) {
         const targetYaw = Math.atan2(-_direction.x, -_direction.z);
         this.root.rotation.y = dampAngle(this.root.rotation.y, targetYaw, 10, dt);
       }
+    }
+    if (this.state === 'attack') {
       this.playAction('idle');
-      if (this.fireTimer <= 0) {
-        this.fireTimer = this.manager.fireInterval * (0.85 + Math.random() * 0.35);
-        if (this.playerVisible && this.manager.canEnemyFire(this)) this.manager.enemyFire(this);
-      }
     } else if (horizontalSpeed > 10) {
-      const targetYaw = Math.atan2(-_velocity.x, -_velocity.z);
-      this.root.rotation.y = dampAngle(this.root.rotation.y, targetYaw, 9, dt);
+      if (!combatFacing) {
+        const targetYaw = Math.atan2(-_velocity.x, -_velocity.z);
+        this.root.rotation.y = dampAngle(this.root.rotation.y, targetYaw, 9, dt);
+      }
       this.playAction('run');
       this.visualTimeScale = THREE.MathUtils.clamp(horizontalSpeed / 210, 0.65, 1.35);
       this.walkTime += dt * THREE.MathUtils.clamp(horizontalSpeed / 28, 5, 10);
@@ -621,6 +771,7 @@ class Enemy {
       this.playAction('idle');
       this.modelRoot.position.y = THREE.MathUtils.damp(this.modelRoot.position.y, 0, 12, dt);
     }
+    this.updateWeapon(dt);
     this.advanceVisual(dt);
     this.root.updateMatrixWorld(true);
   }
@@ -630,7 +781,7 @@ export class EnemyManager {
   constructor({
     scene,
     navigation,
-    collisionRoot,
+    collisionWorld,
     player,
     playerHealth,
     weaponEffects,
@@ -642,19 +793,37 @@ export class EnemyManager {
     attackRange = 850,
     fieldOfView = 125,
     memoryTime = 5,
-    fireInterval = 0.65,
     enemyDamage = 3,
-    maxAttackers = 2,
+    enemyShotInterval = 0.16,
+    burstShotMin = 2,
+    burstShotMax = 4,
+    burstPauseMin = 1.15,
+    burstPauseMax = 1.85,
+    enemyMagazineSize = 24,
+    enemyReloadTime = 2.4,
+    reactionTimeMin = 0.35,
+    reactionTimeMax = 0.95,
+    friendlyFireRadius = 25,
+    combatSpacing = 105,
+    minAttackRange = 320,
+    searchDuration = 4.5,
     respawnDelay = 6,
   }) {
-    if (!scene || !navigation?.crowd || !collisionRoot || !player) {
+    if (!scene || !navigation?.crowd || !collisionWorld || !player) {
       throw new Error('EnemyManager requires scene, crowd navigation, collision, and player');
     }
     Object.assign(this, {
-      scene, navigation, collisionRoot, player, playerHealth, weaponEffects, hints,
+      scene, navigation, collisionWorld, player, playerHealth, weaponEffects, hints,
       count, enemyHealth, moveSpeed, visionRange, attackRange, memoryTime,
-      fireInterval, enemyDamage, maxAttackers, respawnDelay,
+      enemyDamage, enemyShotInterval, burstShotMin, burstShotMax,
+      burstPauseMin, burstPauseMax, enemyMagazineSize, enemyReloadTime,
+      reactionTimeMin, reactionTimeMax, friendlyFireRadius, combatSpacing,
+      minAttackRange, searchDuration, respawnDelay,
     });
+    this.burstShotMin = Math.max(1, Math.floor(this.burstShotMin));
+    this.burstShotMax = Math.max(this.burstShotMin, Math.floor(this.burstShotMax));
+    this.burstPauseMax = Math.max(this.burstPauseMin, this.burstPauseMax);
+    this.reactionTimeMax = Math.max(this.reactionTimeMin, this.reactionTimeMax);
     this.visionCosine = Math.cos(THREE.MathUtils.degToRad(fieldOfView / 2));
     this.enemies = [];
     this.clips = Object.create(null);
@@ -807,10 +976,8 @@ export class EnemyManager {
     _direction.multiplyScalar(1 / distance);
     _forward.set(0, 0, -1).applyQuaternion(enemy.root.quaternion);
     if (_forward.dot(_direction) < minimumDot) return false;
-    this.raycaster.set(_origin, _direction);
-    this.raycaster.near = 2;
-    this.raycaster.far = distance;
-    const wall = this.raycaster.intersectObject(this.collisionRoot, true)[0];
+    this.raycaster.ray.set(_origin, _direction);
+    const wall = this.collisionWorld.raycastFirst(this.raycaster.ray, 2, distance);
     return !wall || wall.distance >= distance - 4;
   }
 
@@ -819,7 +986,12 @@ export class EnemyManager {
     const feet = this.player.feetPosition;
     _target.set(feet.x, feet.y + 42, feet.z);
     const distance = _origin.distanceTo(_target);
-    const spread = 5 + distance * 0.018;
+    const playerSpeed = Math.hypot(this.player.velocity.x, this.player.velocity.z);
+    const spread = enemyShotSpread(distance, {
+      playerSpeed,
+      shooterSpeed: enemy.movementSpeed,
+      suppressed: enemy.suppressionTimer > 0,
+    });
     _target.x += (Math.random() - 0.5) * spread;
     _target.y += (Math.random() - 0.5) * spread;
     _target.z += (Math.random() - 0.5) * spread;
@@ -842,15 +1014,72 @@ export class EnemyManager {
     this.weaponEffects?.addMuzzleFlash(_origin, _direction);
     this.weaponEffects?.playEnemyShot(_origin, enemy.index);
     if (hitPlayer) this.playerHealth?.takeDamage(this.enemyDamage, enemy);
+    return { hitPlayer, spread };
   }
 
   canEnemyFire(candidate) {
-    return this.enemies
-      .filter((enemy) => !enemy.dead && enemy.state === 'attack' && enemy.playerVisible)
-      .sort((a, b) => a.root.position.distanceToSquared(this.player.position) -
-        b.root.position.distanceToSquared(this.player.position))
-      .slice(0, this.maxAttackers)
-      .includes(candidate);
+    const combatState = candidate?.state === 'attack' || candidate?.state === 'reposition';
+    return Boolean(candidate && !candidate.dead && candidate.playerVisible && combatState &&
+      !this.hasFriendlyLineBlock(candidate));
+  }
+
+  hasFriendlyLineBlock(candidate) {
+    candidate.muzzlePosition(_origin);
+    const feet = this.player.feetPosition;
+    _target.set(feet.x, feet.y + 42, feet.z);
+    _direction.subVectors(_target, _origin);
+    const distance = _direction.length();
+    if (distance <= 1) return false;
+    _direction.multiplyScalar(1 / distance);
+    this.raycaster.ray.set(_origin, _direction);
+    const radiusSquared = this.friendlyFireRadius * this.friendlyFireRadius;
+    for (const teammate of this.enemies) {
+      if (teammate === candidate || teammate.dead) continue;
+      _friendCenter.copy(teammate.root.position).addScaledVector(UP, 42);
+      this.raycaster.ray.closestPointToPoint(_friendCenter, _friendClosest);
+      const along = _friendClosest.distanceTo(_origin);
+      if (along > 8 && along < distance - 24 &&
+          _friendClosest.distanceToSquared(_friendCenter) < radiusSquared) return true;
+    }
+    return false;
+  }
+
+  isCombatCrowded(candidate) {
+    const spacingSquared = this.combatSpacing * this.combatSpacing;
+    return this.enemies.some((teammate) => teammate !== candidate && !teammate.dead &&
+      planarDistance(teammate.root.position, candidate.root.position) ** 2 < spacingSquared);
+  }
+
+  findEngagementPoint(enemy) {
+    const feet = this.player.feetPosition;
+    _direction.subVectors(enemy.root.position, feet).setY(0);
+    if (_direction.lengthSq() < 1) {
+      const angle = (enemy.index / Math.max(1, this.enemies.length)) * Math.PI * 2;
+      _direction.set(Math.cos(angle), 0, Math.sin(angle));
+    } else {
+      _direction.normalize();
+    }
+    const plan = engagementPlan(enemy.index, this.attackRange);
+    const cosine = Math.cos(plan.angle);
+    const sine = Math.sin(plan.angle);
+    const x = _direction.x * cosine - _direction.z * sine;
+    const z = _direction.x * sine + _direction.z * cosine;
+    _target.set(feet.x + x * plan.radius, feet.y, feet.z + z * plan.radius);
+    const projected = this.navigation.projectPoint(_target);
+    return projected.success && projected.point ? projected.point.clone() : null;
+  }
+
+  findSearchPoint(origin, enemyIndex = 0, step = 0) {
+    const choices = this.patrolPoints.filter((point) => {
+      const distance = planarDistance(point, origin);
+      return distance > 90 && distance < 720;
+    });
+    if (choices.length > 0) {
+      const index = Math.abs(enemyIndex + step * 2) % choices.length;
+      return choices[index].clone();
+    }
+    const projected = this.navigation.projectPoint(origin);
+    return projected.success && projected.point ? projected.point.clone() : null;
   }
 
   findPatrolPoint(origin) {
@@ -867,6 +1096,8 @@ export class EnemyManager {
       if (enemy.dead || enemy.root.position.distanceToSquared(origin) > radius * radius) continue;
       enemy.lastSeen.copy(lastSeen);
       enemy.lastSeenTimer = Math.max(enemy.lastSeenTimer, 3.5);
+      enemy.engaged = true;
+      enemy.searchTimer = 0;
       enemy.decisionTimer = 0;
     }
   }
@@ -880,8 +1111,8 @@ export class EnemyManager {
     };
   }
 
-  update(deltaSeconds, { active = true } = {}) {
-    for (const enemy of this.enemies) enemy.update(deltaSeconds, active);
+  update(deltaSeconds) {
+    for (const enemy of this.enemies) enemy.update(deltaSeconds, true);
   }
 
   dispose() {
