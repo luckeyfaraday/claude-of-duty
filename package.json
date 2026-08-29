@@ -6,7 +6,7 @@
   "scripts": {
     "bake:navmesh": "node .tools/bake_navmesh.mjs",
     "test": "node --test",
-    "test:unit": "node --test test/player-controller.test.mjs test/player-health.test.mjs test/weapon-controller.test.mjs test/t6-sab-audio.test.mjs test/xanim-to-json.test.mjs tests/navmesh-bake.test.mjs",
+    "test:unit": "node --test test/player-controller.test.mjs test/player-health.test.mjs test/weapon-controller.test.mjs test/t6-sab-audio.test.mjs test/xanim-to-json.test.mjs test/notetracks.test.mjs tests/navmesh-bake.test.mjs",
     "test:browser": "node --test test/browser-smoke.mjs"
   },
   "repository": {

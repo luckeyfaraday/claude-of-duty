@@ -408,13 +408,41 @@ test('Hijacked viewer loads collision, navigation, and walking controls', { time
       const api = globalThis.hijacked;
       const viewmodel = api.viewmodel;
       const beforeReserve = api.weapon.reserveAmmo;
+
+      // Record the cues the running clip fires, and confirm each one reaches
+      // the audio engine with a decoded buffer behind it.
+      const cues = [];
+      const played = [];
+      const originalNotetrack = viewmodel.onNotetrack;
+      const originalFoley = api.weaponEffects.playFoley.bind(api.weaponEffects);
+      viewmodel.onNotetrack = (cue) => {
+        cues.push({ type: cue.type, name: cue.name, at: Number(viewmodel.notetrackAction.time.toFixed(2)) });
+        originalNotetrack(cue);
+      };
+      api.weaponEffects.playFoley = (name) => {
+        const ok = originalFoley(name);
+        played.push({ name, ok });
+        return ok;
+      };
+
+      // The magazine is an attachment model driven by the clip's tag_clip
+      // track, so a working reload physically moves it out of the magwell.
+      const clip = viewmodel.root.getObjectByName('tag_clip');
+      const rest = clip?.position.clone() ?? null;
+      let magTravel = 0;
+
       const started = api.reloadWeapon();
       const mid = viewmodel.reloading;
       await new Promise((resolve) => {
-        const check = () => (viewmodel.reloading ? setTimeout(check, 100) : resolve());
-        setTimeout(check, 100);
+        const check = () => {
+          if (clip && rest) magTravel = Math.max(magTravel, clip.position.distanceTo(rest));
+          return viewmodel.reloading ? setTimeout(check, 50) : resolve();
+        };
+        setTimeout(check, 50);
       });
       const muzzleAfter = viewmodel.muzzlePosition();
+      viewmodel.onNotetrack = originalNotetrack;
+      api.weaponEffects.playFoley = originalFoley;
       return {
         started,
         mid,
@@ -422,6 +450,12 @@ test('Hijacked viewer loads collision, navigation, and walking controls', { time
         magazine: api.weapon.magazine,
         reserveUsed: beforeReserve - api.weapon.reserveAmmo,
         muzzle: [muzzleAfter.x, muzzleAfter.y, muzzleAfter.z].map((n) => Number(n.toFixed(1))),
+        cues,
+        played,
+        timelineCleared: viewmodel.activeTimeline === null,
+        hasMagazine: Boolean(clip),
+        magTravel: Number(magTravel.toFixed(2)),
+        magReseated: clip && rest ? Number(clip.position.distanceTo(rest).toFixed(2)) : null,
       };
     });
     assert.equal(reload.started, true, 'reload should start on demand');
@@ -431,6 +465,30 @@ test('Hijacked viewer loads collision, navigation, and walking controls', { time
     assert.ok(reload.reserveUsed >= 2, 'reload should transfer rounds fired by API and mouse input');
     assert.ok(reload.muzzle[2] < 0, `muzzle still ahead after reload, got ${reload.muzzle}`);
     assert.ok(Math.abs(reload.muzzle[0]) < 12, `weapon still centered after reload, got ${reload.muzzle}`);
+
+    const sounds = reload.cues.filter((cue) => cue.type === 'sound');
+    assert.deepEqual(sounds.map((cue) => cue.name),
+      ['fly_reload_cloth_sm', 'fly_hk416_mag_out', 'fly_hk416_futz', 'fly_hk416_mag_in'],
+      `reload should fire its authored audio cues in order: ${JSON.stringify(reload.cues)}`);
+    assert.ok(reload.cues.some((cue) => cue.type === 'rumble'),
+      'rumble cues should be delivered alongside the sound cues');
+    // Each cue must land at its authored time, within one frame of slack.
+    const authored = { fly_reload_cloth_sm: 0.0333, fly_hk416_mag_out: 0.4667, fly_hk416_futz: 1.3, fly_hk416_mag_in: 1.4 };
+    for (const cue of sounds) {
+      assert.ok(Math.abs(cue.at - authored[cue.name]) < 0.09,
+        `${cue.name} fired at ${cue.at}, authored ${authored[cue.name]}`);
+    }
+    assert.deepEqual(reload.played.map((p) => p.ok), Array(4).fill(true),
+      `every reload cue should find a decoded buffer: ${JSON.stringify(reload.played)}`);
+    assert.equal(reload.timelineCleared, true, 'the timeline should be released when the reload ends');
+    assert.equal(reload.hasMagazine, true, 'the magazine attachment model should be mounted at tag_clip');
+    // The clip's tag_clip position track is a constant source-scene placement,
+    // so once rebased the magazine must stay seated for the whole reload
+    // rather than being thrown 163 units out of the world by the raw track.
+    assert.ok(reload.magTravel < 0.5,
+      `the magazine should stay in the magwell, drifted ${reload.magTravel}`);
+    assert.ok(reload.magReseated < 0.5,
+      `the magazine should end seated, ended ${reload.magReseated} from rest`);
 
     const hud = await page.locator('#hud').innerText();
     assert.match(hud, /nav shown/);

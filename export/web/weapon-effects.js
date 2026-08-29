@@ -13,6 +13,25 @@ const PANNER_REFERENCE_DISTANCE = 180;
 
 let flashTexture = null;
 
+// The reload xanim names its audio cues by alias, but the shipped soundbanks
+// key entries by a 32-bit hash with no name table, and the alias-to-file map
+// lives in a common bank this export does not include. These files were
+// recovered structurally instead: the five HK416 mechanical sounds are the
+// contiguous run of mono entries that follows the M27's stereo shot cluster in
+// cmn_root.all.sabl, taken in the bank's own order.
+//
+// UNVERIFIED: the run is the right one, but which entry is which cue is
+// inferred, not confirmed by ear. To correct one, swap its filename here --
+// nothing else reads these names.
+export const FOLEY_URLS = {
+  fly_hk416_bolt_back: './audio/fly_hk416_bolt_back.wav',
+  fly_hk416_bolt_release: './audio/fly_hk416_bolt_release.wav',
+  fly_hk416_futz: './audio/fly_hk416_futz.wav',
+  fly_hk416_mag_in: './audio/fly_hk416_mag_in.wav',
+  fly_hk416_mag_out: './audio/fly_hk416_mag_out.wav',
+  fly_reload_cloth_sm: './audio/fly_reload_cloth_sm.wav',
+};
+
 // A soft radial core crossed by two thin spikes. Shared by the viewmodel's
 // first-person flash and the world flashes fired by enemies so both weapons
 // read as the same muzzle.
@@ -64,6 +83,7 @@ export class GunAudio {
     this.ready = false;
     this.loading = null;
     this.buffers = Object.create(null);
+    this.foleyBuffers = Object.create(null);
     this.voices = Object.create(null);
     this.panners = new Map();
     this.listenerPosition = new THREE.Vector3();
@@ -106,15 +126,55 @@ export class GunAudio {
     if (this.loading) return this.loading;
     const context = this.ensureContext();
     if (!context) return false;
-    this.loading = Promise.all(Object.entries(this.urls).map(async ([name, url]) => {
+    const decode = async (url) => {
       const response = await fetch(url);
       if (!response.ok) throw new Error(`weapon audio HTTP ${response.status}: ${url}`);
-      this.buffers[name] = await context.decodeAudioData(await response.arrayBuffer());
-    })).then(() => {
+      return context.decodeAudioData(await response.arrayBuffer());
+    };
+
+    // Reload foley is loaded tolerantly: a missing or undecodable cue should
+    // cost that one layer, not the gunfire the weapon depends on.
+    const foley = Promise.allSettled(
+      Object.entries(FOLEY_URLS).map(async ([name, url]) => {
+        this.foleyBuffers[name] = await decode(url);
+      }),
+    ).then((results) => {
+      const failed = results.filter((r) => r.status === 'rejected');
+      if (failed.length) console.warn(`${failed.length} reload foley cue(s) unavailable`, failed[0].reason);
+    });
+
+    this.loading = Promise.all([
+      ...Object.entries(this.urls).map(async ([name, url]) => {
+        this.buffers[name] = await decode(url);
+      }),
+      foley,
+    ]).then(() => {
       this.ready = true;
       return true;
     });
     return this.loading;
+  }
+
+  // Weapon handling foley is the player's own gun: dry and centered, never
+  // panned, so it sits in the head the way the viewmodel does on screen.
+  playFoley(name, { gain = 0.85 } = {}) {
+    const context = this.ensureContext();
+    const buffer = this.foleyBuffers[name];
+    if (!context || !buffer || !this.output) return false;
+    if (context.state === 'suspended') void context.resume();
+
+    const source = context.createBufferSource();
+    const gainNode = context.createGain();
+    source.buffer = buffer;
+    source.playbackRate.value = 2 ** (((Math.random() * 30) - 15) / 1200);
+    gainNode.gain.value = gain;
+    source.connect(gainNode).connect(this.output);
+    source.onended = () => {
+      source.disconnect();
+      gainNode.disconnect();
+    };
+    source.start();
+    return true;
   }
 
   // Keeps the Web Audio listener on the camera so panned shots stay locked to
@@ -367,6 +427,10 @@ export class WeaponEffects {
 
   playHitmarker(info) {
     this.audio.playHitmarker(info);
+  }
+
+  playFoley(name) {
+    return this.audio.playFoley(name);
   }
 
   addMuzzleFlash(position, direction = null) {

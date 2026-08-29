@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { createMuzzleFlashTexture } from './weapon-effects.js';
+import { parseNotetracks, NotetrackTimeline } from './notetracks.js';
 
 // The exported viewhands skeleton keeps the engine's view axes in tag_view's
 // local space: X forward (down the barrel), Y left, Z up. This basis maps that
@@ -90,6 +91,12 @@ export class Viewmodel {
 
     this.mixer = null;
     this.clips = new Map();
+    // Cues authored into the clips. onNotetrack receives {type, name, time} as
+    // each one passes; index.html routes the sound cues to the audio engine.
+    this.notetracks = new Map();
+    this.onNotetrack = null;
+    this.activeTimeline = null;
+    this.notetrackAction = null;
     this.idleAction = null;
     this.reloadAction = null;
     this.reloadEmptyAction = null;
@@ -98,7 +105,7 @@ export class Viewmodel {
     this.reloading = false;
   }
 
-  async load(handsUrl, weaponUrl, onProgress) {
+  async load(handsUrl, weaponUrl, magazineUrl, onProgress) {
     // The exported GLBs reference sibling textures as .dds; the web export
     // ships texconv PNG copies instead, so remap the suffix at load time.
     const manager = new THREE.LoadingManager();
@@ -106,15 +113,27 @@ export class Viewmodel {
     const loader = new GLTFLoader(manager);
     const textureLoader = new THREE.TextureLoader(manager);
     const load = (url, label) => loader.loadAsync(url, (event) => onProgress?.(label, event));
-    const [hands, weapon, customCamo] = await Promise.all([
+    const [hands, weapon, magazine, customCamo] = await Promise.all([
       load(handsUrl, 'hands'),
       load(weaponUrl, 'weapon'),
+      magazineUrl
+        ? load(magazineUrl, 'magazine').catch((error) => {
+          console.warn('Magazine attachment unavailable:', error);
+          return null;
+        })
+        : Promise.resolve(null),
       textureLoader.loadAsync(CUSTOM_CAMO_URL),
     ]);
 
     applyCustomCamo(weapon.scene, customCamo);
+    if (magazine) applyCustomCamo(magazine.scene, customCamo);
 
     this.root.add(hands.scene, weapon.scene);
+    // T6 ships the magazine as its own attachment xmodel rather than welding it
+    // into the receiver, because the reload xanim animates it out of the well
+    // and back in on a `tag_clip` track. Parenting it into the weapon's own
+    // space lands it in the magwell and lets that authored track bind by name.
+    if (magazine) weapon.scene.add(magazine.scene);
     this.root.updateMatrixWorld(true);
 
     // T6 mount convention: the weapon's j_gun joint lands exactly on the
@@ -217,10 +236,30 @@ export class Viewmodel {
         }
         if (bone.pos?.values?.length) {
           const times = bone.pos.frames.map((frame) => frame / data.fps);
-          tracks.push(new THREE.VectorKeyframeTrack(`${bone.name}.position`, times, bone.pos.values));
+          const values = bone.pos.values.slice();
+          // The magazine's tag_clip track carries a constant 163-unit placement
+          // that belongs to the source animation scene, not to this rig, the
+          // same way the body xanims place j_mainroot (see enemy-system.js).
+          // Applied as authored it throws the magazine out of the world, so
+          // rebase it onto the attachment's own bind position in the magwell.
+          const node = findNode(this.root, bone.name);
+          if (bone.name === 'tag_clip' && node) {
+            const offset = [
+              node.position.x - values[0],
+              node.position.y - values[1],
+              node.position.z - values[2],
+            ];
+            for (let i = 0; i < values.length; i += 3) {
+              values[i] += offset[0];
+              values[i + 1] += offset[1];
+              values[i + 2] += offset[2];
+            }
+          }
+          tracks.push(new THREE.VectorKeyframeTrack(`${bone.name}.position`, times, values));
         }
       }
       this.clips.set(key, new THREE.AnimationClip(key, data.duration, tracks));
+      this.notetracks.set(key, parseNotetracks(data.notifies));
     }
 
     if (this.clips.has('idle')) {
@@ -257,6 +296,7 @@ export class Viewmodel {
   onClipFinished(event) {
     if (event.action === this.reloadAction || event.action === this.reloadEmptyAction) {
       this.reloading = false;
+      this.stopNotetracks();
       this.idleAction.reset().fadeIn(0.12).play();
       event.action.fadeOut(0.12);
       return;
@@ -275,7 +315,19 @@ export class Viewmodel {
     this.adsFireAction?.stop();
     action.reset().fadeIn(0.12).play();
     this.idleAction.fadeOut(0.12);
+    this.startNotetracks(empty && this.reloadEmptyAction ? 'reloadEmpty' : 'reload', action);
     return true;
+  }
+
+  startNotetracks(clipKey, action) {
+    const events = this.notetracks.get(clipKey) ?? [];
+    this.notetrackAction = action;
+    this.activeTimeline = events.length ? new NotetrackTimeline(events) : null;
+  }
+
+  stopNotetracks() {
+    this.activeTimeline = null;
+    this.notetrackAction = null;
   }
 
   fire() {
@@ -320,6 +372,11 @@ export class Viewmodel {
   update(dt, state = {}) {
     if (!this.ready) return;
     this.mixer?.update(dt);
+    if (this.activeTimeline && this.notetrackAction) {
+      for (const cue of this.activeTimeline.advance(this.notetrackAction.time)) {
+        this.onNotetrack?.(cue);
+      }
+    }
     this.flashTime = Math.max(0, this.flashTime - dt);
     if (this.muzzleFlash) {
       const flash = clamp(this.flashTime / 0.045, 0, 1);

@@ -135,6 +135,11 @@ let hitmarkerLife = 0;
 let hitmarkerMaxLife = 0.18;
 
 const weaponEffects = new WeaponEffects(scene);
+// Reload audio is authored into the clip as notetracks, so the cues play from
+// the animation's own timing rather than a hand-written schedule.
+viewmodel.onNotetrack = (cue) => {
+  if (cue.type === 'sound') weaponEffects.playFoley(cue.name);
+};
 const weapon = new WeaponController({
   magazineSize: 30,
   reserveAmmo: 120,
@@ -331,6 +336,7 @@ async function start() {
       .load(
         'viewmodel/c_usa_mp_fbi_shortsleeve_viewhands_lod0.glb',
         'viewmodel/t6_wpn_ar_hk416_view_lod0.glb',
+        'viewmodel/t6_attach_mag_hk416_view_lod0.glb',
         (label, event) => progress(label, event),
       )
       .then(() =>
