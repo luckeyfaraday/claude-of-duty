@@ -168,6 +168,10 @@ export async function applyEnvironmentLighting(renderer, scene, options = {}) {
     probePath = 'textures/probe/',
     visionUrl = 'vision.json',
     fog = true,
+    // The probe volume (light-probes.js) carries diffuse ambient, so the
+    // environment map is turned down to mostly contribute specular. Raise this
+    // if the volume is absent and the env map has to do both jobs.
+    environmentIntensity = 0.45,
   } = options;
 
   const applied = { sky: false, environment: false, tone: false, fog: false };
@@ -216,6 +220,8 @@ export async function applyEnvironmentLighting(renderer, scene, options = {}) {
     try {
       const prefiltered = pmrem.fromCubemap(source).texture;
       scene.environment = prefiltered;
+      scene.environmentIntensity = environmentIntensity;
+      applied.environmentIntensity = environmentIntensity;
       // Exposed so overlay scenes (the viewmodel) can share the same map.
       applied.environmentTexture = prefiltered;
       applied.environment = true;

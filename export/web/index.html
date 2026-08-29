@@ -77,6 +77,7 @@ import { WeaponEffects } from './weapon-effects.js';
 import { EnemyManager } from './enemy-system.js';
 import { PlayerHealth } from './player-health.js';
 import { applyEnvironmentLighting, loadGradeLut, LUT_SHADER } from './lighting.js';
+import { loadProbeVolume } from './light-probes.js';
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x87a8c8);
@@ -113,6 +114,39 @@ scene.add(hemi);
 const sun = new THREE.DirectionalLight(0xfff2d8, 1.1);
 sun.position.set(-800, 1200, 600);
 scene.add(sun);
+
+// Baked SH probe volume: ambient that varies with where you are, rather than
+// one constant hemisphere everywhere. It supersedes `hemi`, which stays only
+// as the fallback if the volume fails to load. See .tools/bake_probes.mjs.
+// The bake integrates raw sky radiance, which is strongly blue; at full
+// strength it overwhelms the warm sunset grade. This scales it back to an
+// ambient term that shapes the scene without recolouring it.
+const PROBE_INTENSITY = 0.55;
+const lightProbe = new THREE.LightProbe();
+scene.add(lightProbe);
+const viewmodelProbe = new THREE.LightProbe();
+viewmodel.scene.add(viewmodelProbe);
+let probeVolume = null;
+loadProbeVolume()
+  .then((volume) => {
+    probeVolume = volume;
+    hemi.intensity = 0;
+    viewmodel.hemi.intensity = 0;
+    console.info('probe volume:', volume.layout.dims.join('x'), 'cells');
+  })
+  .catch((error) => console.warn('probe volume unavailable:', error));
+
+// Sampling is cheap but not free, and ambient changes slowly relative to the
+// camera, so refresh on movement rather than every frame.
+const probeAt = new THREE.Vector3(Infinity, Infinity, Infinity);
+function updateLightProbes(position) {
+  if (!probeVolume || position.distanceToSquared(probeAt) < 24 * 24) return;
+  probeAt.copy(position);
+  probeVolume.applyTo(lightProbe, position.x, position.y, position.z, PROBE_INTENSITY);
+  // The weapon sits in the player's own light, slightly lifted so it never
+  // silhouettes to black in an unlit interior.
+  probeVolume.applyTo(viewmodelProbe, position.x, position.y, position.z, PROBE_INTENSITY * 1.15);
+}
 
 // Colour grade: the world renders into an sRGB target, then the map's own
 // vision-set LUT is applied on the way to the canvas. The target's colour space
@@ -624,6 +658,7 @@ function tick() {
     hitmarker.style.opacity = '0';
   }
 
+  updateLightProbes(camera.position);
   renderFrame();
 }
 
