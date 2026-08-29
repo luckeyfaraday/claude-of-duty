@@ -76,6 +76,7 @@ import { WeaponController } from './weapon-controller.js';
 import { WeaponEffects } from './weapon-effects.js';
 import { EnemyManager } from './enemy-system.js';
 import { PlayerHealth } from './player-health.js';
+import { applyEnvironmentLighting, loadGradeLut, LUT_SHADER } from './lighting.js';
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x87a8c8);
@@ -103,10 +104,77 @@ document.body.appendChild(renderer.domElement);
 const viewmodel = new Viewmodel();
 viewmodel.setSize(innerWidth, innerHeight);
 
-scene.add(new THREE.HemisphereLight(0xbfd8ff, 0x3a4a55, 1.1));
-const sun = new THREE.DirectionalLight(0xfff2d8, 1.6);
+// The prefiltered reflection probe supplies ambient and specular, so the
+// analytic lights only need to carve out direction. Both are turned down from
+// the flat-lit values they had before the environment existed; if the env
+// assets fail to load these still light the scene on their own.
+const hemi = new THREE.HemisphereLight(0xbfd8ff, 0x3a4a55, 0.35);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xfff2d8, 1.1);
 sun.position.set(-800, 1200, 600);
 scene.add(sun);
+
+// Colour grade: the world renders into an sRGB target, then the map's own
+// vision-set LUT is applied on the way to the canvas. The target's colour space
+// makes the render tone-mapped and sRGB-encoded before the lookup, which is the
+// display-referred space the LUT was authored against.
+let gradeTarget = null;
+let gradeMaterial = null;
+let gradeScene = null;
+let gradeCamera = null;
+
+function sizeGradeTarget() {
+  if (!gradeTarget) return;
+  const ratio = renderer.getPixelRatio();
+  gradeTarget.setSize(Math.floor(innerWidth * ratio), Math.floor(innerHeight * ratio));
+}
+
+loadGradeLut().then((lut) => {
+  if (!lut) return;
+  gradeTarget = new THREE.WebGLRenderTarget(1, 1, {
+    type: THREE.UnsignedByteType,
+    depthBuffer: true,
+    stencilBuffer: false,
+  });
+  gradeTarget.texture.colorSpace = THREE.SRGBColorSpace;
+  gradeTarget.texture.minFilter = THREE.LinearFilter;
+  gradeTarget.texture.magFilter = THREE.LinearFilter;
+  sizeGradeTarget();
+  gradeMaterial = new THREE.ShaderMaterial({
+    ...LUT_SHADER,
+    uniforms: THREE.UniformsUtils.clone(LUT_SHADER.uniforms),
+    depthTest: false,
+    depthWrite: false,
+  });
+  gradeMaterial.uniforms.lut.value = lut;
+  gradeScene = new THREE.Scene();
+  gradeCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+  gradeScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), gradeMaterial));
+  console.info('colour grade: vision-set LUT active');
+});
+
+// Sky, probe, tone mapping and fog tint all come from the map's own assets.
+// See export/web/lighting.js and .tools/bake_env.mjs.
+const environmentReady = applyEnvironmentLighting(renderer, scene)
+  .then((applied) => {
+    if (applied.environmentTexture) {
+      viewmodel.setEnvironment(applied.environmentTexture);
+    } else {
+      // No probe/sky: restore the standalone lighting levels.
+      hemi.intensity = 1.1;
+      sun.intensity = 1.6;
+      viewmodel.hemi.intensity = 1.3;
+      viewmodel.lamp.intensity = 1.7;
+    }
+    console.info('environment lighting:', applied);
+    return applied;
+  })
+  .catch((error) => {
+    console.warn('environment lighting unavailable:', error);
+    hemi.intensity = 1.1;
+    sun.intensity = 1.6;
+    return null;
+  });
 
 const blocker = document.getElementById('blocker');
 const hud = document.getElementById('hud');
@@ -556,6 +624,23 @@ function tick() {
     hitmarker.style.opacity = '0';
   }
 
+  renderFrame();
+}
+
+// With the grade active the world and viewmodel go into an sRGB-encoded target
+// and the LUT pass writes the canvas; without it they draw straight to screen.
+function renderFrame() {
+  if (gradeMaterial?.uniforms.lut.value && gradeTarget) {
+    renderer.setRenderTarget(gradeTarget);
+    renderer.clear();
+    renderer.render(scene, camera);
+    viewmodel.render(renderer);
+    renderer.setRenderTarget(null);
+    gradeMaterial.uniforms.tDiffuse.value = gradeTarget.texture;
+    renderer.clear();
+    renderer.render(gradeScene, gradeCamera);
+    return;
+  }
   renderer.clear();
   renderer.render(scene, camera);
   viewmodel.render(renderer);
@@ -570,6 +655,7 @@ addEventListener('resize', () => {
   viewmodel.setSize(innerWidth, innerHeight);
   renderer.setPixelRatio(renderPixelRatio());
   renderer.setSize(innerWidth, innerHeight);
+  sizeGradeTarget();
 });
 </script>
 </body>

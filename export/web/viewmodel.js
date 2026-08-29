@@ -53,10 +53,15 @@ export class Viewmodel {
     this.camera = new THREE.PerspectiveCamera(fov, 1, 0.5, 500);
     this.scene = new THREE.Scene();
 
-    this.scene.add(new THREE.HemisphereLight(0xbfd8ff, 0x3a4a55, 1.3));
-    const lamp = new THREE.DirectionalLight(0xfff2d8, 1.7);
+    // Levels assume the renderer's ACES tone mapping and the vision set's
+    // exposure (see lighting.js). setEnvironment() supplies ambient/specular
+    // from the map's reflection probe; these two only shape the weapon.
+    this.hemi = new THREE.HemisphereLight(0xbfd8ff, 0x3a4a55, 0.32);
+    this.scene.add(this.hemi);
+    const lamp = new THREE.DirectionalLight(0xfff2d8, 0.65);
     lamp.position.set(-2, 3, 1.5);
     this.scene.add(lamp);
+    this.lamp = lamp;
 
     // adsGroup carries the aim translation, swayGroup the idle/motion offsets,
     // and root the fixed rig placement (tag_view anchored to the camera).
@@ -167,6 +172,15 @@ export class Viewmodel {
     });
 
     this.ready = true;
+  }
+
+  // Share the world's prefiltered environment so the weapon picks up the same
+  // sky/probe reflections the map does. Intensity is kept a little under the
+  // world's because the viewmodel sits in its own overlay scene with no
+  // surrounding geometry to occlude it.
+  setEnvironment(texture, intensity = 0.5) {
+    this.scene.environment = texture;
+    this.scene.environmentIntensity = intensity;
   }
 
   createMuzzleFlash() {
