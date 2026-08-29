@@ -805,7 +805,7 @@ export class EnemyManager {
   constructor({
     scene,
     navigation,
-    collisionRoot,
+    collisionWorld,
     player,
     playerHealth,
     weaponEffects,
@@ -833,11 +833,11 @@ export class EnemyManager {
     searchDuration = 4.5,
     respawnDelay = 6,
   }) {
-    if (!scene || !navigation?.crowd || !collisionRoot || !player) {
+    if (!scene || !navigation?.crowd || !collisionWorld || !player) {
       throw new Error('EnemyManager requires scene, crowd navigation, collision, and player');
     }
     Object.assign(this, {
-      scene, navigation, collisionRoot, player, playerHealth, weaponEffects, hints,
+      scene, navigation, collisionWorld, player, playerHealth, weaponEffects, hints,
       count, enemyHealth, moveSpeed, visionRange, attackRange, memoryTime,
       enemyDamage, enemyShotInterval, burstShotMin, burstShotMax,
       burstPauseMin, burstPauseMax, enemyMagazineSize, enemyReloadTime,
@@ -1013,10 +1013,8 @@ export class EnemyManager {
     _direction.multiplyScalar(1 / distance);
     _forward.set(0, 0, -1).applyQuaternion(enemy.root.quaternion);
     if (_forward.dot(_direction) < minimumDot) return false;
-    this.raycaster.set(_origin, _direction);
-    this.raycaster.near = 2;
-    this.raycaster.far = distance;
-    const wall = this.raycaster.intersectObject(this.collisionRoot, true)[0];
+    this.raycaster.ray.set(_origin, _direction);
+    const wall = this.collisionWorld.raycastFirst(this.raycaster.ray, 2, distance);
     return !wall || wall.distance >= distance - 4;
   }
 
@@ -1150,8 +1148,8 @@ export class EnemyManager {
     };
   }
 
-  update(deltaSeconds, { active = true } = {}) {
-    for (const enemy of this.enemies) enemy.update(deltaSeconds, active);
+  update(deltaSeconds) {
+    for (const enemy of this.enemies) enemy.update(deltaSeconds, true);
   }
 
   dispose() {

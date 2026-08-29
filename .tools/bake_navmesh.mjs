@@ -388,7 +388,7 @@ function primitiveTriangles(mode, indices) {
   return triangles;
 }
 
-function parseGltfGeometry(filename, forcedCoordinateSystem) {
+export function parseGltfGeometry(filename, forcedCoordinateSystem = 'auto') {
   const extension = path.extname(filename).toLowerCase();
   const glb = extension === '.glb' ? parseGlb(filename) : { json: readJson(filename), binary: undefined };
   const gltf = glb.json;
@@ -614,9 +614,11 @@ async function main() {
   console.log(`wrote ${path.relative(ROOT, metaOutput)}`);
 }
 
-try {
-  await main();
-} catch (error) {
-  console.error(`error: ${error instanceof Error ? error.message : error}`);
-  process.exitCode = 1;
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  try {
+    await main();
+  } catch (error) {
+    console.error(`error: ${error instanceof Error ? error.message : error}`);
+    process.exitCode = 1;
+  }
 }

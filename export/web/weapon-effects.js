@@ -349,6 +349,8 @@ export class WeaponEffects {
     this.maxImpacts = maxImpacts;
     this.raycaster = new THREE.Raycaster();
     this.ceilingRaycaster = new THREE.Raycaster();
+    this.raycaster.firstHitOnly = true;
+    this.ceilingRaycaster.firstHitOnly = true;
     this.audio = new GunAudio();
     this.impacts = [];
     this.transients = [];

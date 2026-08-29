@@ -31,12 +31,11 @@ test('Hijacked viewer loads collision, navigation, and walking controls', { time
   page.on('console', (message) => {
     if (message.type() === 'error') errors.push(message.text());
   });
-  // The loading screen streams the map buffer itself for byte progress and
-  // hands it to GLTFLoader through the loader cache. If that key ever stops
-  // matching, the only symptom is a silent second 44 MB download.
-  let mapBufferRequests = 0;
+  // The optimized map is a self-contained GLB. Guard against accidentally
+  // starting a duplicate 48 MB transfer while the loading shell is visible.
+  let mapAssetRequests = 0;
   page.on('request', (request) => {
-    if (request.url().endsWith('hijacked.bin')) mapBufferRequests += 1;
+    if (request.url().endsWith('hijacked_optimized.glb')) mapAssetRequests += 1;
   });
 
   try {
@@ -64,7 +63,7 @@ test('Hijacked viewer loads collision, navigation, and walking controls', { time
     assert.match(menu.backdrop, /menu_mp_background_main2\.png/, 'the frontend backdrop should be the extracted plate');
     assert.equal(menu.cardLoaded, 256, 'the Hijacked map card should decode at its authored width');
     assert.equal(menu.barWidth, '100%', 'a finished load fills the bar');
-    assert.equal(mapBufferRequests, 1, 'the prefetched map buffer must not be downloaded twice');
+    assert.equal(mapAssetRequests, 1, 'the optimized map must be downloaded exactly once');
 
     const simulation = await page.evaluate(() => {
       const api = globalThis.hijacked;

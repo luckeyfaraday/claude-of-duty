@@ -13,6 +13,9 @@
 !/.tools/export_collision.py
 !/.tools/export_ui.py
 !/.tools/bake_navmesh.mjs
+!/.tools/bake_collision_bvh.mjs
+!/.tools/bake_map.mjs
+!/.tools/perf_probe.mjs
 !/.tools/xanim_to_json.mjs
 !/.tools/extract_t6_sab_audio.mjs
 !/.tools/ai-game.mjs

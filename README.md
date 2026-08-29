@@ -44,13 +44,11 @@ set to the HUD's mint rather than the game's blue. The layout is not the
 original: T6 menudefs do not dump (the Unlinker lists all 133 in `ui_mp.ff` and
 writes none of them), so only the art is reused.
 
-The load bar measures stages declared up front with fixed weights rather than
-bytes as they are discovered, because neither of the two largest downloads
-reports itself. `GLTFLoader`'s progress callback covers `hijacked.gltf` alone,
-so `hijacked.bin` is streamed separately for real byte progress and handed to
-the loader through `THREE.Cache`; the 359 map textures are counted through a
-`LoadingManager` instead. A stage is held below its full weight until its
-promise settles, so the bar cannot reach 100% before the game is playable.
+The load bar measures stages declared up front with fixed weights. The visible
+map ships as one Meshopt-compressed GLB containing GPU-compressed KTX2 textures,
+so its progress callback covers the dominant transfer. A stage is held below
+its full weight until its promise settles, preventing the bar from reaching
+100% before the game is playable.
 
 Re-export the menu art with:
 
@@ -128,17 +126,22 @@ Python 3 is required. The scene composer also runs the collision exporter:
 
 ```powershell
 python .tools/compose_scene.py
+npm run bake:map
+npm run bake:collision
 npm run bake:navmesh
 ```
 
-The first command rebuilds the render scene, the collision-only glTF, and the
-spawn/pathnode navigation hints. The second command turns that collision mesh
-into the serialized Recast navmesh loaded by the browser.
+The first command rebuilds the source render scene, collision-only glTF, and
+spawn/pathnode navigation hints. The bake commands then create the optimized
+render GLB, collision BVH, and serialized Recast navmesh loaded by the browser.
+`bake:map` requires Khronos KTX-Software's `ktx` executable on `PATH`.
 
 Generated runtime assets are in `export/web`:
 
 - `hijacked.gltf` / `hijacked.bin`: visible map
 - `hijacked_collision.gltf` / `.bin`: physics-only geometry
+- `hijacked_optimized.glb`: Meshopt/KTX2 runtime render map
+- `hijacked_collision_bvh.bin` / `.json`: runtime collision BVH
 - `hijacked_nav_hints.json`: spawns, pathnodes, and traversal links
 - `hijacked.navmesh.bin` / `.json`: baked Recast mesh and build metadata
 

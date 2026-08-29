@@ -206,6 +206,7 @@
 { "imports": {
   "three": "https://cdn.jsdelivr.net/npm/three@0.185.1/build/three.module.js",
   "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.185.1/examples/jsm/",
+  "three-mesh-bvh": "https://cdn.jsdelivr.net/npm/three-mesh-bvh@0.9.14/src/index.js",
   "@recast-navigation/core": "https://cdn.jsdelivr.net/npm/@recast-navigation/core@0.43.1/dist/index.mjs",
   "@recast-navigation/generators": "https://cdn.jsdelivr.net/npm/@recast-navigation/generators@0.43.1/dist/index.mjs",
   "@recast-navigation/wasm": "https://cdn.jsdelivr.net/npm/@recast-navigation/wasm@0.43.1/dist/recast-navigation.wasm-compat.js",
@@ -261,6 +262,8 @@
 <script type="module">
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { KTX2Loader } from 'three/addons/loaders/KTX2Loader.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { PlayerController } from './player-controller.js';
 import { loadNavigation } from './navigation.js';
 import { Viewmodel } from './viewmodel.js';
@@ -269,6 +272,8 @@ import { WeaponEffects } from './weapon-effects.js';
 import { EnemyManager } from './enemy-system.js';
 import { PlayerHealth } from './player-health.js';
 import { Frontend } from './frontend.js';
+import { loadCollisionWorld } from './collision-world.js';
+import { optimizeStaticScene } from './scene-optimizer.js';
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x87a8c8);
@@ -317,12 +322,10 @@ const frontend = new Frontend({
   onPlay: () => renderer.domElement.requestPointerLock(),
   onResume: () => renderer.domElement.requestPointerLock(),
 });
-// Weights are roughly the wall-clock share each stage takes, not its byte
-// size: the map dominates because its 44 MB buffer streams behind a .gltf that
-// reports only 1.25 MB of itself, and the shader warm-up moves no bytes at all.
+// Weights are roughly the wall-clock share each stage takes, not its byte size.
 frontend.expect({
-  map: 8,
-  textures: 10,
+  map: 14,
+  textures: 4,
   collision: 2,
   navigation: 1,
   viewmodel: 1,
@@ -335,7 +338,10 @@ const crosshair = document.getElementById('crosshair');
 const hitmarker = document.getElementById('hitmarker');
 const keys = Object.create(null);
 const clock = new THREE.Clock();
+const bootStartedAt = performance.now();
+const frameWorkSamples = new Float32Array(180);
 const raycaster = new THREE.Raycaster();
+raycaster.firstHitOnly = true;
 const down = new THREE.Vector3(0, -1, 0);
 const lookCenter = new THREE.Vector2(0, 0);
 const yawPitch = new THREE.Euler(0, 0, 0, 'YXZ');
@@ -345,6 +351,8 @@ let locked = false;
 let player = null;
 let navigation = null;
 let collisionRoot = null;
+let collisionWorld = null;
+let mapOptimization = null;
 let navigationVisible = false;
 let collisionVisible = false;
 let pathPoints = 0;
@@ -353,6 +361,13 @@ let playerHealth = null;
 let hitmarkerLife = 0;
 let hitmarkerMaxLife = 0.18;
 let automationPaused = false;
+let startupMilliseconds = null;
+let frameWorkSampleCount = 0;
+let frameWorkSampleIndex = 0;
+let frameWorkWarmupUntil = Number.POSITIVE_INFINITY;
+let hudElapsed = 1;
+let lastDamageOpacity = '';
+let lastAdsState = false;
 
 const weaponEffects = new WeaponEffects(scene);
 // Reload audio is authored into the clip as notetracks, so the cues play from
@@ -400,59 +415,14 @@ function syncMenuButtons() {
   }
 }
 
-// GLTFLoader's progress callback covers the .gltf JSON only; the 44 MB buffer
-// beside it streams with no reporting at all, which is most of the wait.
-// Stream it here for real byte progress and leave it in the loader cache under
-// the names GLTFLoader will resolve it to, so nothing fetches it twice.
-THREE.Cache.enabled = true;
-async function prefetchBuffer(url, label) {
-  const response = await fetch(url);
-  if (!response.ok) throw new Error(`${url} HTTP ${response.status}`);
-  const total = Number(response.headers.get('content-length')) || 0;
-  const reader = response.body.getReader();
-  const chunks = [];
-  let loaded = 0;
-  for (;;) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    chunks.push(value);
-    loaded += value.byteLength;
-    progress(label, { loaded, total });
-  }
-  const bytes = new Uint8Array(loaded);
-  let offset = 0;
-  for (const chunk of chunks) {
-    bytes.set(chunk, offset);
-    offset += chunk.byteLength;
-  }
-  // GLTFLoader resolves a buffer URI against the .gltf's base path, which for
-  // a bare filename is './', and FileLoader namespaces its cache keys with a
-  // `file:` prefix. Register every plausible spelling -- a miss costs a second
-  // 44 MB download, and `browser-smoke` asserts the request count stays at one.
-  for (const name of [`./${url}`, url, new URL(url, location.href).href]) {
-    THREE.Cache.add(`file:${name}`, bytes.buffer);
-    THREE.Cache.add(name, bytes.buffer);
-  }
-}
-
-// The map's 359 textures are 59 MB, more than the geometry buffer, and none of
-// them reach a per-file progress callback either. The LoadingManager counts
-// them as they complete, which is close enough to even weight to drive a bar.
 const loadingManager = new THREE.LoadingManager();
-const MAP_TEXTURE_QUORUM = 32;
-loadingManager.onProgress = (url, itemsLoaded, itemsTotal) => {
-  // itemsTotal is discovered, not known: it reads 1/1 for the .gltf itself
-  // long before parsing queues the texture set, and a bar taking that at face
-  // value races to full and then falls back. Wait until enough items are known
-  // for the ratio to mean something.
-  if (itemsTotal < MAP_TEXTURE_QUORUM) return;
-  frontend.progress('textures', { loaded: itemsLoaded, total: itemsTotal });
-};
-
 const loader = new GLTFLoader(loadingManager);
+const ktx2Loader = new KTX2Loader(loadingManager)
+  .setTranscoderPath('https://cdn.jsdelivr.net/npm/three@0.185.1/examples/jsm/libs/basis/')
+  .detectSupport(renderer);
+loader.setKTX2Loader(ktx2Loader);
+loader.setMeshoptDecoder(MeshoptDecoder);
 function loadGltf(url, label) {
-  // The onProgress callback covers the .gltf only, so the stage is not done
-  // until the promise settles and its referenced buffer has landed with it.
   return loader.loadAsync(url, (event) => progress(label, event)).then((gltf) => {
     frontend.stage(label);
     return gltf;
@@ -538,11 +508,7 @@ function reloadWeapon() {
 
 function setDebugVisibility() {
   navigation?.setDebugVisible(navigationVisible);
-  if (collisionRoot) {
-    collisionRoot.traverse((object) => {
-      if (object.isMesh && object.material) object.material.visible = collisionVisible;
-    });
-  }
+  collisionWorld?.setDebugVisible(collisionVisible);
   syncMenuButtons();
 }
 
@@ -552,6 +518,19 @@ const debugRound = (value) => Number.isFinite(value)
 const debugVector = (vector) => vector
   ? [debugRound(vector.x), debugRound(vector.y), debugRound(vector.z)]
   : null;
+
+function frameWorkStats() {
+  const count = Math.min(frameWorkSampleCount, frameWorkSamples.length);
+  if (!count) return { startupMilliseconds, samples: 0, averageMilliseconds: 0, p95Milliseconds: 0 };
+  const values = Array.from(frameWorkSamples.subarray(0, count)).sort((a, b) => a - b);
+  const total = values.reduce((sum, value) => sum + value, 0);
+  return {
+    startupMilliseconds,
+    samples: count,
+    averageMilliseconds: debugRound(total / count),
+    p95Milliseconds: debugRound(values[Math.min(count - 1, Math.floor(count * 0.95))]),
+  };
+}
 
 function setAutomationActive(active = true) {
   locked = Boolean(active);
@@ -638,6 +617,9 @@ function getDebugState() {
       textures: renderer.info.memory.textures,
       drawingBuffer: [size.x, size.y],
       pixelRatio: debugRound(renderer.getPixelRatio()),
+      frameWork: frameWorkStats(),
+      collision: collisionWorld?.stats ?? null,
+      scene: mapOptimization,
     },
     menu: frontend.getState(),
     hud: hud.textContent,
@@ -810,47 +792,28 @@ async function start() {
         console.warn('Viewmodel unavailable:', error);
       })
       .finally(() => frontend.stage('viewmodel'));
-    // Only the map's own .gltf waits on the prefetched buffer; everything else
-    // still downloads alongside it.
-    const mapBuffer = prefetchBuffer('hijacked.bin', 'map').then(() => frontend.stage('map'));
-    const [renderGltf, collisionGltf, hints] = await Promise.all([
-      mapBuffer.then(() => loadGltf('hijacked.gltf', 'render')).then((gltf) => {
-        // GLTFLoader resolves only once every texture it references has landed.
+    const [renderGltf, loadedCollisionWorld, hints] = await Promise.all([
+      loadGltf('hijacked_optimized.glb', 'map').then((gltf) => {
+        // KTX2 texture decoding is complete when GLTFLoader resolves.
         frontend.stage('textures');
         return gltf;
       }),
-      loadGltf('hijacked_collision.gltf', 'collision'),
+      loadCollisionWorld({ onProgress: (event) => progress('collision', event) })
+        .finally(() => frontend.stage('collision')),
       fetch('hijacked_nav_hints.json').then((response) => {
         if (!response.ok) throw new Error(`nav hints HTTP ${response.status}`);
         return response.json();
       }),
     ]);
-    // The buffer is inside the parsed scene now, so stop the cache holding a
-    // second 44 MB copy of it for the rest of the session.
-    THREE.Cache.clear();
-    THREE.Cache.enabled = false;
-
+    mapOptimization = optimizeStaticScene(renderGltf.scene);
     scene.add(renderGltf.scene);
-    collisionRoot = collisionGltf.scene;
-    collisionRoot.updateWorldMatrix(true, true);
-
-    // Keep the collision source raycastable but visually hidden. V toggles a
-    // translucent wireframe without rebuilding the player Octree.
-    const collisionMaterial = new THREE.MeshBasicMaterial({
-      color: 0xff3b30, wireframe: true, transparent: true, opacity: .24,
-      depthTest: false, visible: false,
-    });
-    collisionRoot.traverse((object) => {
-      if (object.isMesh) {
-        object.material = collisionMaterial;
-        object.renderOrder = 40;
-      }
-    });
+    collisionWorld = loadedCollisionWorld;
+    collisionRoot = collisionWorld.mesh;
     scene.add(collisionRoot);
 
     const spawn = chooseSpawn(hints, collisionRoot);
     camera.quaternion.setFromEuler(new THREE.Euler(0, spawn.yaw, 0, 'YXZ'));
-    player = new PlayerController(camera, collisionRoot, {
+    player = new PlayerController(camera, collisionWorld, {
       spawn: spawn.position,
       radius: 16,
       height: 72,
@@ -889,7 +852,7 @@ async function start() {
       ? (enemies = new EnemyManager({
           scene,
           navigation,
-          collisionRoot,
+          collisionWorld,
           player,
           playerHealth,
           weaponEffects,
@@ -948,11 +911,13 @@ async function start() {
 
     // Small read/debug surface for automated smoke tests and map tooling.
     globalThis.hijacked = {
-      scene, camera, renderer, player, navigation, collisionRoot, hints, viewmodel,
+      scene, camera, renderer, player, navigation, collisionRoot, collisionWorld, hints, viewmodel,
       weapon, weaponEffects, playerHealth, enemies, reloadWeapon, frontend,
       debug: createDebugApi(),
     };
 
+    startupMilliseconds = debugRound(performance.now() - bootStartedAt);
+    frameWorkWarmupUntil = performance.now() + 1000;
     ready = true;
     frontend.setReady([
       'WASD move · Shift sprint · Space jump · C/Ctrl crouch',
@@ -969,6 +934,7 @@ async function start() {
 
 function tick() {
   requestAnimationFrame(tick);
+  const frameWorkStartedAt = performance.now();
   const dt = Math.min(clock.getDelta(), 0.1);
   const simulationActive = locked && !automationPaused;
   if (player && simulationActive) {
@@ -986,7 +952,7 @@ function tick() {
   playerHealth?.update(simulationActive ? dt : 0);
   weaponEffects.update(dt);
   // Panned enemy fire is only meaningful while the listener tracks the camera.
-  weaponEffects.updateListener(camera);
+  if (simulationActive) weaponEffects.updateListener(camera);
 
   if (player) {
     const p = player.position;
@@ -1003,19 +969,32 @@ function tick() {
     if (weapon.reloading && !viewmodel.reloading) weapon.finishReload();
     weapon.update(dt, { canFire: simulationActive && !sprinting && !playerHealth?.dead });
 
-    hud.textContent =
-      `xyz ${p.x.toFixed(1)} ${p.y.toFixed(1)} ${p.z.toFixed(1)}\n` +
-      `speed ${speed.toFixed(0)}  ${player.isGrounded ? 'grounded' : 'air'}${player.crouched ? '  crouched' : ''}\n` +
-      `health ${Math.ceil(playerHealth?.health ?? 100)}${playerHealth?.dead ? '  respawning' :
-        playerHealth?.protectionTimer > 0 ? '  protected' : ''}  ` +
-      `enemies ${enemies?.aliveCount ?? 0}/${enemies?.enemies.length ?? 0}\n` +
-      `weapon ${viewmodel.ready ? 'm27' : 'none'}${viewmodel.reloading ? ' reloading' : ''}  ` +
-      `ammo ${weapon.magazine}/${weapon.reserveAmmo}\n` +
-      `nav ${navigation ? (navigationVisible ? 'shown' : 'ready') : 'unavailable'}  ` +
-      `collision ${collisionVisible ? 'shown' : 'ready'}  path ${pathPoints}`;
+    hudElapsed += dt;
+    if (hudElapsed >= 0.1) {
+      hudElapsed = 0;
+      const nextHud =
+        `xyz ${p.x.toFixed(1)} ${p.y.toFixed(1)} ${p.z.toFixed(1)}\n` +
+        `speed ${speed.toFixed(0)}  ${player.isGrounded ? 'grounded' : 'air'}${player.crouched ? '  crouched' : ''}\n` +
+        `health ${Math.ceil(playerHealth?.health ?? 100)}${playerHealth?.dead ? '  respawning' :
+          playerHealth?.protectionTimer > 0 ? '  protected' : ''}  ` +
+        `enemies ${enemies?.aliveCount ?? 0}/${enemies?.enemies.length ?? 0}\n` +
+        `weapon ${viewmodel.ready ? 'm27' : 'none'}${viewmodel.reloading ? ' reloading' : ''}  ` +
+        `ammo ${weapon.magazine}/${weapon.reserveAmmo}\n` +
+        `nav ${navigation ? (navigationVisible ? 'shown' : 'ready') : 'unavailable'}  ` +
+        `collision ${collisionVisible ? 'shown' : 'ready'}  path ${pathPoints}`;
+      if (hud.textContent !== nextHud) hud.textContent = nextHud;
+    }
   }
-  damageOverlay.style.opacity = String((playerHealth?.hitFlash ?? 0) * 0.55);
-  crosshair.classList.toggle('ads', viewmodel.aimBlend > 0.5);
+  const damageOpacity = String((playerHealth?.hitFlash ?? 0) * 0.55);
+  if (damageOpacity !== lastDamageOpacity) {
+    damageOverlay.style.opacity = damageOpacity;
+    lastDamageOpacity = damageOpacity;
+  }
+  const adsState = viewmodel.aimBlend > 0.5;
+  if (adsState !== lastAdsState) {
+    crosshair.classList.toggle('ads', adsState);
+    lastAdsState = adsState;
+  }
 
   if (hitmarkerLife > 0) {
     hitmarkerLife = Math.max(0, hitmarkerLife - dt);
@@ -1031,6 +1010,11 @@ function tick() {
   renderer.clear();
   renderer.render(scene, camera);
   viewmodel.render(renderer);
+  if (ready && performance.now() >= frameWorkWarmupUntil) {
+    frameWorkSamples[frameWorkSampleIndex] = performance.now() - frameWorkStartedAt;
+    frameWorkSampleIndex = (frameWorkSampleIndex + 1) % frameWorkSamples.length;
+    frameWorkSampleCount += 1;
+  }
 }
 
 start();

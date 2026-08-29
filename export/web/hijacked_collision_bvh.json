@@ -1,0 +1,43 @@
+{
+  "format": "hijacked-collision-bvh-v1",
+  "threeMeshBvhVersion": "0.9.14",
+  "source": "export/web/hijacked_collision.gltf",
+  "binary": "hijacked_collision_bvh.bin",
+  "coordinateSystem": "three-y-up",
+  "vertices": 199986,
+  "triangles": 207092,
+  "bounds": {
+    "min": [
+      -3515.728271484375,
+      -499.77099609375,
+      -999.5180053710938
+    ],
+    "max": [
+      2837.89990234375,
+      741.8660278320312,
+      965.1699829101562
+    ]
+  },
+  "buildMilliseconds": 416,
+  "byteLength": 6504424,
+  "layout": {
+    "position": {
+      "byteOffset": 0,
+      "byteLength": 2399832,
+      "type": "Float32Array",
+      "count": 599958
+    },
+    "index": {
+      "byteOffset": 2399832,
+      "byteLength": 2485104,
+      "type": "Uint32Array",
+      "count": 621276
+    },
+    "roots": [
+      {
+        "byteOffset": 4884936,
+        "byteLength": 1619488
+      }
+    ]
+  }
+}
