@@ -70,6 +70,37 @@ test('vision grade falls back to neutral when keys are missing', () => {
   assert.deepEqual(grade.highlight, [1, 1, 1]);
 });
 
+test('vision tone lifts shadows cool and tints highlights warm', async () => {
+  const { visionTone, parseVisionGrade } = await import('../export/web/lighting.js');
+  // the real mp_hijacked values
+  const grade = parseVisionGrade({
+    highlight: [0.165, 0.15093, 0.124956],
+    lowlight: [0.025591, 0.029729, 0.0325],
+    exposure: 1.399999,
+  });
+  const tone = visionTone(grade);
+
+  // vc_YL is the black lift: small, and blue must sit above red or shadows
+  // come out warm instead of the cool the vision set asks for.
+  assert.ok(tone.lift[2] > tone.lift[0], 'lift should be cool (B > R)');
+  assert.ok(tone.lift.every((v) => v > 0 && v < 0.1), 'lift stays a few percent');
+
+  // vc_YH is the highlight tint, normalised so the brightest channel is 1.
+  assert.ok(Math.abs(Math.max(...tone.highlightTint) - 1) < 1e-9, 'tint peaks at 1');
+  assert.ok(tone.highlightTint[0] > tone.highlightTint[2], 'tint should be warm (R > B)');
+
+  // vc_YH.w is NOT an exposure - it is reported, never applied as one.
+  assert.equal(grade.visionExposure, 1.399999);
+  assert.equal(grade.exposure, undefined, 'exposure must not be derived from the vision set');
+});
+
+test('vision tone survives a missing or empty vision set', async () => {
+  const { visionTone } = await import('../export/web/lighting.js');
+  const tone = visionTone(null);
+  assert.deepEqual(tone.lift, [0, 0, 0], 'no lift without data');
+  assert.deepEqual(tone.highlightTint, [1, 1, 1], 'neutral tint without data');
+});
+
 test('encodePng writes a decodable image with the expected pixels', () => {
   const w = 3, h = 2;
   const rgb = Buffer.from([
