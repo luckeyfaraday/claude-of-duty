@@ -278,40 +278,64 @@ function bakePoseSequence(bodyTemplate, clip, frameCount, atlas, includeEnd = fa
   });
 }
 
-function attachWeapon(body, weapon, actorRoot) {
-  // In this PLA export tag_inhand sits high on the back and
-  // tag_weapon_right is offset toward the chest. The wrist bone is the
-  // reliable palm anchor for the rigid world weapon.
-  const hand = findNode(body, 'j_wrist_ri')
-    ?? findNode(body, 'tag_weapon_right')
-    ?? findNode(body, 'tag_inhand');
+// Where the trigger hand closes on the world weapon, in its own tag_weapon
+// frame, read off the model's mesh: the bore runs along +X with the muzzle at
+// +11, and the pistol grip and handguard are the two clusters hanging below
+// it. Their 10.0-inch separation matches the wrist span the pb_* stance clips
+// author, which is what makes them usable as calibration targets.
+const WEAPON_TRIGGER_GRIP = new THREE.Vector3(-13.5, 0, -3.5);
+const WEAPON_SOCKET = 'tag_weapon_right';
+const WEAPON_TRIGGER_JOINT = 'j_wrist_ri';
+
+// The stance clips orient tag_weapon_right correctly but place it about 14
+// inches from the wrist, while this body's bind puts it at 11.4: the clips and
+// the PLA rig disagree about the socket offset, so welding straight to the
+// socket leaves the rifle floating roughly a foot off the hands. Solve one
+// rigid correction from the authored trigger hand and reuse it for every pose
+// frame, so the weapon still rides the animated socket rigidly the way the
+// engine attaches it, just from the right offset.
+function solveWeaponCalibration(body) {
+  const socket = findNode(body, WEAPON_SOCKET);
+  const trigger = findNode(body, WEAPON_TRIGGER_JOINT);
+  if (!socket || !trigger) return null;
+  body.updateMatrixWorld(true);
+
+  // The stance clip already authors the barrel rotation on tag_weapon_right.
+  // Preserve it and correct only the incompatible bind-space translation.
+  const triggerPoint = trigger.getWorldPosition(new THREE.Vector3());
+  const ideal = new THREE.Matrix4().makeRotationFromQuaternion(
+    socket.getWorldQuaternion(new THREE.Quaternion()),
+  );
+  ideal.setPosition(triggerPoint.sub(WEAPON_TRIGGER_GRIP.clone().applyMatrix4(ideal)));
+  return { node: WEAPON_SOCKET, transform: socket.matrixWorld.clone().invert().multiply(ideal) };
+}
+
+// pb_death_faceplant animates the socket 30 inches out and rising, because T6
+// drops the weapon on death and this viewer does not model a dropped weapon.
+// Capture where the rifle sits relative to the trigger hand in the living
+// stance so the falling body keeps hold of it instead of flinging it away.
+function solveDeathMount(body, calibration) {
+  const socket = findNode(body, WEAPON_SOCKET);
+  const hand = findNode(body, WEAPON_TRIGGER_JOINT);
+  if (!socket || !hand || !calibration) return null;
+  body.updateMatrixWorld(true);
+  const weaponWorld = socket.matrixWorld.clone().multiply(calibration);
+  return { node: WEAPON_TRIGGER_JOINT, transform: hand.matrixWorld.clone().invert().multiply(weaponWorld) };
+}
+
+function attachWeapon(body, weapon, mountPoint) {
+  // T6's own convention, the same one the viewmodel uses: the weapon's origin
+  // tag lands on the body's weapon socket, which the clips animate along with
+  // the hand.
+  const parent = mountPoint && findNode(body, mountPoint.node);
   const mount = findNode(weapon, 'tag_weapon');
-  if (!hand || !mount) return null;
+  if (!parent || !mount || !mountPoint.transform) return null;
   weapon.updateMatrixWorld(true);
   weapon.matrixAutoUpdate = false;
-  weapon.matrix.copy(mount.matrixWorld).invert();
-  hand.add(weapon);
-  actorRoot?.updateMatrixWorld(true);
-
-  const muzzle = findNode(weapon, 'tag_flash');
-  if (muzzle && actorRoot) {
-    // The exported world weapon uses a different forward axis than the body
-    // hand tag. Keep tag_weapon pinned to the hand, but rotate the weapon
-    // around that socket so its barrel follows the actor's gameplay forward.
-    const handPosition = hand.getWorldPosition(new THREE.Vector3());
-    const muzzlePosition = muzzle.getWorldPosition(new THREE.Vector3());
-    const currentDirection = muzzlePosition.sub(handPosition).normalize();
-    const desiredDirection = new THREE.Vector3(0, -0.06, -1).normalize();
-    desiredDirection.applyQuaternion(actorRoot.getWorldQuaternion(new THREE.Quaternion()));
-
-    const inverseHandRotation = hand.getWorldQuaternion(new THREE.Quaternion()).invert();
-    currentDirection.applyQuaternion(inverseHandRotation).normalize();
-    desiredDirection.applyQuaternion(inverseHandRotation).normalize();
-    const correction = new THREE.Quaternion().setFromUnitVectors(currentDirection, desiredDirection);
-    weapon.matrix.premultiply(new THREE.Matrix4().makeRotationFromQuaternion(correction));
-    actorRoot.updateMatrixWorld(true);
-  }
-  return { hand, mount, muzzle };
+  weapon.matrix.copy(mount.matrixWorld).invert().premultiply(mountPoint.transform);
+  parent.add(weapon);
+  body.updateMatrixWorld(true);
+  return { hand: parent, mount, muzzle: findNode(weapon, 'tag_flash') };
 }
 
 function makeHitbox(geometry, position, enemy, multiplier, region) {
@@ -379,7 +403,7 @@ class Enemy {
         const body = template.clone(true);
         const weapon = manager.weaponTemplate.clone(true);
         this.modelRoot.add(body);
-        const mounts = attachWeapon(body, weapon, this.root);
+        const mounts = attachWeapon(body, weapon, manager.weaponMounts[state]);
         this.modelRoot.remove(body);
         return { body, weapon, ...mounts };
       }),
@@ -833,6 +857,7 @@ export class EnemyManager {
     this.weaponTemplate = null;
     this.poseTemplates = null;
     this.poseFrameRates = null;
+    this.weaponMounts = null;
     this.bodyAtlas = null;
     this.weaponAtlas = null;
     this.bakedWeaponMeshCount = 0;
@@ -845,9 +870,13 @@ export class EnemyManager {
     // skinned vertices. The world-weapon LOD1 likewise keeps all mount tags.
     bodyUrl = 'enemies/c_chn_mp_pla_assault_fb_lod2.glb',
     weaponUrl = 'enemies/t6_wpn_ar_hk416_world_lod1.glb',
+    // The pb_hold_* set is T6's carry stance, not its weapon stance: it poses
+    // the hands for an object and parks tag_weapon_right somewhere unrelated.
+    // pb_stand_alert and pb_combatrun_forward_loop are the rifle clips, and
+    // they agree with each other on the socket to within an inch.
     animations = {
-      idle: 'enemies/anims/pb_hold_idle.json',
-      run: 'enemies/anims/pb_hold_run.json',
+      idle: 'enemies/anims/pb_stand_alert.json',
+      run: 'enemies/anims/pb_combatrun_forward_loop.json',
       death: 'enemies/anims/pb_death_faceplant.json',
     },
     onProgress = null,
@@ -885,6 +914,14 @@ export class EnemyManager {
       idle: 1,
       run: this.poseTemplates.run.length / this.clips.run.duration,
       death: (this.poseTemplates.death.length - 1) / this.clips.death.duration,
+    };
+    // Calibrate each stance from its own first pose frame: the two stance
+    // clips still disagree with each other by an inch or so at the socket.
+    const idleMount = solveWeaponCalibration(this.poseTemplates.idle[0]);
+    this.weaponMounts = {
+      idle: idleMount,
+      run: solveWeaponCalibration(this.poseTemplates.run[0]),
+      death: solveDeathMount(this.poseTemplates.idle[0], idleMount?.transform),
     };
     this.bakedWeaponMeshCount = bakeSkinnedMeshes(this.weaponTemplate);
     collapseBakedBody(this.weaponTemplate, this.weaponAtlas);

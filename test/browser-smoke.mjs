@@ -106,22 +106,39 @@ test('Hijacked viewer loads collision, navigation, and walking controls', { time
           const rootBone = enemy.body.getObjectByName('j_mainroot');
           return rootBone ? Number(rootBone.position.z.toFixed(2)) : null;
         }) ?? [],
-        weaponMountErrors: api.enemies?.enemies.map((enemy) => {
-          enemy.root.updateMatrixWorld(true);
-          const hand = enemy.handMount.getWorldPosition(enemy.root.position.clone());
-          const mount = enemy.weaponMount.getWorldPosition(enemy.root.position.clone());
-          return hand.distanceTo(mount);
-        }) ?? [],
-        weaponForwardDots: api.enemies?.enemies.map((enemy) => {
-          enemy.root.updateMatrixWorld(true);
-          const hand = enemy.handMount.getWorldPosition(enemy.root.position.clone());
-          const muzzle = enemy.muzzle.getWorldPosition(enemy.root.position.clone()).sub(hand).normalize();
-          const rootPosition = enemy.root.getWorldPosition(hand.clone());
-          const forward = enemy.root.localToWorld(hand.clone().set(0, 0, -1))
-            .sub(rootPosition).normalize();
-          return muzzle.dot(forward);
+        weaponPoseSamples: api.enemies?.enemies.map((enemy) => {
+          const measure = () => {
+            enemy.root.updateMatrixWorld(true);
+            const triggerHand = enemy.body.getObjectByName('j_wrist_ri')
+              .getWorldPosition(enemy.root.position.clone());
+            const triggerGrip = enemy.weaponMount.localToWorld(
+              enemy.root.position.clone().set(-13.5, 0, -3.5),
+            );
+            const mount = enemy.weaponMount.getWorldPosition(enemy.root.position.clone());
+            const muzzle = enemy.muzzle.getWorldPosition(enemy.root.position.clone()).sub(mount).normalize();
+            const rootPosition = enemy.root.getWorldPosition(enemy.root.position.clone());
+            const forward = enemy.root.localToWorld(enemy.root.position.clone().set(0, 0, -1))
+              .sub(rootPosition).normalize();
+            return {
+              gripError: triggerHand.distanceTo(triggerGrip),
+              forwardDot: muzzle.dot(forward),
+            };
+          };
+
+          const idle = measure();
+          const run = enemy.visualFrames.run.map((_, index) => {
+            enemy.showVisualFrame('run', index);
+            return measure();
+          });
+          const death = enemy.visualFrames.death.map((_, index) => {
+            enemy.showVisualFrame('death', index);
+            return measure();
+          });
+          enemy.playAction('idle');
+          return { idle, run, death };
         }) ?? [],
         animatedBodies: api.enemies?.enemies.map((enemy) => {
+          enemy.root.updateMatrixWorld(true);
           const beforeBody = enemy.body;
           const beforeWrist = beforeBody.getObjectByName('j_wrist_ri').quaternion.clone();
           enemy.playAction('run');
@@ -187,10 +204,14 @@ test('Hijacked viewer loads collision, navigation, and walking controls', { time
     assert.deepEqual(enemySetup.models, Array(6).fill(true), 'enemy body and weapon assets should load');
     assert.ok(enemySetup.groundedRoots.every((z) => Math.abs(z - 37.23) < 0.1),
       `enemy animation roots should retain the grounded bind height: ${enemySetup.groundedRoots}`);
-    assert.ok(enemySetup.weaponMountErrors.every((error) => error < 0.01),
-      `enemy weapons should remain attached to the right hand: ${enemySetup.weaponMountErrors}`);
-    assert.ok(enemySetup.weaponForwardDots.every((dot) => dot > 0.98),
-      `enemy weapon barrels should face with their actors: ${enemySetup.weaponForwardDots}`);
+    const weaponGripErrors = enemySetup.weaponPoseSamples.flatMap(({ idle, run, death }) =>
+      [idle, ...run, ...death].map(({ gripError }) => gripError));
+    assert.ok(weaponGripErrors.every((error) => error < 0.25),
+      `enemy trigger grips should remain in the right hands across poses: ${weaponGripErrors}`);
+    const weaponForwardDots = enemySetup.weaponPoseSamples.flatMap(({ idle, run }) =>
+      [idle, ...run].map(({ forwardDot }) => forwardDot));
+    assert.ok(weaponForwardDots.every((dot) => dot > 0.96),
+      `enemy weapon barrels should face with their actors in living stances: ${weaponForwardDots}`);
     assert.ok(enemySetup.animatedBodies.every(({ changed, changedFrame }) => changedFrame && changed > 0.0001),
       `enemy run clips should animate their skeletons: ${JSON.stringify(enemySetup.animatedBodies)}`);
     assert.deepEqual(enemySetup.skinnedMeshCounts, Array(6).fill(0),

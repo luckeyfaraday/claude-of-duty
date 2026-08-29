@@ -100,6 +100,18 @@ body, M27 world model, and converted `pb_*` body animations, with separate
 head, torso, and leg damage zones. The HUD shows player health and the current
 alive enemy count.
 
+The rifle rides `tag_weapon_right`, the body's own weapon socket, the same way
+the viewmodel welds `j_gun` to the hands' `tag_weapon`. Two details do not come
+free. The stance clips have to be the weapon set (`pb_stand_alert`,
+`pb_combatrun_forward_loop`); the `pb_hold_*` set is T6's carry stance, which
+poses the hands for an object and parks the socket somewhere unrelated. And the
+clips and the PLA rig disagree about the socket offset — the clips put it about
+14 inches from the wrist, the model's bind 11.4 — so the socket is calibrated
+once per stance against the authored trigger hand, which lands the grip within
+about a sixth of an inch of the wrist. `pb_death_faceplant` animates the
+socket 30 inches clear of the body because T6 drops the weapon on death, so the
+falling body instead keeps the rifle welded to its trigger hand.
+
 Enemy fire is audible and locatable. Every shot lights a pooled additive sprite
 at the shooter's `tag_flash` and plays a panned report through an HRTF
 `PannerNode` whose distances are tuned to Radiant inches, with a distance-driven
