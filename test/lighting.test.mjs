@@ -101,6 +101,32 @@ test('vision tone survives a missing or empty vision set', async () => {
   assert.deepEqual(tone.highlightTint, [1, 1, 1], 'neutral tint without data');
 });
 
+test('material classes make chrome metallic and leave dielectrics alone', async () => {
+  const { classifyMaterial } = await import('../export/web/lighting.js');
+  const metal = (n) => classifyMaterial(n)?.metalness;
+
+  // The railing that rendered as a black silhouette.
+  assert.equal(metal('p6_hijacked_railing_front02_right:mc/metal_chrome_boat'), 1);
+  assert.equal(classifyMaterial('mc/metal_chrome_boat').roughness, 0.16);
+
+  // A decal overlay must not veto the real material in the other half.
+  assert.equal(metal('*33n_95(wpc/com_metal_chrome_trim:wpc/pb_decal_wall_fillet_2'), 1,
+    'chrome trim under a decal is still chrome');
+  assert.equal(metal('wpc/metal_brushed_blue:wpc/ao_decal_ramp'), 1,
+    'brushed metal under an ao decal is still metal');
+
+  // Named metals that are really painted or plastic stay dielectric.
+  assert.equal(metal('wpc/metal_wall_panel_painted'), 0);
+  assert.equal(metal('wpc/metal_whitetrim_ext'), 0);
+  assert.equal(metal('wpc/wood_teak_decking_dark'), 0);
+
+  // Anything unrecognised is left exactly as the exporter set it.
+  assert.equal(classifyMaterial('mlv/fiberglass_boat_white'), null);
+  assert.equal(classifyMaterial('wpc/water_ocean_mp_hijacked'), null);
+  assert.equal(classifyMaterial(''), null);
+  assert.equal(classifyMaterial(undefined), null);
+});
+
 test('encodePng writes a decodable image with the expected pixels', () => {
   const w = 3, h = 2;
   const rgb = Buffer.from([

@@ -120,6 +120,7 @@ export const POST_SHADER = {
     lift: { value: new THREE.Vector3(0, 0, 0) },
     highlightTint: { value: new THREE.Vector3(1, 1, 1) },
     visionAmount: { value: 1 },
+    saturation: { value: 1 },
   },
   vertexShader: /* glsl */`
     varying vec2 vUv;
@@ -136,6 +137,7 @@ export const POST_SHADER = {
     uniform vec3 lift;
     uniform vec3 highlightTint;
     uniform float visionAmount;
+    uniform float saturation;
     varying vec2 vUv;
 
     // The vision set's split tone: vc_YH is a warm highlight target and vc_YL a
@@ -146,6 +148,13 @@ export const POST_SHADER = {
       vec3 warmed = c * mix(vec3(1.0), highlightTint, y);
       vec3 lifted = lift + warmed * (1.0 - lift);
       return mix(c, lifted, visionAmount);
+    }
+
+    // ACES, the warm highlight tint and the LUT each add a little saturation,
+    // and they compound into clouds far more vivid than the game's. Pulled
+    // back once at the end rather than by weakening each stage.
+    vec3 hjSaturation(vec3 c, float s) {
+      return mix(vec3(dot(c, vec3(0.2126, 0.7152, 0.0722))), c, s);
     }
 
     // Matches THREE's ACESFilmicToneMapping so the look is unchanged from
@@ -205,9 +214,70 @@ export const POST_SHADER = {
       c = hjLinearToSRGB(c);
       // vision split tone, then the LUT built from the same vision set
       c = hjVision(c);
-      gl_FragColor = vec4(mix(c, sampleLut(c), amount), src.a);
+      c = mix(c, sampleLut(c), amount);
+      gl_FragColor = vec4(clamp(hjSaturation(c, saturation), 0.0, 1.0), src.a);
     }`,
 };
+
+// compose_scene.py gives every world material metalness 0 / roughness 0.9,
+// because until now there was no environment for a metal to reflect. That makes
+// chrome render as a rough dielectric over a dark albedo - the chrome map is a
+// flat ~#3c3c3c, since in the engine its whole appearance comes from
+// reflection - so railings and trim collapse to black silhouettes.
+//
+// First match wins, so the explicitly-dielectric rule is listed first: plenty
+// of names contain "metal" while being painted or plastic, and those really are
+// rough dielectrics.
+export const MATERIAL_CLASSES = [
+  { match: /painted|whitetrim|plastic|rubber|wood|fabric|leather/i, metalness: 0, roughness: 0.9 },
+  { match: /chrome/i, metalness: 1, roughness: 0.16 },
+  { match: /brushed/i, metalness: 1, roughness: 0.45 },
+  { match: /metal|steel|alum|iron/i, metalness: 1, roughness: 0.35 },
+];
+
+// Names arrive as "model:material" or "material:decal_overlay", sometimes
+// behind a "*33n_95(" surface prefix. The overlay half must not decide the
+// class - "com_metal_chrome_trim:pb_decal_wall_fillet" is chrome with a decal
+// on it, not a dielectric.
+export function materialProbeName(name) {
+  const cleaned = String(name).replace(/^\*[^(]*\(/, '');
+  const segments = cleaned.split(':').filter((s) => !/decal|ao_|fillet/i.test(s));
+  return segments.length ? segments.join(':') : cleaned;
+}
+
+export function classifyMaterial(name) {
+  if (!name) return null;
+  const probe = materialProbeName(name);
+  for (const rule of MATERIAL_CLASSES) {
+    if (rule.match.test(probe)) return { metalness: rule.metalness, roughness: rule.roughness };
+  }
+  return null;
+}
+
+/**
+ * Reclassify a loaded subtree's materials so metals reflect the environment.
+ * Returns how many were changed.
+ */
+export function applyMaterialClasses(root) {
+  const seen = new Set();
+  let changed = 0;
+  root.traverse((object) => {
+    if (!object.isMesh && !object.isSkinnedMesh) return;
+    const list = Array.isArray(object.material) ? object.material : [object.material];
+    for (const material of list) {
+      if (!material || seen.has(material)) continue;
+      seen.add(material);
+      if (material.metalness === undefined) continue; // not a PBR material
+      const cls = classifyMaterial(material.name);
+      if (!cls) continue;
+      material.metalness = cls.metalness;
+      material.roughness = cls.roughness;
+      material.needsUpdate = true;
+      changed++;
+    }
+  });
+  return changed;
+}
 
 /**
  * Turn the vision set's tone targets into post-pass uniforms.
@@ -218,13 +288,18 @@ export const POST_SHADER = {
  * (R > G > B); only its hue matters here, so it is normalised to its max and
  * applied by luminance.
  */
-export function visionTone(grade, liftScale = 1) {
+export function visionTone(grade, { liftScale = 1, tintStrength = 0.35 } = {}) {
   const yl = grade?.lowlight ?? [0, 0, 0];
   const yh = grade?.highlight ?? [1, 1, 1];
   const peak = Math.max(yh[0], yh[1], yh[2]) || 1;
   return {
     lift: yl.map((v) => Math.min(Math.max(v * liftScale, 0), 0.25)),
-    highlightTint: yh.map((v) => v / peak),
+    // Normalised vc_YH is [1, 0.92, 0.76] - a 24% cut to blue. Applied at full
+    // strength and weighted by luminance it lands hardest on the brightest part
+    // of the frame, which is the sunset, and drives the sky orange. The hue is
+    // right but the magnitude is not a literal multiplier, so it is eased
+    // toward neutral.
+    highlightTint: yh.map((v) => 1 + (v / peak - 1) * tintStrength),
   };
 }
 

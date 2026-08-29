@@ -76,7 +76,7 @@ import { WeaponController } from './weapon-controller.js';
 import { WeaponEffects } from './weapon-effects.js';
 import { EnemyManager } from './enemy-system.js';
 import { PlayerHealth } from './player-health.js';
-import { applyEnvironmentLighting, loadGradeLut, POST_SHADER, HAZE } from './lighting.js';
+import { applyEnvironmentLighting, loadGradeLut, POST_SHADER, HAZE, applyMaterialClasses } from './lighting.js';
 import { loadProbeVolume, attachObjectProbe } from './light-probes.js';
 
 const scene = new THREE.Scene();
@@ -181,9 +181,14 @@ let gradeScene = null;
 let gradeCamera = null;
 let visionTone = null;
 
+// Tuned against a capture of the real game, which is markedly more muted than
+// ACES + the warm tint + the LUT produce on their own.
+const SATURATION = 0.78;
+
 function applyVisionTone(material, tone) {
   material.uniforms.lift.value.fromArray(tone.lift);
   material.uniforms.highlightTint.value.fromArray(tone.highlightTint);
+  material.uniforms.saturation.value = SATURATION;
 }
 
 function sizeGradeTarget() {
@@ -310,8 +315,15 @@ function progress(name, event) {
 }
 
 const loader = new GLTFLoader();
-function loadGltf(url, label) {
-  return loader.loadAsync(url, (event) => progress(label, event));
+async function loadGltf(url, label) {
+  const gltf = await loader.loadAsync(url, (event) => progress(label, event));
+  // Chrome and bare metal need metalness to reflect the environment; without
+  // it they render as dark dielectrics and read as black. See lighting.js.
+  if (gltf.scene) {
+    const reclassified = applyMaterialClasses(gltf.scene);
+    if (reclassified) console.info(`${label}: reclassified ${reclassified} materials`);
+  }
+  return gltf;
 }
 
 function chooseSpawn(hints, collision) {
