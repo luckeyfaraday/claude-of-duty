@@ -8,7 +8,8 @@ import {
   BVH,
   rayTri,
 } from '../.tools/bake_probes.mjs';
-import { ProbeVolume } from '../export/web/light-probes.js';
+import * as THREE from 'three';
+import { ProbeVolume, attachObjectProbe } from '../export/web/light-probes.js';
 
 // A single triangle spanning the xz plane at y = 10, big enough to cover any
 // upward ray from the origin.
@@ -118,6 +119,82 @@ test('probe volume clamps outside its bounds instead of wrapping', () => {
   const volume = volumeOf([2, 1, 1], (x) => (x === 0 ? 1 : 9));
   assert.equal(volume.sample(-9999, 0, 0)[0], 1, 'below origin clamps to the first cell');
   assert.equal(volume.sample(9999, 0, 0)[0], 9, 'past the end clamps to the last cell');
+});
+
+// --- per-object probes ------------------------------------------------------
+
+function enemyLike() {
+  const root = new THREE.Group();
+  const shared = new THREE.MeshLambertMaterial({ color: 0x808080 });
+  const body = new THREE.Mesh(new THREE.BufferGeometry(), shared);
+  const head = new THREE.Mesh(new THREE.BufferGeometry(), shared);
+  // hitbox proxies are unlit and must be left alone
+  const hitbox = new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshBasicMaterial());
+  root.add(body, head, hitbox);
+  return { root, shared, body, head, hitbox };
+}
+
+test('attaching a probe clones lit materials but leaves unlit ones shared', () => {
+  const { root, shared, body, head, hitbox } = enemyLike();
+  const probe = attachObjectProbe(root);
+  assert.equal(probe.materialCount, 2, 'only the two lit meshes are patched');
+  assert.notEqual(body.material, shared, 'lit material is cloned off the shared one');
+  assert.notEqual(body.material, head.material, 'each mesh gets its own clone');
+  assert.ok(hitbox.material.isMeshBasicMaterial, 'unlit hitbox material is untouched');
+  assert.equal(hitbox.material.userData.probeDeltaSH, undefined);
+  assert.equal(body.material.userData.probeDeltaSH, probe.uniform);
+});
+
+test('two objects patched separately do not share a uniform', () => {
+  const a = attachObjectProbe(enemyLike().root);
+  const b = attachObjectProbe(enemyLike().root);
+  assert.notEqual(a.uniform, b.uniform);
+});
+
+test('patched materials share one shader program cache key', () => {
+  // The injection is defined once at module scope precisely so THREE does not
+  // compile a separate program per enemy.
+  const a = enemyLike();
+  const b = enemyLike();
+  attachObjectProbe(a.root);
+  attachObjectProbe(b.root);
+  assert.equal(
+    a.body.material.onBeforeCompile.toString(),
+    b.body.material.onBeforeCompile.toString(),
+  );
+});
+
+test('object probe stores the difference against the scene probe', () => {
+  const { root, body } = enemyLike();
+  const probe = attachObjectProbe(root);
+  // uniform ambient of 2 everywhere
+  const volume = volumeOf([2, 2, 2], () => 2);
+  const sceneSH = new Float32Array(12).fill(0.5);
+  probe.update(volume, new THREE.Vector3(5, 5, 5), sceneSH, 1);
+  // local (2) - scene (0.5) = 1.5, so scene + delta lands back on local
+  for (let b = 0; b < 4; b++) {
+    assert.ok(Math.abs(probe.uniform.value[b].x - 1.5) < 1e-5,
+      `coefficient ${b} should be 1.5, got ${probe.uniform.value[b].x}`);
+  }
+  assert.equal(body.material.userData.probeDeltaSH.value[0].x, probe.uniform.value[0].x);
+});
+
+test('object probe intensity scales the local term only', () => {
+  const probe = attachObjectProbe(enemyLike().root);
+  const volume = volumeOf([2, 2, 2], () => 2);
+  const sceneSH = new Float32Array(12).fill(1);
+  probe.update(volume, new THREE.Vector3(5, 5, 5), sceneSH, 0.5);
+  // local 2 * 0.5 = 1, minus scene 1 => 0: an object matching the scene probe
+  // contributes nothing extra.
+  assert.ok(Math.abs(probe.uniform.value[0].x) < 1e-5,
+    `expected no delta, got ${probe.uniform.value[0].x}`);
+});
+
+test('object probe update is inert without a volume', () => {
+  const probe = attachObjectProbe(enemyLike().root);
+  probe.uniform.value[0].set(7, 7, 7);
+  probe.update(null, new THREE.Vector3(), new Float32Array(12), 1);
+  assert.equal(probe.uniform.value[0].x, 7, 'no volume must not clobber the uniform');
 });
 
 test('probe volume rejects data that does not match its dims', () => {

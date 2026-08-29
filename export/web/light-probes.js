@@ -80,6 +80,96 @@ function clamp(v, lo, hi) {
   return v < lo ? lo : v > hi ? hi : v;
 }
 
+// --------------------------- per-object probes ------------------------------
+//
+// THREE.LightProbe is scene-wide, so a scene-level probe cannot light an enemy
+// below decks differently from one on the open deck. These helpers give an
+// object its own SH term by patching its materials.
+//
+// The uniform carries the *difference* between the object's local probe and
+// the scene probe, not the local value: the scene probe already contributes to
+// every lit surface, so adding the delta lands on the local value exactly
+// without double-counting.
+
+// Same magic numbers as THREE's shGetIrradianceAt, restricted to L0+L1.
+const SH_C0 = 0.886227;
+const SH_C1 = 2.0 * 0.511664;
+
+// Defined once at module scope: THREE keys its program cache on the source of
+// onBeforeCompile, so sharing one function keeps every patched material on a
+// single compiled program.
+function injectProbeUniform(shader) {
+  shader.uniforms.probeDeltaSH = this.userData.probeDeltaSH;
+  shader.fragmentShader = shader.fragmentShader
+    .replace(
+      'void main() {',
+      `uniform vec3 probeDeltaSH[4];
+void main() {`,
+    )
+    .replace(
+      '#include <lights_fragment_begin>',
+      `#include <lights_fragment_begin>
+      {
+        // local probe minus the scene probe, evaluated for this normal
+        irradiance += probeDeltaSH[0] * ${SH_C0.toFixed(6)}
+          + probeDeltaSH[1] * ${SH_C1.toFixed(6)} * normal.y
+          + probeDeltaSH[2] * ${SH_C1.toFixed(6)} * normal.z
+          + probeDeltaSH[3] * ${SH_C1.toFixed(6)} * normal.x;
+      }`,
+    );
+}
+
+function patchMaterial(material, uniform) {
+  // Materials are shared between enemies (the body atlas), so each object needs
+  // its own clone to carry its own uniform. The clone shares textures and
+  // compiles to the same program, so this costs a uniform block, not a shader.
+  const clone = material.clone();
+  clone.userData = { ...clone.userData, probeDeltaSH: uniform };
+  clone.onBeforeCompile = injectProbeUniform;
+  clone.needsUpdate = true;
+  return clone;
+}
+
+/**
+ * Give an object subtree its own probe term.
+ * Returns a handle whose update(volume, sceneSH, intensity) refreshes it.
+ */
+export function attachObjectProbe(root) {
+  const uniform = {
+    value: [
+      new THREE.Vector3(), new THREE.Vector3(),
+      new THREE.Vector3(), new THREE.Vector3(),
+    ],
+  };
+  let patched = 0;
+  root.traverse((object) => {
+    if (!object.isMesh && !object.isSkinnedMesh) return;
+    // Invisible hitbox proxies use MeshBasicMaterial, which is unlit; patching
+    // it would fail to compile because it has no irradiance to add to.
+    const patch = (m) => (m && m.isMeshBasicMaterial ? m : (patched++, patchMaterial(m, uniform)));
+    object.material = Array.isArray(object.material)
+      ? object.material.map(patch)
+      : patch(object.material);
+  });
+  const local = new Float32Array(12);
+  return {
+    uniform,
+    materialCount: patched,
+    /** Sample `volume` at `position` and store the delta against `sceneSH`. */
+    update(volume, position, sceneSH, intensity = 1) {
+      if (!volume) return;
+      volume.sample(position.x, position.y, position.z, local);
+      for (let b = 0; b < 4; b++) {
+        uniform.value[b].set(
+          local[b * 3] * intensity - sceneSH[b * 3],
+          local[b * 3 + 1] * intensity - sceneSH[b * 3 + 1],
+          local[b * 3 + 2] * intensity - sceneSH[b * 3 + 2],
+        );
+      }
+    },
+  };
+}
+
 export async function loadProbeVolume(baseUrl = '') {
   const [layout, buffer] = await Promise.all([
     fetch(`${baseUrl}hijacked_probes.json`).then((r) => {
