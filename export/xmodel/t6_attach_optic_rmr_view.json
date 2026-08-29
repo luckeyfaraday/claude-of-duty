@@ -1,0 +1,21 @@
+{
+    "$schema": "http://openassettools.dev/schema/xmodel.v1.json",
+    "_game": "t6",
+    "_type": "xmodel",
+    "_version": 2,
+    "flags": 6815744,
+    "lightingOriginOffset": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.5
+    },
+    "lightingOriginRange": 0.5,
+    "lods": [
+        {
+            "distance": 297.6170349121094,
+            "file": "model_export/t6_attach_optic_rmr_view_lod0.glb"
+        }
+    ],
+    "rootBoneName": "tag_rmr",
+    "type": "rigid"
+}

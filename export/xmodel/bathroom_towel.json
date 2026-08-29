@@ -1,0 +1,32 @@
+{
+    "$schema": "http://openassettools.dev/schema/xmodel.v1.json",
+    "_game": "t6",
+    "_type": "xmodel",
+    "_version": 2,
+    "flags": 2097152,
+    "lightingOriginOffset": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.5
+    },
+    "lightingOriginRange": 0.5,
+    "lods": [
+        {
+            "distance": 400.0,
+            "file": "model_export/bathroom_towel_lod0.glb"
+        },
+        {
+            "distance": 800.0,
+            "file": "model_export/bathroom_towel_lod1.glb"
+        },
+        {
+            "distance": 1000.0,
+            "file": "model_export/bathroom_towel_lod2.glb"
+        },
+        {
+            "distance": 1300.0,
+            "file": "model_export/bathroom_towel_lod3.glb"
+        }
+    ],
+    "type": "rigid"
+}

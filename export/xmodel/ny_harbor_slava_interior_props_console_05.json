@@ -1,0 +1,21 @@
+{
+    "$schema": "http://openassettools.dev/schema/xmodel.v1.json",
+    "_game": "t6",
+    "_type": "xmodel",
+    "_version": 2,
+    "flags": 2621440,
+    "lightingOriginOffset": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.5
+    },
+    "lightingOriginRange": 0.5,
+    "lods": [
+        {
+            "distance": 2019.8533935546875,
+            "file": "model_export/ny_harbor_slava_interior_props_console_05_lod0.glb"
+        }
+    ],
+    "rootBoneName": "console_05",
+    "type": "rigid"
+}

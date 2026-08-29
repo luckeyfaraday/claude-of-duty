@@ -1,0 +1,30 @@
+{
+    "$schema": "http://openassettools.dev/schema/xmodel.v1.json",
+    "_game": "t6",
+    "_type": "xmodel",
+    "_version": 2,
+    "collLod": 2,
+    "flags": 2097152,
+    "lightingOriginOffset": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.5
+    },
+    "lightingOriginRange": 0.5,
+    "lods": [
+        {
+            "distance": 300.0,
+            "file": "model_export/furniture_lamp_table2_1_lod0.glb"
+        },
+        {
+            "distance": 700.0,
+            "file": "model_export/furniture_lamp_table2_1_lod1.glb"
+        },
+        {
+            "distance": 2000.0,
+            "file": "model_export/furniture_lamp_table2_1_lod2.glb"
+        }
+    ],
+    "rootBoneName": "lamp_table2_1_lod0",
+    "type": "rigid"
+}

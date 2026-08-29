@@ -1,0 +1,25 @@
+{
+    "$schema": "http://openassettools.dev/schema/xmodel.v1.json",
+    "_game": "t6",
+    "_type": "xmodel",
+    "_version": 2,
+    "flags": 6291456,
+    "lightingOriginOffset": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.5
+    },
+    "lightingOriginRange": 0.5,
+    "lods": [
+        {
+            "distance": 100.0,
+            "file": "model_export/fx_decal_burnt_paper3_lod0.glb"
+        },
+        {
+            "distance": 2000.0,
+            "file": "model_export/fx_decal_burnt_paper3_lod1.glb"
+        }
+    ],
+    "rootBoneName": "fx_decal_burnt_paper3_lod0",
+    "type": "rigid"
+}

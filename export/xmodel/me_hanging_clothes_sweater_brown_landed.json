@@ -1,0 +1,21 @@
+{
+    "$schema": "http://openassettools.dev/schema/xmodel.v1.json",
+    "_game": "t6",
+    "_type": "xmodel",
+    "_version": 2,
+    "flags": 2097152,
+    "lightingOriginOffset": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.5
+    },
+    "lightingOriginRange": 0.5,
+    "lods": [
+        {
+            "distance": 3000.0,
+            "file": "model_export/me_hanging_clothes_sweater_brown_landed_lod0.glb"
+        }
+    ],
+    "rootBoneName": "sweater_landed_0",
+    "type": "rigid"
+}

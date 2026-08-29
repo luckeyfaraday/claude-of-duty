@@ -1,0 +1,33 @@
+{
+    "$schema": "http://openassettools.dev/schema/xmodel.v1.json",
+    "_game": "t6",
+    "_type": "xmodel",
+    "_version": 2,
+    "collLod": 3,
+    "flags": 6815744,
+    "lightingOriginOffset": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.5
+    },
+    "lightingOriginRange": 0.5,
+    "lods": [
+        {
+            "distance": 1000.0,
+            "file": "model_export/p6_light_blk_emergency_red_lod0.glb"
+        },
+        {
+            "distance": 1500.0,
+            "file": "model_export/p6_light_blk_emergency_red_lod1.glb"
+        },
+        {
+            "distance": 2000.0,
+            "file": "model_export/p6_light_blk_emergency_red_lod2.glb"
+        },
+        {
+            "distance": 4375.1787109375,
+            "file": "model_export/p6_light_blk_emergency_red_lod3.glb"
+        }
+    ],
+    "type": "rigid"
+}

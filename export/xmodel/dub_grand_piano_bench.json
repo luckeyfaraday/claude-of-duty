@@ -1,0 +1,33 @@
+{
+    "$schema": "http://openassettools.dev/schema/xmodel.v1.json",
+    "_game": "t6",
+    "_type": "xmodel",
+    "_version": 2,
+    "collLod": 3,
+    "flags": 2621440,
+    "lightingOriginOffset": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.5
+    },
+    "lightingOriginRange": 0.5,
+    "lods": [
+        {
+            "distance": 800.0,
+            "file": "model_export/dub_grand_piano_bench_lod0.glb"
+        },
+        {
+            "distance": 1400.0,
+            "file": "model_export/dub_grand_piano_bench_lod1.glb"
+        },
+        {
+            "distance": 3000.0,
+            "file": "model_export/dub_grand_piano_bench_lod2.glb"
+        },
+        {
+            "distance": 4121.78759765625,
+            "file": "model_export/dub_grand_piano_bench_lod3.glb"
+        }
+    ],
+    "type": "rigid"
+}

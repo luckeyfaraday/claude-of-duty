@@ -1,0 +1,23 @@
+{
+    "$schema": "http://openassettools.dev/schema/xmodel.v1.json",
+    "_game": "t6",
+    "_type": "xmodel",
+    "_version": 2,
+    "collLod": 0,
+    "flags": 6815744,
+    "lightingOriginOffset": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.5
+    },
+    "lightingOriginRange": 0.5,
+    "lods": [
+        {
+            "distance": 1831.782958984375,
+            "file": "model_export/dest_glo_powerbox_glass02_chunk05_lod0.glb"
+        }
+    ],
+    "physPreset": "glass_chunk",
+    "rootBoneName": "chunk_05",
+    "type": "rigid"
+}

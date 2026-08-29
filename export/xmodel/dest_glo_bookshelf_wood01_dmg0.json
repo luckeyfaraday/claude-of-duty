@@ -1,0 +1,26 @@
+{
+    "$schema": "http://openassettools.dev/schema/xmodel.v1.json",
+    "_game": "t6",
+    "_type": "xmodel",
+    "_version": 2,
+    "collLod": 1,
+    "flags": 6291456,
+    "lightingOriginOffset": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.5
+    },
+    "lightingOriginRange": 0.5,
+    "lods": [
+        {
+            "distance": 1999.0,
+            "file": "model_export/dest_glo_bookshelf_wood01_dmg0_lod0.glb"
+        },
+        {
+            "distance": 2000.0,
+            "file": "model_export/dest_glo_bookshelf_wood01_dmg0_lod1.glb"
+        }
+    ],
+    "rootBoneName": "dest_window_basepiece",
+    "type": "rigid"
+}

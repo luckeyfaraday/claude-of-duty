@@ -1,0 +1,249 @@
+{
+  "format": "detour-navmesh",
+  "recastNavigationVersion": "0.43.1",
+  "coordinateSystem": "three-y-up",
+  "source": "export/web/hijacked_collision.gltf",
+  "geometry": {
+    "vertices": 199986,
+    "triangles": 207092
+  },
+  "bounds": {
+    "min": [
+      -3515.728303442707,
+      -499.77099609375,
+      -999.5180053710938
+    ],
+    "max": [
+      2837.89990234375,
+      741.8660278320312,
+      965.1699829101562
+    ]
+  },
+  "config": {
+    "cs": 4,
+    "ch": 2,
+    "walkableSlopeAngle": 45,
+    "walkableHeight": 36,
+    "walkableClimb": 9,
+    "walkableRadius": 4,
+    "maxEdgeLen": 12,
+    "maxSimplificationError": 1.3,
+    "minRegionArea": 8,
+    "mergeRegionArea": 20,
+    "maxVertsPerPoly": 6,
+    "detailSampleDist": 6,
+    "detailSampleMaxError": 1,
+    "buildBvTree": true,
+    "bounds": [
+      [
+        -3220,
+        -328,
+        -777
+      ],
+      [
+        2766,
+        311.59765625,
+        622
+      ]
+    ]
+  },
+  "offMeshConnections": [
+    {
+      "startPosition": {
+        "x": 850,
+        "y": -88.86,
+        "z": -281.36
+      },
+      "endPosition": {
+        "x": 918,
+        "y": 43.14,
+        "z": -285.36
+      },
+      "radius": 20,
+      "bidirectional": false,
+      "area": 0,
+      "flags": 1
+    },
+    {
+      "startPosition": {
+        "x": 893,
+        "y": 42,
+        "z": -280
+      },
+      "endPosition": {
+        "x": 814,
+        "y": -54,
+        "z": -286
+      },
+      "radius": 20,
+      "bidirectional": false,
+      "area": 0,
+      "flags": 1
+    },
+    {
+      "startPosition": {
+        "x": -1224,
+        "y": -88.86,
+        "z": -187.36
+      },
+      "endPosition": {
+        "x": -1304,
+        "y": 43.14,
+        "z": -187.36
+      },
+      "radius": 20,
+      "bidirectional": false,
+      "area": 0,
+      "flags": 1
+    },
+    {
+      "startPosition": {
+        "x": -1268,
+        "y": -22,
+        "z": -188
+      },
+      "endPosition": {
+        "x": -1186,
+        "y": -118,
+        "z": -186
+      },
+      "radius": 20,
+      "bidirectional": false,
+      "area": 0,
+      "flags": 1
+    },
+    {
+      "startPosition": {
+        "x": 1142,
+        "y": 41.14,
+        "z": -279.36
+      },
+      "endPosition": {
+        "x": 1078,
+        "y": 173.14,
+        "z": -281.36
+      },
+      "radius": 20,
+      "bidirectional": false,
+      "area": 0,
+      "flags": 1
+    },
+    {
+      "startPosition": {
+        "x": 1104,
+        "y": 172,
+        "z": -280
+      },
+      "endPosition": {
+        "x": 1162,
+        "y": 76,
+        "z": -278
+      },
+      "radius": 20,
+      "bidirectional": false,
+      "area": 0,
+      "flags": 1
+    },
+    {
+      "startPosition": {
+        "x": -1546,
+        "y": -20.86,
+        "z": -345.36
+      },
+      "endPosition": {
+        "x": -1502,
+        "y": 111.14,
+        "z": -309.36
+      },
+      "radius": 20,
+      "bidirectional": false,
+      "area": 0,
+      "flags": 1
+    },
+    {
+      "startPosition": {
+        "x": -1514,
+        "y": 110,
+        "z": -306
+      },
+      "endPosition": {
+        "x": -1570,
+        "y": 14,
+        "z": -366
+      },
+      "radius": 20,
+      "bidirectional": false,
+      "area": 0,
+      "flags": 1
+    },
+    {
+      "startPosition": {
+        "x": 66,
+        "y": 41.14,
+        "z": -367.36
+      },
+      "endPosition": {
+        "x": 4,
+        "y": 101.14,
+        "z": -373.36
+      },
+      "radius": 20,
+      "bidirectional": false,
+      "area": 0,
+      "flags": 1
+    },
+    {
+      "startPosition": {
+        "x": -244,
+        "y": 41.14,
+        "z": -365.36
+      },
+      "endPosition": {
+        "x": -194,
+        "y": 101.14,
+        "z": -371.36
+      },
+      "radius": 20,
+      "bidirectional": false,
+      "area": 0,
+      "flags": 1
+    },
+    {
+      "startPosition": {
+        "x": -174,
+        "y": 112,
+        "z": -372
+      },
+      "endPosition": {
+        "x": -272,
+        "y": 152,
+        "z": -366
+      },
+      "radius": 20,
+      "bidirectional": false,
+      "area": 0,
+      "flags": 1
+    },
+    {
+      "startPosition": {
+        "x": -15,
+        "y": 112,
+        "z": -369
+      },
+      "endPosition": {
+        "x": 89,
+        "y": 152,
+        "z": -359
+      },
+      "radius": 20,
+      "bidirectional": false,
+      "area": 0,
+      "flags": 1
+    }
+  ],
+  "pathnodes": {
+    "total": 402,
+    "projected": 400
+  },
+  "byteLength": 357800
+}

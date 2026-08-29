@@ -1,0 +1,33 @@
+{
+    "$schema": "http://openassettools.dev/schema/xmodel.v1.json",
+    "_game": "t6",
+    "_type": "xmodel",
+    "_version": 2,
+    "collLod": 3,
+    "flags": 524288,
+    "lightingOriginOffset": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.5
+    },
+    "lightingOriginRange": 0.5,
+    "lods": [
+        {
+            "distance": 1200.0,
+            "file": "model_export/veh_t6_drone_tank_alt_lod0.glb"
+        },
+        {
+            "distance": 2400.0,
+            "file": "model_export/veh_t6_drone_tank_alt_lod1.glb"
+        },
+        {
+            "distance": 3600.0,
+            "file": "model_export/veh_t6_drone_tank_alt_lod2.glb"
+        },
+        {
+            "distance": 7875.81689453125,
+            "file": "model_export/veh_t6_drone_tank_alt_lod3.glb"
+        }
+    ],
+    "type": "animated"
+}

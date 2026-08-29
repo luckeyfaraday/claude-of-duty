@@ -2,6 +2,7 @@
 """Compose Hijacked world shell + static model instances into a glTF scene."""
 import json, os, re, struct, sys
 from urllib.parse import quote
+from export_collision import export_collision
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = f"{ROOT}/export/web"
@@ -73,7 +74,7 @@ def add_material(mat_name, tex_png):
         "pbrMetallicRoughness": {"baseColorFactor": [1,1,1,1], "metallicFactor": 0.0, "roughnessFactor": 0.9},
         "doubleSided": True,
     }
-    if tex_png:
+    if tex_png and os.path.exists(f"{OUT}/textures/{tex_png}"):
         mat["pbrMetallicRoughness"]["baseColorTexture"] = {"index": add_texture(tex_png)}
     materials.append(mat)
     return len(materials)-1
@@ -278,3 +279,8 @@ with open(f"{OUT}/hijacked.bin", "wb") as f:
     f.write(buf.data)
 print(f"written: hijacked.gltf ({os.path.getsize(f'{OUT}/hijacked.gltf')//1024} KB), hijacked.bin ({len(buf.data)//1024//1024} MB)")
 print(f"materials: {len(materials)}, textures used: {len(textures)}, meshes: {len(meshes)}")
+
+# Keep navigation/collision source separate from the render scene.  The
+# exporter writes an untextured glTF, entity hints, and a documented sidecar;
+# no render meshes/materials are changed by this call.
+export_collision(ROOT, OUT)

@@ -1,0 +1,35 @@
+{
+    "$schema": "http://openassettools.dev/schema/xmodel.v1.json",
+    "_game": "t6",
+    "_type": "xmodel",
+    "_version": 2,
+    "collLod": 2,
+    "flags": 2621440,
+    "lightingOriginOffset": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.5
+    },
+    "lightingOriginRange": 0.5,
+    "lods": [
+        {
+            "distance": 800.0,
+            "file": "model_export/vehicle_mi24p_hind_desert_d_piece02_lod0.glb"
+        },
+        {
+            "distance": 1400.0,
+            "file": "model_export/vehicle_mi24p_hind_desert_d_piece02_lod1.glb"
+        },
+        {
+            "distance": 1800.0,
+            "file": "model_export/vehicle_mi24p_hind_desert_d_piece02_lod2.glb"
+        },
+        {
+            "distance": 43346.6796875,
+            "file": "model_export/vehicle_mi24p_hind_desert_d_piece02_lod3.glb"
+        }
+    ],
+    "physPreset": "helicopter_piece",
+    "rootBoneName": "rotord",
+    "type": "rigid"
+}

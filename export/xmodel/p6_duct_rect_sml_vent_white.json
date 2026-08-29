@@ -1,0 +1,26 @@
+{
+    "$schema": "http://openassettools.dev/schema/xmodel.v1.json",
+    "_game": "t6",
+    "_type": "xmodel",
+    "_version": 2,
+    "collLod": 1,
+    "flags": 2621440,
+    "lightingOriginOffset": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.5
+    },
+    "lightingOriginRange": 0.5,
+    "lods": [
+        {
+            "distance": 1800.0,
+            "file": "model_export/p6_duct_rect_sml_vent_white_lod0.glb"
+        },
+        {
+            "distance": 3591.818115234375,
+            "file": "model_export/p6_duct_rect_sml_vent_white_lod1.glb"
+        }
+    ],
+    "rootBoneName": "p6_duct_rect_sml_vent_lod0",
+    "type": "rigid"
+}

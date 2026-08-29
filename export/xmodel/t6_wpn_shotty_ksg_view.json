@@ -1,0 +1,20 @@
+{
+    "$schema": "http://openassettools.dev/schema/xmodel.v1.json",
+    "_game": "t6",
+    "_type": "xmodel",
+    "_version": 2,
+    "flags": 6815744,
+    "lightingOriginOffset": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.5
+    },
+    "lightingOriginRange": 0.5,
+    "lods": [
+        {
+            "distance": 3665.134521484375,
+            "file": "model_export/t6_wpn_shotty_ksg_view_lod0.glb"
+        }
+    ],
+    "type": "rigid"
+}

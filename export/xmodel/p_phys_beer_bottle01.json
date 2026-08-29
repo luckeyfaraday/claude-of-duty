@@ -1,0 +1,35 @@
+{
+    "$schema": "http://openassettools.dev/schema/xmodel.v1.json",
+    "_game": "t6",
+    "_type": "xmodel",
+    "_version": 2,
+    "collLod": 3,
+    "flags": 2097152,
+    "lightingOriginOffset": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.5
+    },
+    "lightingOriginRange": 0.5,
+    "lods": [
+        {
+            "distance": 100.0,
+            "file": "model_export/p_phys_beer_bottle01_lod0.glb"
+        },
+        {
+            "distance": 200.0,
+            "file": "model_export/p_phys_beer_bottle01_lod1.glb"
+        },
+        {
+            "distance": 300.0,
+            "file": "model_export/p_phys_beer_bottle01_lod2.glb"
+        },
+        {
+            "distance": 1500.0,
+            "file": "model_export/p_phys_beer_bottle01_lod3.glb"
+        }
+    ],
+    "physPreset": "beer_bottle01",
+    "rootBoneName": "hero_lod0",
+    "type": "rigid"
+}

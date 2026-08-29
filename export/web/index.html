@@ -2,105 +2,567 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Hijacked — browser port (WIP)</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Hijacked — browser port</title>
 <style>
-  html, body { margin: 0; height: 100%; overflow: hidden; background: #000; }
-  #blocker { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-             background: rgba(0,0,0,.6); color: #fff; font: 16px system-ui; cursor: pointer; }
-  #hud { position: absolute; top: 10px; left: 10px; color: #0f0; font: 12px monospace; white-space: pre; }
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #05090d; }
+  canvas { display: block; }
+  #blocker {
+    position: fixed; inset: 0; z-index: 3; display: flex; align-items: center;
+    justify-content: center; padding: 24px; background: rgba(2, 8, 13, .72);
+    color: #fff; font: 500 16px/1.55 system-ui, sans-serif; text-align: center;
+    cursor: default; white-space: pre-line;
+  }
+  #blocker.ready { cursor: pointer; }
+  #hud {
+    position: fixed; top: 12px; left: 12px; z-index: 2; min-width: 260px;
+    padding: 9px 11px; border: 1px solid rgba(127, 255, 196, .26);
+    border-radius: 5px; background: rgba(0, 8, 10, .64); color: #9fffc4;
+    font: 12px/1.45 ui-monospace, SFMono-Regular, Consolas, monospace;
+    white-space: pre; pointer-events: none;
+  }
+  #crosshair {
+    position: fixed; left: 50%; top: 50%; z-index: 2; width: 5px; height: 5px;
+    margin: -2px; border-radius: 50%; background: rgba(255,255,255,.9);
+    box-shadow: 0 0 4px #000; opacity: 0; pointer-events: none;
+  }
+  body.locked #crosshair { opacity: 1; }
+  body.locked #crosshair.ads { opacity: 0; }
+  #hitmarker {
+    position: fixed; left: 50%; top: 50%; z-index: 2; width: 26px; height: 26px;
+    margin: -13px; opacity: 0; pointer-events: none;
+    filter: drop-shadow(0 0 2px rgba(0, 0, 0, .9));
+  }
+  #hitmarker line { stroke: #fff; stroke-width: 2.4; stroke-linecap: round; }
+  #hitmarker[data-kind="head"] line { stroke: #ffd76a; }
+  #hitmarker[data-kind="kill"] line { stroke: #ff4a3d; }
+  #damage {
+    position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: 0;
+    background: radial-gradient(circle, transparent 35%, rgba(145, 0, 0, .82) 100%);
+  }
 </style>
 <script type="importmap">
 { "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  "three": "https://cdn.jsdelivr.net/npm/three@0.185.1/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.185.1/examples/jsm/",
+  "@recast-navigation/core": "https://cdn.jsdelivr.net/npm/@recast-navigation/core@0.43.1/dist/index.mjs",
+  "@recast-navigation/generators": "https://cdn.jsdelivr.net/npm/@recast-navigation/generators@0.43.1/dist/index.mjs",
+  "@recast-navigation/wasm": "https://cdn.jsdelivr.net/npm/@recast-navigation/wasm@0.43.1/dist/recast-navigation.wasm-compat.js",
+  "@recast-navigation/three": "https://cdn.jsdelivr.net/npm/@recast-navigation/three@0.43.1/dist/index.mjs"
 } }
 </script>
 </head>
 <body>
-<div id="blocker">Click to play — WASD move, Q/E down/up, Shift sprint, Esc release</div>
-<div id="hud"></div>
+<div id="blocker">Loading Hijacked…</div>
+<div id="hud">loading…</div>
+<div id="crosshair"></div>
+<svg id="hitmarker" viewBox="0 0 26 26" data-kind="torso" aria-hidden="true">
+  <line x1="3" y1="3" x2="9" y2="9"></line>
+  <line x1="23" y1="3" x2="17" y2="9"></line>
+  <line x1="3" y1="23" x2="9" y2="17"></line>
+  <line x1="23" y1="23" x2="17" y2="17"></line>
+</svg>
+<div id="damage"></div>
 <script type="module">
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { PlayerController } from './player-controller.js';
+import { loadNavigation } from './navigation.js';
+import { Viewmodel } from './viewmodel.js';
+import { WeaponController } from './weapon-controller.js';
+import { WeaponEffects } from './weapon-effects.js';
+import { EnemyManager } from './enemy-system.js';
+import { PlayerHealth } from './player-health.js';
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x87a8c8);
 scene.fog = new THREE.Fog(0x87a8c8, 1500, 9000);
 
-const camera = new THREE.PerspectiveCamera(75, innerWidth/innerHeight, 1, 20000);
-camera.position.set(0, 200, 1400);
-camera.lookAt(0, 60, 0);
+const camera = new THREE.PerspectiveCamera(75, innerWidth / innerHeight, 1, 20000);
+camera.rotation.order = 'YXZ';
 
-const renderer = new THREE.WebGLRenderer({ antialias: true });
+const MAX_RENDER_PIXELS = 1600 * 900;
+const renderPixelRatio = () => Math.max(0.5, Math.min(
+  devicePixelRatio,
+  1,
+  Math.sqrt(MAX_RENDER_PIXELS / Math.max(1, innerWidth * innerHeight)),
+));
+const renderer = new THREE.WebGLRenderer({
+  antialias: false,
+  powerPreference: 'high-performance',
+});
 renderer.setSize(innerWidth, innerHeight);
-renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setPixelRatio(renderPixelRatio());
 renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.autoClear = false;
 document.body.appendChild(renderer.domElement);
+
+const viewmodel = new Viewmodel();
+viewmodel.setSize(innerWidth, innerHeight);
 
 scene.add(new THREE.HemisphereLight(0xbfd8ff, 0x3a4a55, 1.1));
 const sun = new THREE.DirectionalLight(0xfff2d8, 1.6);
 sun.position.set(-800, 1200, 600);
 scene.add(sun);
 
+const blocker = document.getElementById('blocker');
 const hud = document.getElementById('hud');
-let loading = true;
-new GLTFLoader().load('hijacked.gltf', (gltf) => {
-  scene.add(gltf.scene);
-  loading = false;
-  document.getElementById('blocker').textContent =
-    'Click to play — WASD move, Q/E down/up, Shift sprint, Esc release';
-}, (ev) => {
-  if (ev.total) document.getElementById('blocker').textContent =
-    `Loading… ${(ev.loaded/ev.total*100).toFixed(0)}%`;
+const damageOverlay = document.getElementById('damage');
+const crosshair = document.getElementById('crosshair');
+const hitmarker = document.getElementById('hitmarker');
+const keys = Object.create(null);
+const loadProgress = Object.create(null);
+const clock = new THREE.Clock();
+const raycaster = new THREE.Raycaster();
+const down = new THREE.Vector3(0, -1, 0);
+const lookCenter = new THREE.Vector2(0, 0);
+const yawPitch = new THREE.Euler(0, 0, 0, 'YXZ');
+
+let ready = false;
+let locked = false;
+let player = null;
+let navigation = null;
+let collisionRoot = null;
+let navigationVisible = false;
+let collisionVisible = false;
+let pathPoints = 0;
+let enemies = null;
+let playerHealth = null;
+let hitmarkerLife = 0;
+let hitmarkerMaxLife = 0.18;
+
+const weaponEffects = new WeaponEffects(scene);
+const weapon = new WeaponController({
+  magazineSize: 30,
+  reserveAmmo: 120,
+  roundsPerMinute: 750,
+  onFire: () => fireShot(),
+  onEmpty: () => reloadWeapon(),
 });
 
-// --- pointer lock + controls ---
-const keys = {};
-const blocker = document.getElementById('blocker');
-let locked = false;
-blocker.onclick = () => renderer.domElement.requestPointerLock();
+const pathGeometry = new THREE.BufferGeometry();
+const pathLine = new THREE.Line(
+  pathGeometry,
+  new THREE.LineBasicMaterial({ color: 0x00ffff, depthTest: false, transparent: true, opacity: .95 }),
+);
+pathLine.renderOrder = 50;
+scene.add(pathLine);
+
+function loadingText() {
+  const entries = Object.entries(loadProgress);
+  const detail = entries.map(([name, percent]) => `${name} ${percent}`).join('  ·  ');
+  blocker.textContent = `Loading Hijacked…${detail ? `\n${detail}` : ''}`;
+}
+
+function progress(name, event) {
+  loadProgress[name] = event.total
+    ? `${Math.min(100, event.loaded / event.total * 100).toFixed(0)}%`
+    : `${(event.loaded / 1048576).toFixed(1)} MB`;
+  loadingText();
+}
+
+const loader = new GLTFLoader();
+function loadGltf(url, label) {
+  return loader.loadAsync(url, (event) => progress(label, event));
+}
+
+function chooseSpawn(hints, collision) {
+  const spawns = Array.isArray(hints?.spawns) ? hints.spawns : [];
+  const preferred = spawns.find((spawn) => spawn.classname === 'mp_dm_spawn') ?? spawns[0];
+  const marker = preferred?.position ?? [2102, 57, 133];
+  const spawn = new THREE.Vector3(marker[0], marker[1], marker[2]);
+
+  // Radiant spawn entities may sit above their floor. Find the first surface
+  // just below the marker so the capsule starts grounded and never inside it.
+  raycaster.set(new THREE.Vector3(spawn.x, spawn.y + 32, spawn.z), down);
+  raycaster.near = 0;
+  raycaster.far = 512;
+  const floor = raycaster.intersectObject(collision, true)[0];
+  if (floor) spawn.y = floor.point.y + 0.2;
+  return { position: spawn, yaw: Number(preferred?.yaw ?? Math.PI) };
+}
+
+function showPathToCrosshair() {
+  if (!navigation || !player || !collisionRoot) return;
+  raycaster.setFromCamera(lookCenter, camera);
+  raycaster.near = 0;
+  raycaster.far = 3000;
+  const hit = raycaster.intersectObject(collisionRoot, true)[0];
+  if (!hit) return;
+  const result = navigation.findPath(player.feetPosition, hit.point);
+  const points = result.success ? result.path : [];
+  pathPoints = points.length;
+  pathGeometry.setFromPoints(points.map((point) => new THREE.Vector3(point.x, point.y + 2, point.z)));
+  pathGeometry.computeBoundingSphere();
+}
+
+function clearKeys() {
+  for (const code of Object.keys(keys)) keys[code] = false;
+}
+
+// A kill marker outlives a body marker so the confirmation still reads when
+// the killing round lands in the middle of a held burst.
+function showHitmarker(kind) {
+  hitmarker.dataset.kind = kind;
+  hitmarkerMaxLife = kind === 'kill' ? 0.34 : 0.18;
+  hitmarkerLife = hitmarkerMaxLife;
+}
+
+function fireShot() {
+  if (!viewmodel.fire()) return;
+  const hit = weaponEffects.fire(camera, collisionRoot, viewmodel.muzzlePosition(), {
+    targets: enemies?.hitTargets ?? [],
+  });
+  const damaged = enemies?.handlePlayerHit(hit, 34);
+  if (damaged) {
+    showHitmarker(damaged.killed ? 'kill' : damaged.region === 'head' ? 'head' : 'torso');
+    weaponEffects.playHitmarker(damaged);
+  }
+  enemies?.alert(player.position, 1500, player.position);
+
+  // Move the actual aim slightly as well as playing the authored weapon kick,
+  // so a held burst climbs instead of keeping every ray perfectly stacked.
+  yawPitch.setFromQuaternion(camera.quaternion);
+  const adsScale = 1 - viewmodel.aimBlend * 0.48;
+  yawPitch.x = THREE.MathUtils.clamp(
+    yawPitch.x + (0.0065 + Math.random() * 0.004) * adsScale,
+    -Math.PI / 2,
+    Math.PI / 2,
+  );
+  yawPitch.y += (Math.random() - 0.5) * 0.0035 * adsScale;
+  camera.quaternion.setFromEuler(yawPitch);
+}
+
+function reloadWeapon() {
+  const empty = weapon.magazine === 0;
+  if (!weapon.startReload()) return false;
+  if (!viewmodel.reload(empty)) {
+    weapon.cancelReload();
+    return false;
+  }
+  return true;
+}
+
+function setDebugVisibility() {
+  navigation?.setDebugVisible(navigationVisible);
+  if (collisionRoot) {
+    collisionRoot.traverse((object) => {
+      if (object.isMesh && object.material) object.material.visible = collisionVisible;
+    });
+  }
+}
+
 document.addEventListener('pointerlockchange', () => {
   locked = document.pointerLockElement === renderer.domElement;
+  document.body.classList.toggle('locked', locked);
   blocker.style.display = locked ? 'none' : 'flex';
+  if (!locked) {
+    clearKeys();
+    weapon.setTrigger(false);
+    viewmodel.setAiming(false);
+  }
 });
-document.addEventListener('mousemove', (e) => {
-  if (!locked) return;
-  const yaw = new THREE.Euler(0, 0, 0, 'YXZ');
-  euler.y -= e.movementX * 0.0022;
-  euler.x -= e.movementY * 0.0022;
-  euler.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, euler.x));
-  camera.quaternion.setFromEuler(euler);
-});
-const euler = new THREE.Euler(0, Math.PI, 0, 'YXZ');
-document.addEventListener('keydown', (e) => keys[e.code] = true);
-document.addEventListener('keyup', (e) => keys[e.code] = false);
 
-const vel = new THREE.Vector3();
-const clock = new THREE.Clock();
+blocker.addEventListener('click', () => {
+  if (ready) renderer.domElement.requestPointerLock();
+});
+
+document.addEventListener('mousemove', (event) => {
+  if (!locked) return;
+  yawPitch.setFromQuaternion(camera.quaternion);
+  yawPitch.y -= event.movementX * 0.0022;
+  yawPitch.x -= event.movementY * 0.0022;
+  yawPitch.x = THREE.MathUtils.clamp(yawPitch.x, -Math.PI / 2, Math.PI / 2);
+  camera.quaternion.setFromEuler(yawPitch);
+  viewmodel.addLook(event.movementX, event.movementY);
+});
+
+document.addEventListener('mousedown', (event) => {
+  if (!locked) return;
+  if (event.button === 0) weapon.setTrigger(true);
+  if (event.button === 2) viewmodel.setAiming(true);
+});
+document.addEventListener('mouseup', (event) => {
+  if (event.button === 0) weapon.setTrigger(false);
+  if (event.button === 2) viewmodel.setAiming(false);
+});
+document.addEventListener('contextmenu', (event) => {
+  if (locked) event.preventDefault();
+});
+
+document.addEventListener('keydown', (event) => {
+  keys[event.code] = true;
+  if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.code)) {
+    event.preventDefault();
+  }
+  if (event.repeat || !ready) return;
+  if (event.code === 'KeyR' && locked) reloadWeapon();
+  if (event.code === 'KeyB' && locked) {
+    if (playerHealth) playerHealth.respawn();
+    else player?.respawn();
+  }
+  if (event.code === 'KeyN') {
+    navigationVisible = !navigationVisible;
+    setDebugVisibility();
+  }
+  if (event.code === 'KeyV') {
+    collisionVisible = !collisionVisible;
+    setDebugVisibility();
+  }
+  if (event.code === 'KeyP') showPathToCrosshair();
+});
+document.addEventListener('keyup', (event) => { keys[event.code] = false; });
+
+async function start() {
+  try {
+    const navPromise = loadNavigation({
+      source: 'hijacked.navmesh.bin',
+      maxAgents: 32,
+      debug: false,
+      debugDrawer: {},
+    }).catch((error) => {
+      console.error('Navigation unavailable:', error);
+      return null;
+    });
+    const viewmodelPromise = viewmodel
+      .load(
+        'viewmodel/c_usa_mp_fbi_shortsleeve_viewhands_lod0.glb',
+        'viewmodel/t6_wpn_ar_hk416_view_lod0.glb',
+        (label, event) => progress(label, event),
+      )
+      .then(() =>
+         viewmodel.loadClips({
+           idle: 'viewmodel/anims/viewmodel_hk416_idle.json',
+           fire: 'viewmodel/anims/viewmodel_hk416_fire.json',
+           adsFire: 'viewmodel/anims/viewmodel_hk416_ads_fire.json',
+           reload: 'viewmodel/anims/viewmodel_hk416_reload.json',
+           reloadEmpty: 'viewmodel/anims/viewmodel_hk416_reload_empty.json',
+         }),
+      )
+      .catch((error) => {
+        console.warn('Viewmodel unavailable:', error);
+      });
+    const [renderGltf, collisionGltf, hints] = await Promise.all([
+      loadGltf('hijacked.gltf', 'render'),
+      loadGltf('hijacked_collision.gltf', 'collision'),
+      fetch('hijacked_nav_hints.json').then((response) => {
+        if (!response.ok) throw new Error(`nav hints HTTP ${response.status}`);
+        return response.json();
+      }),
+    ]);
+
+    scene.add(renderGltf.scene);
+    collisionRoot = collisionGltf.scene;
+    collisionRoot.updateWorldMatrix(true, true);
+
+    // Keep the collision source raycastable but visually hidden. V toggles a
+    // translucent wireframe without rebuilding the player Octree.
+    const collisionMaterial = new THREE.MeshBasicMaterial({
+      color: 0xff3b30, wireframe: true, transparent: true, opacity: .24,
+      depthTest: false, visible: false,
+    });
+    collisionRoot.traverse((object) => {
+      if (object.isMesh) {
+        object.material = collisionMaterial;
+        object.renderOrder = 40;
+      }
+    });
+    scene.add(collisionRoot);
+
+    const spawn = chooseSpawn(hints, collisionRoot);
+    camera.quaternion.setFromEuler(new THREE.Euler(0, spawn.yaw, 0, 'YXZ'));
+    player = new PlayerController(camera, collisionRoot, {
+      spawn: spawn.position,
+      radius: 16,
+      height: 72,
+      eyeHeight: 60,
+      crouchHeight: 48,
+      crouchEyeHeight: 40,
+      moveSpeed: 300,
+      sprintSpeed: 450,
+      jumpHeight: 48,
+      maxSlopeAngle: 45,
+      fallResetY: -700,
+    });
+    playerHealth = new PlayerHealth({
+      maxHealth: 100,
+      respawnDelay: 1.5,
+      spawnProtection: 3,
+      regenDelay: 4,
+      regenPerSecond: 25,
+      onDeath: () => {
+        player.setEnabled(false);
+        weapon.setTrigger(false);
+        viewmodel.setAiming(false);
+      },
+      onRespawn: () => {
+        player.respawn();
+        player.setEnabled(true);
+      },
+    });
+
+    navigation = await navPromise;
+    if (navigation?.debugDrawer) scene.add(navigation.debugDrawer);
+    if (navigation?.crowdHelper) scene.add(navigation.crowdHelper);
+    setDebugVisibility();
+
+    const enemyPromise = navigation
+      ? (enemies = new EnemyManager({
+          scene,
+          navigation,
+          collisionRoot,
+          player,
+          playerHealth,
+          weaponEffects,
+          hints,
+          count: 6,
+        })).load({ onProgress: (label, event) => progress(label, event) })
+      : Promise.resolve();
+
+    await Promise.all([viewmodelPromise, weaponEffects.loadAudio(), enemyPromise]);
+
+    // Compile map and enemy shader variants while the loading blocker is
+    // still visible. Otherwise the first close enemy can trigger synchronous
+    // material compilation in the middle of player movement.
+    await renderer.compileAsync(scene, camera);
+    if (enemies?.enemies[0]) {
+      // Shader compilation does not upload vertex buffers or textures. Render
+      // every shared baked pose once into a 1 px target so no run frame needs
+      // its first GPU upload while the player is already moving.
+      const warmEnemy = enemies.enemies[0];
+      const parent = warmEnemy.root.parent;
+      const warmScene = new THREE.Scene();
+      warmScene.fog = scene.fog;
+      warmScene.add(new THREE.HemisphereLight(0xbfd8ff, 0x3a4a55, 1.1));
+      const warmSun = new THREE.DirectionalLight(0xfff2d8, 1.6);
+      warmSun.position.set(-80, 120, 60);
+      warmScene.add(warmSun, warmEnemy.root);
+      const warmCamera = new THREE.PerspectiveCamera(60, 1, 1, 256);
+      warmCamera.position.copy(warmEnemy.root.position).add(new THREE.Vector3(0, 42, 100));
+      warmCamera.lookAt(warmEnemy.root.position.x, warmEnemy.root.position.y + 36, warmEnemy.root.position.z);
+      const warmTarget = new THREE.WebGLRenderTarget(1, 1, { depthBuffer: true });
+      const previousTarget = renderer.getRenderTarget();
+      renderer.setRenderTarget(warmTarget);
+      const originalState = warmEnemy.visualState;
+      const originalFrame = warmEnemy.visualFrameIndex;
+      for (const [state, frames] of Object.entries(warmEnemy.visualFrames)) {
+        for (let i = 0; i < frames.length; i += 1) {
+          warmEnemy.showVisualFrame(state, i);
+          renderer.clear();
+          renderer.render(warmScene, warmCamera);
+        }
+      }
+      renderer.getContext().finish();
+      warmEnemy.showVisualFrame(originalState, originalFrame);
+      // A couple of synchronized repeats consume delayed driver allocation.
+      for (let i = 0; i < 2; i += 1) {
+        renderer.clear();
+        renderer.render(warmScene, warmCamera);
+        renderer.getContext().finish();
+      }
+      renderer.setRenderTarget(previousTarget);
+      warmTarget.dispose();
+      parent.add(warmEnemy.root);
+    }
+
+    // Small read/debug surface for automated smoke tests and map tooling.
+    globalThis.hijacked = {
+      scene, camera, renderer, player, navigation, collisionRoot, hints, viewmodel,
+      weapon, weaponEffects, playerHealth, enemies, reloadWeapon,
+    };
+
+    ready = true;
+    blocker.classList.add('ready');
+    blocker.textContent = [
+      'Click to play',
+      'WASD move · Shift sprint · Space jump · C/Ctrl crouch',
+      'Left mouse fire · Right mouse aim · R reload · B respawn',
+      'N navmesh · V collision · P path',
+      navigation ? '' : 'Navigation failed to load; collision and walking are still available.',
+    ].filter(Boolean).join('\n');
+  } catch (error) {
+    console.error(error);
+    blocker.textContent = `Unable to start\n${error instanceof Error ? error.message : error}`;
+    hud.textContent = 'load failed — see developer console';
+  }
+}
 
 function tick() {
   requestAnimationFrame(tick);
-  const dt = Math.min(clock.getDelta(), 0.05);
-  if (locked) {
-    const speed = (keys.ShiftLeft ? 900 : 380) * dt;
-    const fwd = new THREE.Vector3(); camera.getWorldDirection(fwd);
-    const right = new THREE.Vector3().crossVectors(fwd, camera.up).normalize();
-    vel.set(0,0,0);
-    if (keys.KeyW) vel.add(fwd); if (keys.KeyS) vel.sub(fwd);
-    if (keys.KeyD) vel.add(right); if (keys.KeyA) vel.sub(right);
-    if (keys.KeyE) vel.y += 1; if (keys.KeyQ) vel.y -= 1;
-    if (vel.lengthSq() > 0) vel.normalize().multiplyScalar(speed);
-    camera.position.add(vel);
+  const dt = Math.min(clock.getDelta(), 0.1);
+  if (player && locked) {
+    player.update(dt, {
+      forward: keys.KeyW,
+      backward: keys.KeyS,
+      strafe: Number(Boolean(keys.KeyD)) - Number(Boolean(keys.KeyA)),
+      sprint: keys.ShiftLeft || keys.ShiftRight,
+      crouch: keys.ControlLeft || keys.ControlRight || keys.KeyC,
+      jump: keys.Space,
+    });
   }
-  hud.textContent = loading ? 'loading…' :
-    `xyz ${camera.position.x.toFixed(0)} ${camera.position.y.toFixed(0)} ${camera.position.z.toFixed(0)}`;
+  if (locked) navigation?.update(1 / 60, dt, 5);
+  enemies?.update(dt, { active: locked });
+  playerHealth?.update(locked ? dt : 0);
+  weaponEffects.update(dt);
+  // Panned enemy fire is only meaningful while the listener tracks the camera.
+  weaponEffects.updateListener(camera);
+
+  if (player) {
+    const p = player.position;
+    const speed = Math.hypot(player.velocity.x, player.velocity.z);
+    const moving = Boolean(keys.KeyW || keys.KeyA || keys.KeyS || keys.KeyD);
+    const sprinting = Boolean(keys.ShiftLeft || keys.ShiftRight) && moving;
+
+    viewmodel.update(dt, {
+      speed,
+      grounded: player.isGrounded,
+      sprinting,
+      moving,
+    });
+    if (weapon.reloading && !viewmodel.reloading) weapon.finishReload();
+    weapon.update(dt, { canFire: locked && !sprinting && !playerHealth?.dead });
+
+    hud.textContent =
+      `xyz ${p.x.toFixed(1)} ${p.y.toFixed(1)} ${p.z.toFixed(1)}\n` +
+      `speed ${speed.toFixed(0)}  ${player.isGrounded ? 'grounded' : 'air'}${player.crouched ? '  crouched' : ''}\n` +
+      `health ${Math.ceil(playerHealth?.health ?? 100)}${playerHealth?.dead ? '  respawning' :
+        playerHealth?.protectionTimer > 0 ? '  protected' : ''}  ` +
+      `enemies ${enemies?.aliveCount ?? 0}/${enemies?.enemies.length ?? 0}\n` +
+      `weapon ${viewmodel.ready ? 'm27' : 'none'}${viewmodel.reloading ? ' reloading' : ''}  ` +
+      `ammo ${weapon.magazine}/${weapon.reserveAmmo}\n` +
+      `nav ${navigation ? (navigationVisible ? 'shown' : 'ready') : 'unavailable'}  ` +
+      `collision ${collisionVisible ? 'shown' : 'ready'}  path ${pathPoints}`;
+  }
+  damageOverlay.style.opacity = String((playerHealth?.hitFlash ?? 0) * 0.55);
+  crosshair.classList.toggle('ads', viewmodel.aimBlend > 0.5);
+
+  if (hitmarkerLife > 0) {
+    hitmarkerLife = Math.max(0, hitmarkerLife - dt);
+    const remaining = hitmarkerLife / hitmarkerMaxLife;
+    // Holds at full opacity for the first third, then falls away while the
+    // ticks spread outward from the crosshair.
+    hitmarker.style.opacity = String(Math.min(1, remaining * 3));
+    hitmarker.style.transform = `scale(${1.5 - remaining * 0.5})`;
+  } else if (hitmarker.style.opacity !== '0') {
+    hitmarker.style.opacity = '0';
+  }
+
+  renderer.clear();
   renderer.render(scene, camera);
+  viewmodel.render(renderer);
 }
+
+start();
 tick();
 
 addEventListener('resize', () => {
-  camera.aspect = innerWidth/innerHeight;
+  camera.aspect = innerWidth / innerHeight;
   camera.updateProjectionMatrix();
+  viewmodel.setSize(innerWidth, innerHeight);
+  renderer.setPixelRatio(renderPixelRatio());
   renderer.setSize(innerWidth, innerHeight);
 });
 </script>

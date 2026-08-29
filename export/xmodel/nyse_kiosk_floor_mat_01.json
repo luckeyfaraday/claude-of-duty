@@ -1,0 +1,21 @@
+{
+    "$schema": "http://openassettools.dev/schema/xmodel.v1.json",
+    "_game": "t6",
+    "_type": "xmodel",
+    "_version": 2,
+    "flags": 2621440,
+    "lightingOriginOffset": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.5
+    },
+    "lightingOriginRange": 0.5,
+    "lods": [
+        {
+            "distance": 8846.8056640625,
+            "file": "model_export/nyse_kiosk_floor_mat_01_lod0.glb"
+        }
+    ],
+    "rootBoneName": "nyse_kiosk_floor_mat_01_lod0",
+    "type": "rigid"
+}

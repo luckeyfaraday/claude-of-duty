@@ -1,0 +1,1834 @@
+{
+  "format": "hijacked-collision-source-v1",
+  "map": "mp_hijacked",
+  "files": {
+    "collisionGltf": "hijacked_collision.gltf",
+    "collisionBin": "hijacked_collision.bin",
+    "navHints": "hijacked_nav_hints.json"
+  },
+  "coordinateSystem": {
+    "source": "T6 z-up",
+    "target": "Three.js y-up",
+    "position": "(x, y, z) -> (x, z, -y)",
+    "modelInstances": "matrix is the R * M * R^-1 conjugation used by compose_scene.py"
+  },
+  "agent": {
+    "radius": 16.0,
+    "height": 72.0,
+    "maxClimb": 18.0,
+    "walkableSlopeAngle": 45.0,
+    "cellSize": 4.0,
+    "cellHeight": 2.0,
+    "units": "T6 world units"
+  },
+  "mesh": {
+    "nodes": 1477,
+    "meshes": 234,
+    "binBytes": 3560952,
+    "world": {
+      "sourceSurfaces": 2366,
+      "includedSurfaces": 2206,
+      "skippedSurfaces": 160,
+      "includedTriangles": 75514,
+      "skippedTriangles": 2045,
+      "vertices": 106581,
+      "materialsIncluded": 202,
+      "materialsSkipped": {
+        "distant": 1,
+        "glass": 15,
+        "non_solid": 15,
+        "water": 3
+      },
+      "surfaceSkipReasons": {
+        "distant": 2,
+        "glass": 89,
+        "non_solid": 62,
+        "water": 7
+      },
+      "materialFilter": "skip distant/water/ocean/pool, actual glass, and materials made only from decal/ao/fx/light/shadow/sky-like tokens; retain solid composites"
+    },
+    "models": {
+      "sourceInstances": 2406,
+      "sourceUniqueModels": 352,
+      "withCollLod": 233,
+      "collisionMeshes": 233,
+      "includedInstances": 1476,
+      "skippedInstances": 930,
+      "skippedByReason": {
+        "no_collLod": 930
+      },
+      "missingXmodelJson": [],
+      "withoutCollLod": [
+        "accessories_book_pile03",
+        "bathroom_soap",
+        "bathroom_towel",
+        "brokenglass_pile02",
+        "com_debris_paper",
+        "com_pipe_4_coupling_metal_clean",
+        "com_pipe_4_coupling_white_clean",
+        "com_pipe_4_fit_white_clean",
+        "com_pipe_coupling_metal",
+        "com_vault_door_black",
+        "com_vault_frame_black",
+        "cs_deck_tie_bar",
+        "cs_handrail_128_double",
+        "cs_handrail_64_double",
+        "cs_handrail_90_left",
+        "cs_handrail_90_right",
+        "cs_handrail_coupling",
+        "ctl_biometric_lock",
+        "ctl_locker_military_door_lt",
+        "ctl_locker_military_door_rt",
+        "dub_bottle_vodka_group",
+        "dub_bottle_wiskey_group",
+        "dub_door_handle_chrome",
+        "dub_flower_vase_dp12",
+        "dub_flower_vase_dp2",
+        "dub_flower_vase_dp5",
+        "dub_flower_vase_dp7",
+        "dub_lounge_chair_03",
+        "dub_rest_napkins_plates",
+        "fxanim_gp_streamer_long_orange_mod",
+        "fxanim_gp_streamer_med_orange_mod",
+        "fxanim_gp_towel_yellow_mod",
+        "hjk_crash_airplane_cabinet_door_med",
+        "hjk_plane_window_02",
+        "hjk_red_latch",
+        "light_outdoorwall03_on_blue",
+        "light_outdoorwall04",
+        "light_outdoorwall04_on",
+        "ma_door_handle_chrome",
+        "ma_restaurant_plate_02",
+        "machinery_hose02",
+        "me_pictureframesbrushmetal_1",
+        "me_pictureframesbrushmetal_2",
+        "me_pictureframesbrushmetal_3",
+        "mlv/com_pipe_4x64_metal_clean",
+        "mlv/corporate_artwork_square_spiral",
+        "mlv/p6_control_panel_01",
+        "mlv/p6_hijacked_railing_back_left",
+        "mlv/p6_hijacked_railing_back_right",
+        "mlv/p6_hijacked_railing_front01_left",
+        "mlv/p6_hijacked_railing_front02_left",
+        "mlv/p6_hijacked_railing_middle_left",
+        "mlv/p6_hijacked_railing_middle_right",
+        "mlv/p6_mech_panel_wires_01",
+        "mlv/p6_mech_panel_wires_02",
+        "mlv/p6_pipes_blackout_coupling_01",
+        "mlv/p6_pipes_blackout_valve_01",
+        "mlv/paris_kitchen_rack",
+        "ny_harbor_slava_interior_props_console",
+        "ny_harbor_slava_interior_props_console_02",
+        "ny_harbor_slava_interior_props_console_05",
+        "ny_harbor_slava_interior_props_console_06",
+        "ny_harbor_slava_interior_props_console_07",
+        "ny_harbor_slava_interior_props_monitor",
+        "nyse_kiosk_floor_mat_01",
+        "p6_anim_beer_pack",
+        "p6_beach_sandals_01_left",
+        "p6_beach_sandals_01_right",
+        "p6_beach_sandals_02_left",
+        "p6_beach_sandals_02_right",
+        "p6_beach_sandals_03_left",
+        "p6_beach_sandals_03_right",
+        "p6_beach_sandals_04_left",
+        "p6_beach_sandals_04_right",
+        "p6_beach_sandals_06_left",
+        "p6_beach_sandals_06_right",
+        "p6_blackout_deck_iloop_02",
+        "p6_blackout_rail_128",
+        "p6_blackout_rail_64",
+        "p6_blackout_rail_corner_32",
+        "p6_blackout_rail_endcap_a",
+        "p6_blackout_rail_endcap_b",
+        "p6_blackout_rail_endcap_c",
+        "p6_blackout_rail_simple_32",
+        "p6_blackout_rail_simple_64",
+        "p6_blackout_stair_rail_hangar_ctrl_a",
+        "p6_garage_pipes_sprinkler",
+        "p6_hijacked_railing_front01_right",
+        "p6_hijacked_railing_front02_right",
+        "p6_mech_panel_wires_03",
+        "p6_metal_handle_flush",
+        "p6_pipes_blackout_valve_01",
+        "p6_security_camera_dome",
+        "p6_spice_rack",
+        "p6_vista_boat_sail_01",
+        "p6_vista_boat_sail_03",
+        "p6_vista_boat_sail_04",
+        "p6_vista_hijacked_island",
+        "p_glo_bullet_pile",
+        "p_glo_loudspeaker_a",
+        "p_jun_windowbend",
+        "p_rus_door_white_frame_58",
+        "p_rus_fire_sprnklr",
+        "paris_kitchen_hinge",
+        "paris_t_shirt_folded_base",
+        "paris_wall_lightswitch_01_chrome",
+        "paris_wall_outlet_01",
+        "paris_wall_outlet_01_chrome",
+        "perfume_bottle01",
+        "perfume_bottle02",
+        "pictureframe_painting_tall_10",
+        "rope_ground_b_1_lod0",
+        "rope_ground_c_1_lod0",
+        "rope_ground_e_1_lod0",
+        "trash_bottle_water2_sixpack",
+        "wall_phone_base",
+        "wall_phone_reciever1",
+        "yoga_mat_flat_blue",
+        "yoga_mat_flat_purple"
+      ],
+      "missingCollisionObj": [],
+      "emptyCollisionObj": [],
+      "records": {
+        "accessories_book_row01": {
+          "xmodel": "export/xmodel/accessories_book_row01.json",
+          "collLod": 0,
+          "obj": "export/model_export/accessories_book_row01_lod0.obj",
+          "vertices": 86,
+          "triangles": 130
+        },
+        "accessories_book_row02_paris": {
+          "xmodel": "export/xmodel/accessories_book_row02_paris.json",
+          "collLod": 0,
+          "obj": "export/model_export/accessories_book_row02_paris_lod0.obj",
+          "vertices": 81,
+          "triangles": 120
+        },
+        "accessories_book_row03": {
+          "xmodel": "export/xmodel/accessories_book_row03.json",
+          "collLod": 0,
+          "obj": "export/model_export/accessories_book_row03_lod0.obj",
+          "vertices": 83,
+          "triangles": 114
+        },
+        "accessories_book_row04": {
+          "xmodel": "export/xmodel/accessories_book_row04.json",
+          "collLod": 0,
+          "obj": "export/model_export/accessories_book_row04_lod0.obj",
+          "vertices": 104,
+          "triangles": 156
+        },
+        "accessories_book_stack01": {
+          "xmodel": "export/xmodel/accessories_book_stack01.json",
+          "collLod": 0,
+          "obj": "export/model_export/accessories_book_stack01_lod0.obj",
+          "vertices": 31,
+          "triangles": 48
+        },
+        "accessories_book_stack04": {
+          "xmodel": "export/xmodel/accessories_book_stack04.json",
+          "collLod": 0,
+          "obj": "export/model_export/accessories_book_stack04_lod0.obj",
+          "vertices": 24,
+          "triangles": 36
+        },
+        "accessories_box_curio_green": {
+          "xmodel": "export/xmodel/accessories_box_curio_green.json",
+          "collLod": 0,
+          "obj": "export/model_export/accessories_box_curio_green_lod0.obj",
+          "vertices": 12,
+          "triangles": 20
+        },
+        "accessories_table_art2": {
+          "xmodel": "export/xmodel/accessories_table_art2.json",
+          "collLod": 2,
+          "obj": "export/model_export/accessories_table_art2_lod2.obj",
+          "vertices": 30,
+          "triangles": 52
+        },
+        "brokenglass_pile08_no_alpha": {
+          "xmodel": "export/xmodel/brokenglass_pile08_no_alpha.json",
+          "collLod": 2,
+          "obj": "export/model_export/brokenglass_pile08_no_alpha_lod2.obj",
+          "vertices": 159,
+          "triangles": 83
+        },
+        "clt_ladder_construction_01": {
+          "xmodel": "export/xmodel/clt_ladder_construction_01.json",
+          "collLod": 2,
+          "obj": "export/model_export/clt_ladder_construction_01_lod2.obj",
+          "vertices": 96,
+          "triangles": 96
+        },
+        "com_fire_light": {
+          "xmodel": "export/xmodel/com_fire_light.json",
+          "collLod": 2,
+          "obj": "export/model_export/com_fire_light_lod2.obj",
+          "vertices": 29,
+          "triangles": 33
+        },
+        "com_laptop_open": {
+          "xmodel": "export/xmodel/com_laptop_open.json",
+          "collLod": 2,
+          "obj": "export/model_export/com_laptop_open_lod2.obj",
+          "vertices": 32,
+          "triangles": 32
+        },
+        "com_pipe_4_90angle_white_clean": {
+          "xmodel": "export/xmodel/com_pipe_4_90angle_white_clean.json",
+          "collLod": 2,
+          "obj": "export/model_export/com_pipe_4_90angle_white_clean_lod2.obj",
+          "vertices": 16,
+          "triangles": 24
+        },
+        "com_pipe_4x128_white_clean": {
+          "xmodel": "export/xmodel/com_pipe_4x128_white_clean.json",
+          "collLod": 2,
+          "obj": "export/model_export/com_pipe_4x128_white_clean_lod2.obj",
+          "vertices": 8,
+          "triangles": 8
+        },
+        "com_pipe_4x256_white_clean": {
+          "xmodel": "export/xmodel/com_pipe_4x256_white_clean.json",
+          "collLod": 1,
+          "obj": "export/model_export/com_pipe_4x256_white_clean_lod1.obj",
+          "vertices": 16,
+          "triangles": 16
+        },
+        "com_pipe_4x32_white_clean": {
+          "xmodel": "export/xmodel/com_pipe_4x32_white_clean.json",
+          "collLod": 2,
+          "obj": "export/model_export/com_pipe_4x32_white_clean_lod2.obj",
+          "vertices": 8,
+          "triangles": 8
+        },
+        "com_pipe_4x64_white_clean": {
+          "xmodel": "export/xmodel/com_pipe_4x64_white_clean.json",
+          "collLod": 2,
+          "obj": "export/model_export/com_pipe_4x64_white_clean_lod2.obj",
+          "vertices": 8,
+          "triangles": 8
+        },
+        "com_pipe_8_90angle_white_clean": {
+          "xmodel": "export/xmodel/com_pipe_8_90angle_white_clean.json",
+          "collLod": 1,
+          "obj": "export/model_export/com_pipe_8_90angle_white_clean_lod1.obj",
+          "vertices": 72,
+          "triangles": 124
+        },
+        "com_pipe_8_fit_white_clean": {
+          "xmodel": "export/xmodel/com_pipe_8_fit_white_clean.json",
+          "collLod": 1,
+          "obj": "export/model_export/com_pipe_8_fit_white_clean_lod1.obj",
+          "vertices": 16,
+          "triangles": 22
+        },
+        "com_pipe_8x128_white_clean": {
+          "xmodel": "export/xmodel/com_pipe_8x128_white_clean.json",
+          "collLod": 1,
+          "obj": "export/model_export/com_pipe_8x128_white_clean_lod1.obj",
+          "vertices": 16,
+          "triangles": 16
+        },
+        "com_pipe_8x256_white_clean": {
+          "xmodel": "export/xmodel/com_pipe_8x256_white_clean.json",
+          "collLod": 1,
+          "obj": "export/model_export/com_pipe_8x256_white_clean_lod1.obj",
+          "vertices": 16,
+          "triangles": 16
+        },
+        "com_pipe_8x64_single_metal": {
+          "xmodel": "export/xmodel/com_pipe_8x64_single_metal.json",
+          "collLod": 3,
+          "obj": "export/model_export/com_pipe_8x64_single_metal_lod3.obj",
+          "vertices": 10,
+          "triangles": 16
+        },
+        "com_telephone_desk": {
+          "xmodel": "export/xmodel/com_telephone_desk.json",
+          "collLod": 3,
+          "obj": "export/model_export/com_telephone_desk_lod3.obj",
+          "vertices": 14,
+          "triangles": 16
+        },
+        "com_wine_crate_close": {
+          "xmodel": "export/xmodel/com_wine_crate_close.json",
+          "collLod": 3,
+          "obj": "export/model_export/com_wine_crate_close_lod3.obj",
+          "vertices": 34,
+          "triangles": 30
+        },
+        "com_wine_crate_open": {
+          "xmodel": "export/xmodel/com_wine_crate_open.json",
+          "collLod": 3,
+          "obj": "export/model_export/com_wine_crate_open_lod3.obj",
+          "vertices": 28,
+          "triangles": 32
+        },
+        "ctl_engine_control": {
+          "xmodel": "export/xmodel/ctl_engine_control.json",
+          "collLod": 3,
+          "obj": "export/model_export/ctl_engine_control_lod3.obj",
+          "vertices": 26,
+          "triangles": 24
+        },
+        "ctl_locker_military": {
+          "xmodel": "export/xmodel/ctl_locker_military.json",
+          "collLod": 3,
+          "obj": "export/model_export/ctl_locker_military_lod3.obj",
+          "vertices": 56,
+          "triangles": 70
+        },
+        "dest_glo_bookshelf_wood01": {
+          "xmodel": "export/xmodel/dest_glo_bookshelf_wood01.json",
+          "collLod": 0,
+          "obj": "export/model_export/dest_glo_bookshelf_wood01_lod0.obj",
+          "vertices": 74,
+          "triangles": 104
+        },
+        "dub_decorative_metal_statue2": {
+          "xmodel": "export/xmodel/dub_decorative_metal_statue2.json",
+          "collLod": 0,
+          "obj": "export/model_export/dub_decorative_metal_statue2_lod0.obj",
+          "vertices": 152,
+          "triangles": 295
+        },
+        "dub_decorative_statue1": {
+          "xmodel": "export/xmodel/dub_decorative_statue1.json",
+          "collLod": 2,
+          "obj": "export/model_export/dub_decorative_statue1_lod2.obj",
+          "vertices": 38,
+          "triangles": 70
+        },
+        "dub_grand_piano": {
+          "xmodel": "export/xmodel/dub_grand_piano.json",
+          "collLod": 3,
+          "obj": "export/model_export/dub_grand_piano_lod3.obj",
+          "vertices": 339,
+          "triangles": 400
+        },
+        "dub_grand_piano_bench": {
+          "xmodel": "export/xmodel/dub_grand_piano_bench.json",
+          "collLod": 3,
+          "obj": "export/model_export/dub_grand_piano_bench_lod3.obj",
+          "vertices": 48,
+          "triangles": 60
+        },
+        "dub_lounge_candle_01_on": {
+          "xmodel": "export/xmodel/dub_lounge_candle_01_on.json",
+          "collLod": 2,
+          "obj": "export/model_export/dub_lounge_candle_01_on_lod2.obj",
+          "vertices": 17,
+          "triangles": 30
+        },
+        "dub_lounge_pillow01": {
+          "xmodel": "export/xmodel/dub_lounge_pillow01.json",
+          "collLod": 1,
+          "obj": "export/model_export/dub_lounge_pillow01_lod1.obj",
+          "vertices": 42,
+          "triangles": 80
+        },
+        "dub_rest_vase_alone": {
+          "xmodel": "export/xmodel/dub_rest_vase_alone.json",
+          "collLod": 0,
+          "obj": "export/model_export/dub_rest_vase_alone_lod0.obj",
+          "vertices": 100,
+          "triangles": 196
+        },
+        "dub_vase_01": {
+          "xmodel": "export/xmodel/dub_vase_01.json",
+          "collLod": 2,
+          "obj": "export/model_export/dub_vase_01_lod2.obj",
+          "vertices": 68,
+          "triangles": 120
+        },
+        "fdxest_p6_console_chair_base": {
+          "xmodel": "export/xmodel/fdxest_p6_console_chair_base.json",
+          "collLod": 1,
+          "obj": "export/model_export/fdxest_p6_console_chair_base_lod1.obj",
+          "vertices": 14,
+          "triangles": 24
+        },
+        "food_snacks_gumboxstack02": {
+          "xmodel": "export/xmodel/food_snacks_gumboxstack02.json",
+          "collLod": 0,
+          "obj": "export/model_export/food_snacks_gumboxstack02_lod0.obj",
+          "vertices": 72,
+          "triangles": 108
+        },
+        "food_soda_twelvepack02": {
+          "xmodel": "export/xmodel/food_soda_twelvepack02.json",
+          "collLod": 0,
+          "obj": "export/model_export/food_soda_twelvepack02_lod0.obj",
+          "vertices": 8,
+          "triangles": 12
+        },
+        "furniture_chair5": {
+          "xmodel": "export/xmodel/furniture_chair5.json",
+          "collLod": 2,
+          "obj": "export/model_export/furniture_chair5_lod2.obj",
+          "vertices": 26,
+          "triangles": 38
+        },
+        "furniture_lamp_table2_1": {
+          "xmodel": "export/xmodel/furniture_lamp_table2_1.json",
+          "collLod": 2,
+          "obj": "export/model_export/furniture_lamp_table2_1_lod2.obj",
+          "vertices": 25,
+          "triangles": 32
+        },
+        "furniture_lamp_table2_1_off": {
+          "xmodel": "export/xmodel/furniture_lamp_table2_1_off.json",
+          "collLod": 2,
+          "obj": "export/model_export/furniture_lamp_table2_1_off_lod2.obj",
+          "vertices": 25,
+          "triangles": 32
+        },
+        "hjk_cafe_coffee_machine01": {
+          "xmodel": "export/xmodel/hjk_cafe_coffee_machine01.json",
+          "collLod": 2,
+          "obj": "export/model_export/hjk_cafe_coffee_machine01_lod2.obj",
+          "vertices": 44,
+          "triangles": 46
+        },
+        "light_outdoorwall03": {
+          "xmodel": "export/xmodel/light_outdoorwall03.json",
+          "collLod": 1,
+          "obj": "export/model_export/light_outdoorwall03_lod1.obj",
+          "vertices": 8,
+          "triangles": 10
+        },
+        "machinery_washer_green": {
+          "xmodel": "export/xmodel/machinery_washer_green.json",
+          "collLod": 2,
+          "obj": "export/model_export/machinery_washer_green_lod2.obj",
+          "vertices": 63,
+          "triangles": 84
+        },
+        "mlv/ap_couch01_cream": {
+          "xmodel": "export/xmodel/mlv/ap_couch01_cream.json",
+          "collLod": 2,
+          "obj": "export/model_export/mlv/ap_couch01_cream_lod2.obj",
+          "vertices": 70,
+          "triangles": 97
+        },
+        "mlv/com_pipe_4x128_metal_clean": {
+          "xmodel": "export/xmodel/mlv/com_pipe_4x128_metal_clean.json",
+          "collLod": 1,
+          "obj": "export/model_export/mlv/com_pipe_4x128_metal_clean_lod1.obj",
+          "vertices": 16,
+          "triangles": 16
+        },
+        "mlv/dub_lounge_pillow01": {
+          "xmodel": "export/xmodel/mlv/dub_lounge_pillow01.json",
+          "collLod": 1,
+          "obj": "export/model_export/mlv/dub_lounge_pillow01_lod1.obj",
+          "vertices": 42,
+          "triangles": 80
+        },
+        "mlv/dub_vase_01": {
+          "xmodel": "export/xmodel/mlv/dub_vase_01.json",
+          "collLod": 2,
+          "obj": "export/model_export/mlv/dub_vase_01_lod2.obj",
+          "vertices": 68,
+          "triangles": 120
+        },
+        "mlv/furniture_chair5": {
+          "xmodel": "export/xmodel/mlv/furniture_chair5.json",
+          "collLod": 2,
+          "obj": "export/model_export/mlv/furniture_chair5_lod2.obj",
+          "vertices": 26,
+          "triangles": 38
+        },
+        "mlv/ny_harbor_sub_command_center_breaker_04": {
+          "xmodel": "export/xmodel/mlv/ny_harbor_sub_command_center_breaker_04.json",
+          "collLod": 1,
+          "obj": "export/model_export/mlv/ny_harbor_sub_command_center_breaker_04_lod1.obj",
+          "vertices": 8,
+          "triangles": 10
+        },
+        "mlv/p6_bed_hijacked": {
+          "xmodel": "export/xmodel/mlv/p6_bed_hijacked.json",
+          "collLod": 1,
+          "obj": "export/model_export/mlv/p6_bed_hijacked_lod1.obj",
+          "vertices": 377,
+          "triangles": 660
+        },
+        "mlv/p6_cic_mech_panel_a_white": {
+          "xmodel": "export/xmodel/mlv/p6_cic_mech_panel_a_white.json",
+          "collLod": 3,
+          "obj": "export/model_export/mlv/p6_cic_mech_panel_a_white_lod3.obj",
+          "vertices": 16,
+          "triangles": 20
+        },
+        "mlv/p6_cic_mech_panel_b_white": {
+          "xmodel": "export/xmodel/mlv/p6_cic_mech_panel_b_white.json",
+          "collLod": 3,
+          "obj": "export/model_export/mlv/p6_cic_mech_panel_b_white_lod3.obj",
+          "vertices": 32,
+          "triangles": 46
+        },
+        "mlv/p6_control_panel_04": {
+          "xmodel": "export/xmodel/mlv/p6_control_panel_04.json",
+          "collLod": 1,
+          "obj": "export/model_export/mlv/p6_control_panel_04_lod1.obj",
+          "vertices": 8,
+          "triangles": 10
+        },
+        "mlv/p6_desk_mp_hijacked": {
+          "xmodel": "export/xmodel/mlv/p6_desk_mp_hijacked.json",
+          "collLod": 3,
+          "obj": "export/model_export/mlv/p6_desk_mp_hijacked_lod3.obj",
+          "vertices": 327,
+          "triangles": 375
+        },
+        "mlv/p6_hijacked_back_cabin_glass": {
+          "xmodel": "export/xmodel/mlv/p6_hijacked_back_cabin_glass.json",
+          "collLod": 0,
+          "obj": "export/model_export/mlv/p6_hijacked_back_cabin_glass_lod0.obj",
+          "vertices": 59,
+          "triangles": 68
+        },
+        "mlv/p6_hijacked_back_vents": {
+          "xmodel": "export/xmodel/mlv/p6_hijacked_back_vents.json",
+          "collLod": 1,
+          "obj": "export/model_export/mlv/p6_hijacked_back_vents_lod1.obj",
+          "vertices": 130,
+          "triangles": 178
+        },
+        "mlv/p6_hijacked_bar_left": {
+          "xmodel": "export/xmodel/mlv/p6_hijacked_bar_left.json",
+          "collLod": 1,
+          "obj": "export/model_export/mlv/p6_hijacked_bar_left_lod1.obj",
+          "vertices": 555,
+          "triangles": 768
+        },
+        "mlv/p6_hijacked_bar_right": {
+          "xmodel": "export/xmodel/mlv/p6_hijacked_bar_right.json",
+          "collLod": 1,
+          "obj": "export/model_export/mlv/p6_hijacked_bar_right_lod1.obj",
+          "vertices": 555,
+          "triangles": 768
+        },
+        "mlv/p6_hijacked_boat_hull": {
+          "xmodel": "export/xmodel/mlv/p6_hijacked_boat_hull.json",
+          "collLod": 1,
+          "obj": "export/model_export/mlv/p6_hijacked_boat_hull_lod1.obj",
+          "vertices": 1494,
+          "triangles": 2815
+        },
+        "mlv/p6_hijacked_boat_lift": {
+          "xmodel": "export/xmodel/mlv/p6_hijacked_boat_lift.json",
+          "collLod": 2,
+          "obj": "export/model_export/mlv/p6_hijacked_boat_lift_lod2.obj",
+          "vertices": 310,
+          "triangles": 500
+        },
+        "mlv/p6_hijacked_cabana": {
+          "xmodel": "export/xmodel/mlv/p6_hijacked_cabana.json",
+          "collLod": 1,
+          "obj": "export/model_export/mlv/p6_hijacked_cabana_lod1.obj",
+          "vertices": 4099,
+          "triangles": 6520
+        },
+        "mlv/p6_hijacked_cabin_back": {
+          "xmodel": "export/xmodel/mlv/p6_hijacked_cabin_back.json",
+          "collLod": 1,
+          "obj": "export/model_export/mlv/p6_hijacked_cabin_back_lod1.obj",
+          "vertices": 3881,
+          "triangles": 5979
+        },
+        "mlv/p6_hijacked_cabin_front": {
+          "xmodel": "export/xmodel/mlv/p6_hijacked_cabin_front.json",
+          "collLod": 1,
+          "obj": "export/model_export/mlv/p6_hijacked_cabin_front_lod1.obj",
+          "vertices": 4241,
+          "triangles": 6858
+        },
+        "mlv/p6_hijacked_cabin_front_railing": {
+          "xmodel": "export/xmodel/mlv/p6_hijacked_cabin_front_railing.json",
+          "collLod": 1,
+          "obj": "export/model_export/mlv/p6_hijacked_cabin_front_railing_lod1.obj",
+          "vertices": 185,
+          "triangles": 256
+        },
+        "mlv/p6_hijacked_center_bar": {
+          "xmodel": "export/xmodel/mlv/p6_hijacked_center_bar.json",
+          "collLod": 2,
+          "obj": "export/model_export/mlv/p6_hijacked_center_bar_lod2.obj",
+          "vertices": 576,
+          "triangles": 863
+        },
+        "mlv/p6_hijacked_console": {
+          "xmodel": "export/xmodel/mlv/p6_hijacked_console.json",
+          "collLod": 1,
+          "obj": "export/model_export/mlv/p6_hijacked_console_lod1.obj",
+          "vertices": 1254,
+          "triangles": 1769
+        },
+        "mlv/p6_hijacked_front_cabin_glass_back": {
+          "xmodel": "export/xmodel/mlv/p6_hijacked_front_cabin_glass_back.json",
+          "collLod": 0,
+          "obj": "export/model_export/mlv/p6_hijacked_front_cabin_glass_back_lod0.obj",
+          "vertices": 24,
+          "triangles": 22
+        },
+        "mlv/p6_hijacked_front_cabin_glass_front": {
+          "xmodel": "export/xmodel/mlv/p6_hijacked_front_cabin_glass_front.json",
+          "collLod": 0,
+          "obj": "export/model_export/mlv/p6_hijacked_front_cabin_glass_front_lod0.obj",
+          "vertices": 37,
+          "triangles": 35
+        },
+        "mlv/p6_hijacked_helipad": {
+          "xmodel": "export/xmodel/mlv/p6_hijacked_helipad.json",
+          "collLod": 1,
+          "obj": "export/model_export/mlv/p6_hijacked_helipad_lod1.obj",
+          "vertices": 583,
+          "triangles": 1058
+        },
+        "mlv/p6_hijacked_hot_tub": {
+          "xmodel": "export/xmodel/mlv/p6_hijacked_hot_tub.json",
+          "collLod": 1,
+          "obj": "export/model_export/mlv/p6_hijacked_hot_tub_lod1.obj",
+          "vertices": 1406,
+          "triangles": 2344
+        },
+        "mlv/p6_hijacked_lounge": {
+          "xmodel": "export/xmodel/mlv/p6_hijacked_lounge.json",
+          "collLod": 1,
+          "obj": "export/model_export/mlv/p6_hijacked_lounge_lod1.obj",
+          "vertices": 4605,
+          "triangles": 5197
+        },
+        "mlv/p6_hijacked_speed_boat": {
+          "xmodel": "export/xmodel/mlv/p6_hijacked_speed_boat.json",
+          "collLod": 2,
+          "obj": "export/model_export/mlv/p6_hijacked_speed_boat_lod2.obj",
+          "vertices": 1049,
+          "triangles": 1777
+        },
+        "mlv/p6_hijacked_spoiler": {
+          "xmodel": "export/xmodel/mlv/p6_hijacked_spoiler.json",
+          "collLod": 1,
+          "obj": "export/model_export/mlv/p6_hijacked_spoiler_lod1.obj",
+          "vertices": 80,
+          "triangles": 156
+        },
+        "mlv/p6_pipes_blackout_128_01": {
+          "xmodel": "export/xmodel/mlv/p6_pipes_blackout_128_01.json",
+          "collLod": 1,
+          "obj": "export/model_export/mlv/p6_pipes_blackout_128_01_lod1.obj",
+          "vertices": 22,
+          "triangles": 16
+        },
+        "mlv/p6_pipes_blackout_128_02": {
+          "xmodel": "export/xmodel/mlv/p6_pipes_blackout_128_02.json",
+          "collLod": 1,
+          "obj": "export/model_export/mlv/p6_pipes_blackout_128_02_lod1.obj",
+          "vertices": 22,
+          "triangles": 16
+        },
+        "mlv/p6_pipes_blackout_128_03": {
+          "xmodel": "export/xmodel/mlv/p6_pipes_blackout_128_03.json",
+          "collLod": 1,
+          "obj": "export/model_export/mlv/p6_pipes_blackout_128_03_lod1.obj",
+          "vertices": 22,
+          "triangles": 16
+        },
+        "mlv/p6_pipes_blackout_128_l_01": {
+          "xmodel": "export/xmodel/mlv/p6_pipes_blackout_128_l_01.json",
+          "collLod": 1,
+          "obj": "export/model_export/mlv/p6_pipes_blackout_128_l_01_lod1.obj",
+          "vertices": 44,
+          "triangles": 32
+        },
+        "mlv/p6_vent_boat": {
+          "xmodel": "export/xmodel/mlv/p6_vent_boat.json",
+          "collLod": 1,
+          "obj": "export/model_export/mlv/p6_vent_boat_lod1.obj",
+          "vertices": 857,
+          "triangles": 1570
+        },
+        "mlv/p6_wire_trellis_128": {
+          "xmodel": "export/xmodel/mlv/p6_wire_trellis_128.json",
+          "collLod": 1,
+          "obj": "export/model_export/mlv/p6_wire_trellis_128_lod1.obj",
+          "vertices": 120,
+          "triangles": 160
+        },
+        "mlv/p6_wire_trellis_64": {
+          "xmodel": "export/xmodel/mlv/p6_wire_trellis_64.json",
+          "collLod": 1,
+          "obj": "export/model_export/mlv/p6_wire_trellis_64_lod1.obj",
+          "vertices": 72,
+          "triangles": 96
+        },
+        "mlv/p6_wire_trellis_90_bend": {
+          "xmodel": "export/xmodel/mlv/p6_wire_trellis_90_bend.json",
+          "collLod": 1,
+          "obj": "export/model_export/mlv/p6_wire_trellis_90_bend_lod1.obj",
+          "vertices": 138,
+          "triangles": 236
+        },
+        "mlv/p6_wire_trellis_wire_128": {
+          "xmodel": "export/xmodel/mlv/p6_wire_trellis_wire_128.json",
+          "collLod": 2,
+          "obj": "export/model_export/mlv/p6_wire_trellis_wire_128_lod2.obj",
+          "vertices": 16,
+          "triangles": 24
+        },
+        "mlv/p6_wire_trellis_wire_64": {
+          "xmodel": "export/xmodel/mlv/p6_wire_trellis_wire_64.json",
+          "collLod": 2,
+          "obj": "export/model_export/mlv/p6_wire_trellis_wire_64_lod2.obj",
+          "vertices": 16,
+          "triangles": 24
+        },
+        "mlv/p6_wire_trellis_wire_90_bend": {
+          "xmodel": "export/xmodel/mlv/p6_wire_trellis_wire_90_bend.json",
+          "collLod": 2,
+          "obj": "export/model_export/mlv/p6_wire_trellis_wire_90_bend_lod2.obj",
+          "vertices": 40,
+          "triangles": 72
+        },
+        "mlv/p6_wire_trellis_wire_90_bend_2": {
+          "xmodel": "export/xmodel/mlv/p6_wire_trellis_wire_90_bend_2.json",
+          "collLod": 2,
+          "obj": "export/model_export/mlv/p6_wire_trellis_wire_90_bend_2_lod2.obj",
+          "vertices": 40,
+          "triangles": 72
+        },
+        "mlv/paris_bookstore_wall_light_top_on": {
+          "xmodel": "export/xmodel/mlv/paris_bookstore_wall_light_top_on.json",
+          "collLod": 2,
+          "obj": "export/model_export/mlv/paris_bookstore_wall_light_top_on_lod2.obj",
+          "vertices": 120,
+          "triangles": 176
+        },
+        "mlv/paris_kitchen_counter_a": {
+          "xmodel": "export/xmodel/mlv/paris_kitchen_counter_a.json",
+          "collLod": 1,
+          "obj": "export/model_export/mlv/paris_kitchen_counter_a_lod1.obj",
+          "vertices": 8,
+          "triangles": 12
+        },
+        "mlv/paris_kitchen_counter_b": {
+          "xmodel": "export/xmodel/mlv/paris_kitchen_counter_b.json",
+          "collLod": 1,
+          "obj": "export/model_export/mlv/paris_kitchen_counter_b_lod1.obj",
+          "vertices": 64,
+          "triangles": 80
+        },
+        "ny_harbor_missle_room_elbow_pipe_02": {
+          "xmodel": "export/xmodel/ny_harbor_missle_room_elbow_pipe_02.json",
+          "collLod": 2,
+          "obj": "export/model_export/ny_harbor_missle_room_elbow_pipe_02_lod2.obj",
+          "vertices": 65,
+          "triangles": 94
+        },
+        "ny_harbor_sub_pipe_valve_01": {
+          "xmodel": "export/xmodel/ny_harbor_sub_pipe_valve_01.json",
+          "collLod": 2,
+          "obj": "export/model_export/ny_harbor_sub_pipe_valve_01_lod2.obj",
+          "vertices": 50,
+          "triangles": 56
+        },
+        "p6_bar_drink_mat": {
+          "xmodel": "export/xmodel/p6_bar_drink_mat.json",
+          "collLod": 0,
+          "obj": "export/model_export/p6_bar_drink_mat_lod0.obj",
+          "vertices": 32,
+          "triangles": 52
+        },
+        "p6_bar_drink_tray": {
+          "xmodel": "export/xmodel/p6_bar_drink_tray.json",
+          "collLod": 1,
+          "obj": "export/model_export/p6_bar_drink_tray_lod1.obj",
+          "vertices": 82,
+          "triangles": 96
+        },
+        "p6_barrel_boat": {
+          "xmodel": "export/xmodel/p6_barrel_boat.json",
+          "collLod": 3,
+          "obj": "export/model_export/p6_barrel_boat_lod3.obj",
+          "vertices": 51,
+          "triangles": 90
+        },
+        "p6_blackout_cic_vent_128": {
+          "xmodel": "export/xmodel/p6_blackout_cic_vent_128.json",
+          "collLod": 1,
+          "obj": "export/model_export/p6_blackout_cic_vent_128_lod1.obj",
+          "vertices": 1248,
+          "triangles": 1520
+        },
+        "p6_blackout_deck_tech_01": {
+          "xmodel": "export/xmodel/p6_blackout_deck_tech_01.json",
+          "collLod": 2,
+          "obj": "export/model_export/p6_blackout_deck_tech_01_lod2.obj",
+          "vertices": 277,
+          "triangles": 431
+        },
+        "p6_blackout_floor_grating": {
+          "xmodel": "export/xmodel/p6_blackout_floor_grating.json",
+          "collLod": 1,
+          "obj": "export/model_export/p6_blackout_floor_grating_lod1.obj",
+          "vertices": 88,
+          "triangles": 68
+        },
+        "p6_blackout_hatch_door_left": {
+          "xmodel": "export/xmodel/p6_blackout_hatch_door_left.json",
+          "collLod": 3,
+          "obj": "export/model_export/p6_blackout_hatch_door_left_lod3.obj",
+          "vertices": 16,
+          "triangles": 28
+        },
+        "p6_blackout_hatch_frame_left": {
+          "xmodel": "export/xmodel/p6_blackout_hatch_frame_left.json",
+          "collLod": 3,
+          "obj": "export/model_export/p6_blackout_hatch_frame_left_lod3.obj",
+          "vertices": 80,
+          "triangles": 160
+        },
+        "p6_blackout_panel_flooring_01": {
+          "xmodel": "export/xmodel/p6_blackout_panel_flooring_01.json",
+          "collLod": 2,
+          "obj": "export/model_export/p6_blackout_panel_flooring_01_lod2.obj",
+          "vertices": 142,
+          "triangles": 116
+        },
+        "p6_blackout_panel_flooring_01_t": {
+          "xmodel": "export/xmodel/p6_blackout_panel_flooring_01_t.json",
+          "collLod": 2,
+          "obj": "export/model_export/p6_blackout_panel_flooring_01_t_lod2.obj",
+          "vertices": 363,
+          "triangles": 456
+        },
+        "p6_blackout_panel_flooring_hatch": {
+          "xmodel": "export/xmodel/p6_blackout_panel_flooring_hatch.json",
+          "collLod": 2,
+          "obj": "export/model_export/p6_blackout_panel_flooring_hatch_lod2.obj",
+          "vertices": 68,
+          "triangles": 84
+        },
+        "p6_blk_fluorescent_light": {
+          "xmodel": "export/xmodel/p6_blk_fluorescent_light.json",
+          "collLod": 1,
+          "obj": "export/model_export/p6_blk_fluorescent_light_lod1.obj",
+          "vertices": 12,
+          "triangles": 20
+        },
+        "p6_chair_modern2": {
+          "xmodel": "export/xmodel/p6_chair_modern2.json",
+          "collLod": 3,
+          "obj": "export/model_export/p6_chair_modern2_lod3.obj",
+          "vertices": 212,
+          "triangles": 332
+        },
+        "p6_chaise_lounge": {
+          "xmodel": "export/xmodel/p6_chaise_lounge.json",
+          "collLod": 3,
+          "obj": "export/model_export/p6_chaise_lounge_lod3.obj",
+          "vertices": 186,
+          "triangles": 282
+        },
+        "p6_cic_mech_panel_c_white": {
+          "xmodel": "export/xmodel/p6_cic_mech_panel_c_white.json",
+          "collLod": 3,
+          "obj": "export/model_export/p6_cic_mech_panel_c_white_lod3.obj",
+          "vertices": 28,
+          "triangles": 38
+        },
+        "p6_cic_touchscreen_radar_04": {
+          "xmodel": "export/xmodel/p6_cic_touchscreen_radar_04.json",
+          "collLod": 1,
+          "obj": "export/model_export/p6_cic_touchscreen_radar_04_lod1.obj",
+          "vertices": 16,
+          "triangles": 18
+        },
+        "p6_cic_touchscreen_radar_10": {
+          "xmodel": "export/xmodel/p6_cic_touchscreen_radar_10.json",
+          "collLod": 1,
+          "obj": "export/model_export/p6_cic_touchscreen_radar_10_lod1.obj",
+          "vertices": 16,
+          "triangles": 18
+        },
+        "p6_cushion_boat_back": {
+          "xmodel": "export/xmodel/p6_cushion_boat_back.json",
+          "collLod": 0,
+          "obj": "export/model_export/p6_cushion_boat_back_lod0.obj",
+          "vertices": 64,
+          "triangles": 99
+        },
+        "p6_cushion_boat_back_left": {
+          "xmodel": "export/xmodel/p6_cushion_boat_back_left.json",
+          "collLod": 0,
+          "obj": "export/model_export/p6_cushion_boat_back_left_lod0.obj",
+          "vertices": 64,
+          "triangles": 99
+        },
+        "p6_cushion_boat_bar": {
+          "xmodel": "export/xmodel/p6_cushion_boat_bar.json",
+          "collLod": 0,
+          "obj": "export/model_export/p6_cushion_boat_bar_lod0.obj",
+          "vertices": 60,
+          "triangles": 104
+        },
+        "p6_door_frame_metal_58": {
+          "xmodel": "export/xmodel/p6_door_frame_metal_58.json",
+          "collLod": 1,
+          "obj": "export/model_export/p6_door_frame_metal_58_lod1.obj",
+          "vertices": 57,
+          "triangles": 79
+        },
+        "p6_door_hijacked_white": {
+          "xmodel": "export/xmodel/p6_door_hijacked_white.json",
+          "collLod": 2,
+          "obj": "export/model_export/p6_door_hijacked_white_lod2.obj",
+          "vertices": 234,
+          "triangles": 304
+        },
+        "p6_door_hijacked_wood": {
+          "xmodel": "export/xmodel/p6_door_hijacked_wood.json",
+          "collLod": 2,
+          "obj": "export/model_export/p6_door_hijacked_wood_lod2.obj",
+          "vertices": 234,
+          "triangles": 304
+        },
+        "p6_duct_rect_sml_16_white": {
+          "xmodel": "export/xmodel/p6_duct_rect_sml_16_white.json",
+          "collLod": 0,
+          "obj": "export/model_export/p6_duct_rect_sml_16_white_lod0.obj",
+          "vertices": 24,
+          "triangles": 32
+        },
+        "p6_duct_rect_sml_32_white": {
+          "xmodel": "export/xmodel/p6_duct_rect_sml_32_white.json",
+          "collLod": 0,
+          "obj": "export/model_export/p6_duct_rect_sml_32_white_lod0.obj",
+          "vertices": 24,
+          "triangles": 32
+        },
+        "p6_duct_rect_sml_64_white": {
+          "xmodel": "export/xmodel/p6_duct_rect_sml_64_white.json",
+          "collLod": 0,
+          "obj": "export/model_export/p6_duct_rect_sml_64_white_lod0.obj",
+          "vertices": 24,
+          "triangles": 32
+        },
+        "p6_duct_rect_sml_hanger_white": {
+          "xmodel": "export/xmodel/p6_duct_rect_sml_hanger_white.json",
+          "collLod": 1,
+          "obj": "export/model_export/p6_duct_rect_sml_hanger_white_lod1.obj",
+          "vertices": 32,
+          "triangles": 24
+        },
+        "p6_duct_rect_sml_vent_white": {
+          "xmodel": "export/xmodel/p6_duct_rect_sml_vent_white.json",
+          "collLod": 1,
+          "obj": "export/model_export/p6_duct_rect_sml_vent_white_lod1.obj",
+          "vertices": 12,
+          "triangles": 10
+        },
+        "p6_duct_rect_sml_vert_90_white": {
+          "xmodel": "export/xmodel/p6_duct_rect_sml_vert_90_white.json",
+          "collLod": 0,
+          "obj": "export/model_export/p6_duct_rect_sml_vert_90_white_lod0.obj",
+          "vertices": 96,
+          "triangles": 96
+        },
+        "p6_engine_monitor_case": {
+          "xmodel": "export/xmodel/p6_engine_monitor_case.json",
+          "collLod": 1,
+          "obj": "export/model_export/p6_engine_monitor_case_lod1.obj",
+          "vertices": 8,
+          "triangles": 12
+        },
+        "p6_engine_monitor_panel_v2": {
+          "xmodel": "export/xmodel/p6_engine_monitor_panel_v2.json",
+          "collLod": 1,
+          "obj": "export/model_export/p6_engine_monitor_panel_v2_lod1.obj",
+          "vertices": 8,
+          "triangles": 12
+        },
+        "p6_engine_monitor_panel_v3": {
+          "xmodel": "export/xmodel/p6_engine_monitor_panel_v3.json",
+          "collLod": 2,
+          "obj": "export/model_export/p6_engine_monitor_panel_v3_lod2.obj",
+          "vertices": 8,
+          "triangles": 12
+        },
+        "p6_fan_standing_modern_on": {
+          "xmodel": "export/xmodel/p6_fan_standing_modern_on.json",
+          "collLod": 3,
+          "obj": "export/model_export/p6_fan_standing_modern_on_lod3.obj",
+          "vertices": 78,
+          "triangles": 140
+        },
+        "p6_fuse_box_base_a": {
+          "xmodel": "export/xmodel/p6_fuse_box_base_a.json",
+          "collLod": 3,
+          "obj": "export/model_export/p6_fuse_box_base_a_lod3.obj",
+          "vertices": 20,
+          "triangles": 20
+        },
+        "p6_fuse_box_base_b": {
+          "xmodel": "export/xmodel/p6_fuse_box_base_b.json",
+          "collLod": 3,
+          "obj": "export/model_export/p6_fuse_box_base_b_lod3.obj",
+          "vertices": 16,
+          "triangles": 24
+        },
+        "p6_future_fire_extinguisher_case_base_mil": {
+          "xmodel": "export/xmodel/p6_future_fire_extinguisher_case_base_mil.json",
+          "collLod": 3,
+          "obj": "export/model_export/p6_future_fire_extinguisher_case_base_mil_lod3.obj",
+          "vertices": 32,
+          "triangles": 54
+        },
+        "p6_garage_pipes_1x256_blue": {
+          "xmodel": "export/xmodel/p6_garage_pipes_1x256_blue.json",
+          "collLod": 1,
+          "obj": "export/model_export/p6_garage_pipes_1x256_blue_lod1.obj",
+          "vertices": 12,
+          "triangles": 16
+        },
+        "p6_high_contrast_art_01": {
+          "xmodel": "export/xmodel/p6_high_contrast_art_01.json",
+          "collLod": 0,
+          "obj": "export/model_export/p6_high_contrast_art_01_lod0.obj",
+          "vertices": 136,
+          "triangles": 228
+        },
+        "p6_high_contrast_art_05": {
+          "xmodel": "export/xmodel/p6_high_contrast_art_05.json",
+          "collLod": 0,
+          "obj": "export/model_export/p6_high_contrast_art_05_lod0.obj",
+          "vertices": 136,
+          "triangles": 228
+        },
+        "p6_hijacked_barstool": {
+          "xmodel": "export/xmodel/p6_hijacked_barstool.json",
+          "collLod": 2,
+          "obj": "export/model_export/p6_hijacked_barstool_lod2.obj",
+          "vertices": 174,
+          "triangles": 342
+        },
+        "p6_hijacked_engine": {
+          "xmodel": "export/xmodel/p6_hijacked_engine.json",
+          "collLod": 1,
+          "obj": "export/model_export/p6_hijacked_engine_lod1.obj",
+          "vertices": 1447,
+          "triangles": 2329
+        },
+        "p6_hijacked_exterior_hatch": {
+          "xmodel": "export/xmodel/p6_hijacked_exterior_hatch.json",
+          "collLod": 1,
+          "obj": "export/model_export/p6_hijacked_exterior_hatch_lod1.obj",
+          "vertices": 64,
+          "triangles": 76
+        },
+        "p6_hijacked_hatch_door": {
+          "xmodel": "export/xmodel/p6_hijacked_hatch_door.json",
+          "collLod": 1,
+          "obj": "export/model_export/p6_hijacked_hatch_door_lod1.obj",
+          "vertices": 364,
+          "triangles": 556
+        },
+        "p6_hijacked_hatch_door_frame": {
+          "xmodel": "export/xmodel/p6_hijacked_hatch_door_frame.json",
+          "collLod": 1,
+          "obj": "export/model_export/p6_hijacked_hatch_door_frame_lod1.obj",
+          "vertices": 256,
+          "triangles": 424
+        },
+        "p6_hijacked_pool": {
+          "xmodel": "export/xmodel/p6_hijacked_pool.json",
+          "collLod": 1,
+          "obj": "export/model_export/p6_hijacked_pool_lod1.obj",
+          "vertices": 960,
+          "triangles": 1463
+        },
+        "p6_hijacked_speed_boat_lock": {
+          "xmodel": "export/xmodel/p6_hijacked_speed_boat_lock.json",
+          "collLod": 2,
+          "obj": "export/model_export/p6_hijacked_speed_boat_lock_lod2.obj",
+          "vertices": 40,
+          "triangles": 44
+        },
+        "p6_hijacked_table": {
+          "xmodel": "export/xmodel/p6_hijacked_table.json",
+          "collLod": 2,
+          "obj": "export/model_export/p6_hijacked_table_lod2.obj",
+          "vertices": 251,
+          "triangles": 382
+        },
+        "p6_industrial_stove": {
+          "xmodel": "export/xmodel/p6_industrial_stove.json",
+          "collLod": 3,
+          "obj": "export/model_export/p6_industrial_stove_lod3.obj",
+          "vertices": 52,
+          "triangles": 86
+        },
+        "p6_industrial_stove_vent": {
+          "xmodel": "export/xmodel/p6_industrial_stove_vent.json",
+          "collLod": 1,
+          "obj": "export/model_export/p6_industrial_stove_vent_lod1.obj",
+          "vertices": 31,
+          "triangles": 38
+        },
+        "p6_industrial_wall_oven": {
+          "xmodel": "export/xmodel/p6_industrial_wall_oven.json",
+          "collLod": 2,
+          "obj": "export/model_export/p6_industrial_wall_oven_lod2.obj",
+          "vertices": 72,
+          "triangles": 96
+        },
+        "p6_karma_pot_med_spikey": {
+          "xmodel": "export/xmodel/p6_karma_pot_med_spikey.json",
+          "collLod": 2,
+          "obj": "export/model_export/p6_karma_pot_med_spikey_lod2.obj",
+          "vertices": 255,
+          "triangles": 262
+        },
+        "p6_karma_pot_short_palm": {
+          "xmodel": "export/xmodel/p6_karma_pot_short_palm.json",
+          "collLod": 3,
+          "obj": "export/model_export/p6_karma_pot_short_palm_lod3.obj",
+          "vertices": 12,
+          "triangles": 10
+        },
+        "p6_karma_pot_tall_fern": {
+          "xmodel": "export/xmodel/p6_karma_pot_tall_fern.json",
+          "collLod": 2,
+          "obj": "export/model_export/p6_karma_pot_tall_fern_lod2.obj",
+          "vertices": 190,
+          "triangles": 166
+        },
+        "p6_karma_pot_tall_spikey": {
+          "xmodel": "export/xmodel/p6_karma_pot_tall_spikey.json",
+          "collLod": 2,
+          "obj": "export/model_export/p6_karma_pot_tall_spikey_lod2.obj",
+          "vertices": 472,
+          "triangles": 508
+        },
+        "p6_kitchen_sink_faucet_handles": {
+          "xmodel": "export/xmodel/p6_kitchen_sink_faucet_handles.json",
+          "collLod": 2,
+          "obj": "export/model_export/p6_kitchen_sink_faucet_handles_lod2.obj",
+          "vertices": 78,
+          "triangles": 122
+        },
+        "p6_kitchen_sink_faucet_nozzle": {
+          "xmodel": "export/xmodel/p6_kitchen_sink_faucet_nozzle.json",
+          "collLod": 2,
+          "obj": "export/model_export/p6_kitchen_sink_faucet_nozzle_lod2.obj",
+          "vertices": 57,
+          "triangles": 100
+        },
+        "p6_laundry_hamper": {
+          "xmodel": "export/xmodel/p6_laundry_hamper.json",
+          "collLod": 1,
+          "obj": "export/model_export/p6_laundry_hamper_lod1.obj",
+          "vertices": 153,
+          "triangles": 197
+        },
+        "p6_led_spotlight_blue": {
+          "xmodel": "export/xmodel/p6_led_spotlight_blue.json",
+          "collLod": 2,
+          "obj": "export/model_export/p6_led_spotlight_blue_lod2.obj",
+          "vertices": 8,
+          "triangles": 12
+        },
+        "p6_life_preserver": {
+          "xmodel": "export/xmodel/p6_life_preserver.json",
+          "collLod": 3,
+          "obj": "export/model_export/p6_life_preserver_lod3.obj",
+          "vertices": 37,
+          "triangles": 68
+        },
+        "p6_light_blk_emergency_red": {
+          "xmodel": "export/xmodel/p6_light_blk_emergency_red.json",
+          "collLod": 3,
+          "obj": "export/model_export/p6_light_blk_emergency_red_lod3.obj",
+          "vertices": 16,
+          "triangles": 22
+        },
+        "p6_light_karma_column_short": {
+          "xmodel": "export/xmodel/p6_light_karma_column_short.json",
+          "collLod": 1,
+          "obj": "export/model_export/p6_light_karma_column_short_lod1.obj",
+          "vertices": 260,
+          "triangles": 268
+        },
+        "p6_light_modern_sconce_off": {
+          "xmodel": "export/xmodel/p6_light_modern_sconce_off.json",
+          "collLod": 2,
+          "obj": "export/model_export/p6_light_modern_sconce_off_lod2.obj",
+          "vertices": 64,
+          "triangles": 92
+        },
+        "p6_lights_club_recessed": {
+          "xmodel": "export/xmodel/p6_lights_club_recessed.json",
+          "collLod": 2,
+          "obj": "export/model_export/p6_lights_club_recessed_lod2.obj",
+          "vertices": 8,
+          "triangles": 6
+        },
+        "p6_lights_club_recessed_off": {
+          "xmodel": "export/xmodel/p6_lights_club_recessed_off.json",
+          "collLod": 2,
+          "obj": "export/model_export/p6_lights_club_recessed_off_lod2.obj",
+          "vertices": 8,
+          "triangles": 6
+        },
+        "p6_metal_panel_railing_128": {
+          "xmodel": "export/xmodel/p6_metal_panel_railing_128.json",
+          "collLod": 2,
+          "obj": "export/model_export/p6_metal_panel_railing_128_lod2.obj",
+          "vertices": 24,
+          "triangles": 24
+        },
+        "p6_metal_panel_railing_32": {
+          "xmodel": "export/xmodel/p6_metal_panel_railing_32.json",
+          "collLod": 2,
+          "obj": "export/model_export/p6_metal_panel_railing_32_lod2.obj",
+          "vertices": 12,
+          "triangles": 8
+        },
+        "p6_metal_panel_railing_64": {
+          "xmodel": "export/xmodel/p6_metal_panel_railing_64.json",
+          "collLod": 2,
+          "obj": "export/model_export/p6_metal_panel_railing_64_lod2.obj",
+          "vertices": 18,
+          "triangles": 16
+        },
+        "p6_metal_panel_railing_90l": {
+          "xmodel": "export/xmodel/p6_metal_panel_railing_90l.json",
+          "collLod": 3,
+          "obj": "export/model_export/p6_metal_panel_railing_90l_lod3.obj",
+          "vertices": 12,
+          "triangles": 8
+        },
+        "p6_metal_panel_railing_90r": {
+          "xmodel": "export/xmodel/p6_metal_panel_railing_90r.json",
+          "collLod": 2,
+          "obj": "export/model_export/p6_metal_panel_railing_90r_lod2.obj",
+          "vertices": 36,
+          "triangles": 40
+        },
+        "p6_microwave_oven_flush": {
+          "xmodel": "export/xmodel/p6_microwave_oven_flush.json",
+          "collLod": 2,
+          "obj": "export/model_export/p6_microwave_oven_flush_lod2.obj",
+          "vertices": 64,
+          "triangles": 110
+        },
+        "p6_modern_kitchen_sink": {
+          "xmodel": "export/xmodel/p6_modern_kitchen_sink.json",
+          "collLod": 2,
+          "obj": "export/model_export/p6_modern_kitchen_sink_lod2.obj",
+          "vertices": 97,
+          "triangles": 150
+        },
+        "p6_mural_paintings01": {
+          "xmodel": "export/xmodel/p6_mural_paintings01.json",
+          "collLod": 1,
+          "obj": "export/model_export/p6_mural_paintings01_lod1.obj",
+          "vertices": 12,
+          "triangles": 18
+        },
+        "p6_mural_paintings02": {
+          "xmodel": "export/xmodel/p6_mural_paintings02.json",
+          "collLod": 1,
+          "obj": "export/model_export/p6_mural_paintings02_lod1.obj",
+          "vertices": 12,
+          "triangles": 18
+        },
+        "p6_mural_paintings03": {
+          "xmodel": "export/xmodel/p6_mural_paintings03.json",
+          "collLod": 1,
+          "obj": "export/model_export/p6_mural_paintings03_lod1.obj",
+          "vertices": 12,
+          "triangles": 18
+        },
+        "p6_mural_paintings04": {
+          "xmodel": "export/xmodel/p6_mural_paintings04.json",
+          "collLod": 1,
+          "obj": "export/model_export/p6_mural_paintings04_lod1.obj",
+          "vertices": 12,
+          "triangles": 18
+        },
+        "p6_mural_paintings_frame4": {
+          "xmodel": "export/xmodel/p6_mural_paintings_frame4.json",
+          "collLod": 1,
+          "obj": "export/model_export/p6_mural_paintings_frame4_lod1.obj",
+          "vertices": 16,
+          "triangles": 26
+        },
+        "p6_office_cabinet": {
+          "xmodel": "export/xmodel/p6_office_cabinet.json",
+          "collLod": 2,
+          "obj": "export/model_export/p6_office_cabinet_lod2.obj",
+          "vertices": 104,
+          "triangles": 124
+        },
+        "p6_oven_hood": {
+          "xmodel": "export/xmodel/p6_oven_hood.json",
+          "collLod": 2,
+          "obj": "export/model_export/p6_oven_hood_lod2.obj",
+          "vertices": 37,
+          "triangles": 66
+        },
+        "p6_painting_motel_01": {
+          "xmodel": "export/xmodel/p6_painting_motel_01.json",
+          "collLod": 1,
+          "obj": "export/model_export/p6_painting_motel_01_lod1.obj",
+          "vertices": 4,
+          "triangles": 2
+        },
+        "p6_painting_motel_02": {
+          "xmodel": "export/xmodel/p6_painting_motel_02.json",
+          "collLod": 1,
+          "obj": "export/model_export/p6_painting_motel_02_lod1.obj",
+          "vertices": 4,
+          "triangles": 2
+        },
+        "p6_painting_motel_03": {
+          "xmodel": "export/xmodel/p6_painting_motel_03.json",
+          "collLod": 1,
+          "obj": "export/model_export/p6_painting_motel_03_lod1.obj",
+          "vertices": 4,
+          "triangles": 2
+        },
+        "p6_pak_food_bottle_stacked_01": {
+          "xmodel": "export/xmodel/p6_pak_food_bottle_stacked_01.json",
+          "collLod": 2,
+          "obj": "export/model_export/p6_pak_food_bottle_stacked_01_lod2.obj",
+          "vertices": 16,
+          "triangles": 22
+        },
+        "p6_pak_food_can_stacked_01": {
+          "xmodel": "export/xmodel/p6_pak_food_can_stacked_01.json",
+          "collLod": 1,
+          "obj": "export/model_export/p6_pak_food_can_stacked_01_lod1.obj",
+          "vertices": 180,
+          "triangles": 216
+        },
+        "p6_pak_food_jar_stack_01": {
+          "xmodel": "export/xmodel/p6_pak_food_jar_stack_01.json",
+          "collLod": 2,
+          "obj": "export/model_export/p6_pak_food_jar_stack_01_lod2.obj",
+          "vertices": 8,
+          "triangles": 10
+        },
+        "p6_pak_food_jar_stack_04": {
+          "xmodel": "export/xmodel/p6_pak_food_jar_stack_04.json",
+          "collLod": 2,
+          "obj": "export/model_export/p6_pak_food_jar_stack_04_lod2.obj",
+          "vertices": 12,
+          "triangles": 16
+        },
+        "p6_pak_food_jar_stack_05": {
+          "xmodel": "export/xmodel/p6_pak_food_jar_stack_05.json",
+          "collLod": 2,
+          "obj": "export/model_export/p6_pak_food_jar_stack_05_lod2.obj",
+          "vertices": 20,
+          "triangles": 28
+        },
+        "p6_pak_food_juice_box_stacked_01": {
+          "xmodel": "export/xmodel/p6_pak_food_juice_box_stacked_01.json",
+          "collLod": 1,
+          "obj": "export/model_export/p6_pak_food_juice_box_stacked_01_lod1.obj",
+          "vertices": 58,
+          "triangles": 112
+        },
+        "p6_pak_food_juice_box_stacked_02": {
+          "xmodel": "export/xmodel/p6_pak_food_juice_box_stacked_02.json",
+          "collLod": 2,
+          "obj": "export/model_export/p6_pak_food_juice_box_stacked_02_lod2.obj",
+          "vertices": 8,
+          "triangles": 10
+        },
+        "p6_pak_food_sack_tan": {
+          "xmodel": "export/xmodel/p6_pak_food_sack_tan.json",
+          "collLod": 2,
+          "obj": "export/model_export/p6_pak_food_sack_tan_lod2.obj",
+          "vertices": 34,
+          "triangles": 64
+        },
+        "p6_pak_food_sauce_stacked_01": {
+          "xmodel": "export/xmodel/p6_pak_food_sauce_stacked_01.json",
+          "collLod": 1,
+          "obj": "export/model_export/p6_pak_food_sauce_stacked_01_lod1.obj",
+          "vertices": 336,
+          "triangles": 560
+        },
+        "p6_pillow_boat_01": {
+          "xmodel": "export/xmodel/p6_pillow_boat_01.json",
+          "collLod": 3,
+          "obj": "export/model_export/p6_pillow_boat_01_lod3.obj",
+          "vertices": 14,
+          "triangles": 24
+        },
+        "p6_pillow_boat_long_01": {
+          "xmodel": "export/xmodel/p6_pillow_boat_long_01.json",
+          "collLod": 3,
+          "obj": "export/model_export/p6_pillow_boat_long_01_lod3.obj",
+          "vertices": 42,
+          "triangles": 80
+        },
+        "p6_pool_towel_folded_01": {
+          "xmodel": "export/xmodel/p6_pool_towel_folded_01.json",
+          "collLod": 2,
+          "obj": "export/model_export/p6_pool_towel_folded_01_lod2.obj",
+          "vertices": 12,
+          "triangles": 20
+        },
+        "p6_pool_towel_unfolded_01": {
+          "xmodel": "export/xmodel/p6_pool_towel_unfolded_01.json",
+          "collLod": 2,
+          "obj": "export/model_export/p6_pool_towel_unfolded_01_lod2.obj",
+          "vertices": 15,
+          "triangles": 20
+        },
+        "p6_ship_engine_parts_compressor": {
+          "xmodel": "export/xmodel/p6_ship_engine_parts_compressor.json",
+          "collLod": 3,
+          "obj": "export/model_export/p6_ship_engine_parts_compressor_lod3.obj",
+          "vertices": 126,
+          "triangles": 180
+        },
+        "p6_ship_engine_parts_turbine": {
+          "xmodel": "export/xmodel/p6_ship_engine_parts_turbine.json",
+          "collLod": 3,
+          "obj": "export/model_export/p6_ship_engine_parts_turbine_lod3.obj",
+          "vertices": 240,
+          "triangles": 422
+        },
+        "p6_shoe_single_01": {
+          "xmodel": "export/xmodel/p6_shoe_single_01.json",
+          "collLod": 2,
+          "obj": "export/model_export/p6_shoe_single_01_lod2.obj",
+          "vertices": 12,
+          "triangles": 20
+        },
+        "p6_shoe_single_02": {
+          "xmodel": "export/xmodel/p6_shoe_single_02.json",
+          "collLod": 2,
+          "obj": "export/model_export/p6_shoe_single_02_lod2.obj",
+          "vertices": 12,
+          "triangles": 20
+        },
+        "p6_signage_fire_extinguisher": {
+          "xmodel": "export/xmodel/p6_signage_fire_extinguisher.json",
+          "collLod": 0,
+          "obj": "export/model_export/p6_signage_fire_extinguisher_lod0.obj",
+          "vertices": 60,
+          "triangles": 76
+        },
+        "p6_smoke_detector": {
+          "xmodel": "export/xmodel/p6_smoke_detector.json",
+          "collLod": 2,
+          "obj": "export/model_export/p6_smoke_detector_lod2.obj",
+          "vertices": 11,
+          "triangles": 15
+        },
+        "p6_stainless_refrigerator": {
+          "xmodel": "export/xmodel/p6_stainless_refrigerator.json",
+          "collLod": 3,
+          "obj": "export/model_export/p6_stainless_refrigerator_lod3.obj",
+          "vertices": 44,
+          "triangles": 56
+        },
+        "p6_tv_glass_hanging": {
+          "xmodel": "export/xmodel/p6_tv_glass_hanging.json",
+          "collLod": 2,
+          "obj": "export/model_export/p6_tv_glass_hanging_lod2.obj",
+          "vertices": 46,
+          "triangles": 74
+        },
+        "p6_tv_led_large": {
+          "xmodel": "export/xmodel/p6_tv_led_large.json",
+          "collLod": 1,
+          "obj": "export/model_export/p6_tv_led_large_lod1.obj",
+          "vertices": 91,
+          "triangles": 161
+        },
+        "p6_water_cooler_metal": {
+          "xmodel": "export/xmodel/p6_water_cooler_metal.json",
+          "collLod": 2,
+          "obj": "export/model_export/p6_water_cooler_metal_lod2.obj",
+          "vertices": 24,
+          "triangles": 38
+        },
+        "p6_water_pipe_01": {
+          "xmodel": "export/xmodel/p6_water_pipe_01.json",
+          "collLod": 3,
+          "obj": "export/model_export/p6_water_pipe_01_lod3.obj",
+          "vertices": 92,
+          "triangles": 124
+        },
+        "p6_wood_cabinet_door_left": {
+          "xmodel": "export/xmodel/p6_wood_cabinet_door_left.json",
+          "collLod": 2,
+          "obj": "export/model_export/p6_wood_cabinet_door_left_lod2.obj",
+          "vertices": 9,
+          "triangles": 12
+        },
+        "p6_wood_cabinet_door_right": {
+          "xmodel": "export/xmodel/p6_wood_cabinet_door_right.json",
+          "collLod": 2,
+          "obj": "export/model_export/p6_wood_cabinet_door_right_lod2.obj",
+          "vertices": 9,
+          "triangles": 12
+        },
+        "p_dest_electronic_outlet01_base": {
+          "xmodel": "export/xmodel/p_dest_electronic_outlet01_base.json",
+          "collLod": 0,
+          "obj": "export/model_export/p_dest_electronic_outlet01_base_lod0.obj",
+          "vertices": 8,
+          "triangles": 10
+        },
+        "p_glo_books_pile": {
+          "xmodel": "export/xmodel/p_glo_books_pile.json",
+          "collLod": 2,
+          "obj": "export/model_export/p_glo_books_pile_lod2.obj",
+          "vertices": 28,
+          "triangles": 36
+        },
+        "p_glo_bread_bgtte": {
+          "xmodel": "export/xmodel/p_glo_bread_bgtte.json",
+          "collLod": 3,
+          "obj": "export/model_export/p_glo_bread_bgtte_lod3.obj",
+          "vertices": 27,
+          "triangles": 50
+        },
+        "p_glo_bread_loaf": {
+          "xmodel": "export/xmodel/p_glo_bread_loaf.json",
+          "collLod": 3,
+          "obj": "export/model_export/p_glo_bread_loaf_lod3.obj",
+          "vertices": 24,
+          "triangles": 36
+        },
+        "p_glo_pipes_aqua_d4_holder": {
+          "xmodel": "export/xmodel/p_glo_pipes_aqua_d4_holder.json",
+          "collLod": 1,
+          "obj": "export/model_export/p_glo_pipes_aqua_d4_holder_lod1.obj",
+          "vertices": 40,
+          "triangles": 64
+        },
+        "p_glo_pipes_group_04": {
+          "xmodel": "export/xmodel/p_glo_pipes_group_04.json",
+          "collLod": 3,
+          "obj": "export/model_export/p_glo_pipes_group_04_lod3.obj",
+          "vertices": 236,
+          "triangles": 400
+        },
+        "p_jun_bowl_dine": {
+          "xmodel": "export/xmodel/p_jun_bowl_dine.json",
+          "collLod": 0,
+          "obj": "export/model_export/p_jun_bowl_dine_lod0.obj",
+          "vertices": 50,
+          "triangles": 96
+        },
+        "p_jun_officebench": {
+          "xmodel": "export/xmodel/p_jun_officebench.json",
+          "collLod": 3,
+          "obj": "export/model_export/p_jun_officebench_lod3.obj",
+          "vertices": 44,
+          "triangles": 36
+        },
+        "p_pent_lamp_desk_off": {
+          "xmodel": "export/xmodel/p_pent_lamp_desk_off.json",
+          "collLod": 2,
+          "obj": "export/model_export/p_pent_lamp_desk_off_lod2.obj",
+          "vertices": 19,
+          "triangles": 18
+        },
+        "p_pent_wastebasket": {
+          "xmodel": "export/xmodel/p_pent_wastebasket.json",
+          "collLod": 1,
+          "obj": "export/model_export/p_pent_wastebasket_lod1.obj",
+          "vertices": 8,
+          "triangles": 12
+        },
+        "p_rus_angle_plate_bolt": {
+          "xmodel": "export/xmodel/p_rus_angle_plate_bolt.json",
+          "collLod": 3,
+          "obj": "export/model_export/p_rus_angle_plate_bolt_lod3.obj",
+          "vertices": 8,
+          "triangles": 10
+        },
+        "p_rus_towel_stack_lrg": {
+          "xmodel": "export/xmodel/p_rus_towel_stack_lrg.json",
+          "collLod": 2,
+          "obj": "export/model_export/p_rus_towel_stack_lrg_lod2.obj",
+          "vertices": 128,
+          "triangles": 148
+        },
+        "p_us_patio_chair": {
+          "xmodel": "export/xmodel/p_us_patio_chair.json",
+          "collLod": 2,
+          "obj": "export/model_export/p_us_patio_chair_lod2.obj",
+          "vertices": 92,
+          "triangles": 128
+        },
+        "paris_bookstore_wall_light_base": {
+          "xmodel": "export/xmodel/paris_bookstore_wall_light_base.json",
+          "collLod": 2,
+          "obj": "export/model_export/paris_bookstore_wall_light_base_lod2.obj",
+          "vertices": 38,
+          "triangles": 50
+        },
+        "paris_bookstore_wall_light_top_off": {
+          "xmodel": "export/xmodel/paris_bookstore_wall_light_top_off.json",
+          "collLod": 2,
+          "obj": "export/model_export/paris_bookstore_wall_light_top_off_lod2.obj",
+          "vertices": 120,
+          "triangles": 176
+        },
+        "paris_bookstore_wall_light_top_on": {
+          "xmodel": "export/xmodel/paris_bookstore_wall_light_top_on.json",
+          "collLod": 2,
+          "obj": "export/model_export/paris_bookstore_wall_light_top_on_lod2.obj",
+          "vertices": 120,
+          "triangles": 176
+        },
+        "paris_kitchen_counter_a": {
+          "xmodel": "export/xmodel/paris_kitchen_counter_a.json",
+          "collLod": 1,
+          "obj": "export/model_export/paris_kitchen_counter_a_lod1.obj",
+          "vertices": 8,
+          "triangles": 12
+        },
+        "paris_kitchen_counter_b": {
+          "xmodel": "export/xmodel/paris_kitchen_counter_b.json",
+          "collLod": 1,
+          "obj": "export/model_export/paris_kitchen_counter_b_lod1.obj",
+          "vertices": 64,
+          "triangles": 80
+        },
+        "paris_kitchen_rack_long": {
+          "xmodel": "export/xmodel/paris_kitchen_rack_long.json",
+          "collLod": 0,
+          "obj": "export/model_export/paris_kitchen_rack_long_lod0.obj",
+          "vertices": 717,
+          "triangles": 874
+        },
+        "picture_frame_table_silver1_4x6": {
+          "xmodel": "export/xmodel/picture_frame_table_silver1_4x6.json",
+          "collLod": 0,
+          "obj": "export/model_export/picture_frame_table_silver1_4x6_lod0.obj",
+          "vertices": 34,
+          "triangles": 50
+        },
+        "picture_frame_table_silver1_5x7": {
+          "xmodel": "export/xmodel/picture_frame_table_silver1_5x7.json",
+          "collLod": 0,
+          "obj": "export/model_export/picture_frame_table_silver1_5x7_lod0.obj",
+          "vertices": 34,
+          "triangles": 50
+        },
+        "picture_frame_table_silver1_8x10": {
+          "xmodel": "export/xmodel/picture_frame_table_silver1_8x10.json",
+          "collLod": 0,
+          "obj": "export/model_export/picture_frame_table_silver1_8x10_lod0.obj",
+          "vertices": 34,
+          "triangles": 50
+        },
+        "prague_china_plates_stand_red": {
+          "xmodel": "export/xmodel/prague_china_plates_stand_red.json",
+          "collLod": 2,
+          "obj": "export/model_export/prague_china_plates_stand_red_lod2.obj",
+          "vertices": 97,
+          "triangles": 178
+        },
+        "prague_china_plates_stand_yellow": {
+          "xmodel": "export/xmodel/prague_china_plates_stand_yellow.json",
+          "collLod": 2,
+          "obj": "export/model_export/prague_china_plates_stand_yellow_lod2.obj",
+          "vertices": 97,
+          "triangles": 178
+        },
+        "sp_b_p_int_shoe_flat": {
+          "xmodel": "export/xmodel/sp_b_p_int_shoe_flat.json",
+          "collLod": 1,
+          "obj": "export/model_export/sp_b_p_int_shoe_flat_lod1.obj",
+          "vertices": 37,
+          "triangles": 66
+        },
+        "test_p_karma_club_ottoman_square": {
+          "xmodel": "export/xmodel/test_p_karma_club_ottoman_square.json",
+          "collLod": 2,
+          "obj": "export/model_export/test_p_karma_club_ottoman_square_lod2.obj",
+          "vertices": 22,
+          "triangles": 26
+        },
+        "treadmill": {
+          "xmodel": "export/xmodel/treadmill.json",
+          "collLod": 2,
+          "obj": "export/model_export/treadmill_lod2.obj",
+          "vertices": 112,
+          "triangles": 152
+        },
+        "veh_iw_mh6_littlebird_noblurblade": {
+          "xmodel": "export/xmodel/veh_iw_mh6_littlebird_noblurblade.json",
+          "collLod": 3,
+          "obj": "export/model_export/veh_iw_mh6_littlebird_noblurblade_lod3.obj",
+          "vertices": 1178,
+          "triangles": 1819
+        },
+        "veh_iw_zodiac": {
+          "xmodel": "export/xmodel/veh_iw_zodiac.json",
+          "collLod": 2,
+          "obj": "export/model_export/veh_iw_zodiac_lod2.obj",
+          "vertices": 718,
+          "triangles": 1164
+        },
+        "weight_single_large": {
+          "xmodel": "export/xmodel/weight_single_large.json",
+          "collLod": 1,
+          "obj": "export/model_export/weight_single_large_lod1.obj",
+          "vertices": 18,
+          "triangles": 32
+        },
+        "weights_large": {
+          "xmodel": "export/xmodel/weights_large.json",
+          "collLod": 1,
+          "obj": "export/model_export/weights_large_lod1.obj",
+          "vertices": 110,
+          "triangles": 200
+        },
+        "weights_small": {
+          "xmodel": "export/xmodel/weights_small.json",
+          "collLod": 1,
+          "obj": "export/model_export/weights_small_lod1.obj",
+          "vertices": 38,
+          "triangles": 62
+        },
+        "weightstand": {
+          "xmodel": "export/xmodel/weightstand.json",
+          "collLod": 1,
+          "obj": "export/model_export/weightstand_lod1.obj",
+          "vertices": 128,
+          "triangles": 248
+        },
+        "yoga_mat_rolled_blue": {
+          "xmodel": "export/xmodel/yoga_mat_rolled_blue.json",
+          "collLod": 1,
+          "obj": "export/model_export/yoga_mat_rolled_blue_lod1.obj",
+          "vertices": 22,
+          "triangles": 34
+        }
+      }
+    }
+  },
+  "hints": {
+    "entities": 1060,
+    "pathnodes": 402,
+    "negotiationNodes": 24,
+    "negotiationBegins": 12,
+    "offMeshConnections": 12,
+    "spawns": 267,
+    "missingNegotiationEnds": 0
+  },
+  "notes": [
+    "This is a source mesh, not a baked Recast navmesh. Feed it to a Node/Recast baker and serialize the result for runtime use.",
+    "BSP clipmap/physics data is not available in the extracted files; world geometry plus xmodel collLod is therefore an approximation.",
+    "Render-only materials (distant/water/glass/decal/FX/light-like) are excluded using material-name heuristics; inspect the debug navmesh and adjust filters if needed.",
+    "The browser still needs a capsule collision controller; a navmesh only constrains AI/path queries."
+  ]
+}

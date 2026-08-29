@@ -1,0 +1,22 @@
+{
+    "$schema": "http://openassettools.dev/schema/xmodel.v1.json",
+    "_game": "t6",
+    "_type": "xmodel",
+    "_version": 2,
+    "collLod": 0,
+    "flags": 2621440,
+    "lightingOriginOffset": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.5
+    },
+    "lightingOriginRange": 0.5,
+    "lods": [
+        {
+            "distance": 1335.6749267578125,
+            "file": "model_export/t5_veh_rcbomb_gib_tire_lod0.glb"
+        }
+    ],
+    "rootBoneName": "rc_gib_tire",
+    "type": "rigid"
+}

@@ -1,0 +1,21 @@
+{
+    "$schema": "http://openassettools.dev/schema/xmodel.v1.json",
+    "_game": "t6",
+    "_type": "xmodel",
+    "_version": 2,
+    "flags": 6815744,
+    "lightingOriginOffset": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.5
+    },
+    "lightingOriginRange": 0.5,
+    "lods": [
+        {
+            "distance": 200.9600067138672,
+            "file": "model_export/fx_cube_createfx_lod0.glb"
+        }
+    ],
+    "rootBoneName": "fx_cube_1x1x1",
+    "type": "rigid"
+}

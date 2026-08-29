@@ -1,0 +1,31 @@
+{
+    "$schema": "http://openassettools.dev/schema/xmodel.v1.json",
+    "_game": "t6",
+    "_type": "xmodel",
+    "_version": 2,
+    "collLod": 2,
+    "flags": 6291456,
+    "lightingOriginOffset": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.5
+    },
+    "lightingOriginRange": 0.5,
+    "lods": [
+        {
+            "distance": 1350.0,
+            "file": "model_export/p6_fuse_box_lid_a_lod0.glb"
+        },
+        {
+            "distance": 2000.0,
+            "file": "model_export/p6_fuse_box_lid_a_lod1.glb"
+        },
+        {
+            "distance": 2001.0,
+            "file": "model_export/p6_fuse_box_lid_a_lod2.glb"
+        }
+    ],
+    "physPreset": "electical_boxes_lids",
+    "rootBoneName": "p6_fuse_box_lid_a_lod0",
+    "type": "rigid"
+}

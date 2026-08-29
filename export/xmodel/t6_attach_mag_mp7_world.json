@@ -1,0 +1,30 @@
+{
+    "$schema": "http://openassettools.dev/schema/xmodel.v1.json",
+    "_game": "t6",
+    "_type": "xmodel",
+    "_version": 2,
+    "flags": 2097152,
+    "lightingOriginOffset": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.5
+    },
+    "lightingOriginRange": 0.5,
+    "lods": [
+        {
+            "distance": 300.0,
+            "file": "model_export/t6_attach_mag_mp7_world_lod0.glb"
+        },
+        {
+            "distance": 800.0,
+            "file": "model_export/t6_attach_mag_mp7_world_lod1.glb"
+        },
+        {
+            "distance": 2500.0,
+            "file": "model_export/t6_attach_mag_mp7_world_lod2.glb"
+        }
+    ],
+    "physPreset": "default",
+    "rootBoneName": "tag_clip",
+    "type": "rigid"
+}

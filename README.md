@@ -1,25 +1,114 @@
 # Hijacked Web Viewer
 
-Browser-based Three.js viewer for the Hijacked map export.
+A browser-based Three.js viewer for the Black Ops II Hijacked map export, with
+first-person capsule collision and a baked Recast navigation mesh.
 
-## Run the viewer
+## Run it
 
-From the repository root:
+Install the JavaScript dependencies once, then serve the web export from the
+repository root:
 
 ```powershell
+npm install
 python -m http.server 8000 --directory export/web
 ```
 
-Then open <http://localhost:8000>.
+Open <http://localhost:8000>. The viewer must be served over HTTP; opening
+`index.html` directly will not load its modules and binary assets.
 
-## Regenerate the scene
+Controls:
 
-Python 3 is required. The composer uses only the standard library.
+- `WASD`: move; mouse: look
+- `Shift`: sprint; `Space`: jump
+- `C` or `Ctrl`: crouch; `B`: respawn
+- `Left mouse`: fire; `R`: reload
+- `Right mouse`: aim down sights
+- `N`: navmesh overlay; `V`: collision overlay
+- `P`: find and draw a navmesh path to the point under the crosshair
+- `Esc`: release the mouse
+
+## First-person viewmodel
+
+The viewer renders a weapon viewmodel (FBI shortsleeve viewhands holding the
+M27/HK416) in a dedicated depth-cleared pass so it never clips into walls. The
+rigs come from the game export (`export_chars/model_export/`,
+`export_common/model_export/`, see `EXPORTING_ASSETS.md`); the copies served to
+the browser live in `export/web/viewmodel/`. The weapon is mounted by aligning
+its `j_gun` joint to the hands' `tag_weapon` joint, and the whole rig is
+anchored at `tag_view` with the engine view axes (X forward, Z up) mapped to
+the camera. It includes look sway, walk bob, a sprint pose, and hold-right-
+mouse ADS, which rotates the gun square to the view axis and seats the eye
+7 units behind `tag_sights` for a proper iron-sight picture.
+
+The M27 fires automatic camera-centered hitscan rounds against the collision
+scene. Shots use the authored hip/ADS fire animations and include view recoil,
+a `tag_flash` muzzle flash, the extracted M27 player-shot/decay/LFE audio layers,
+tracers, persistent
+impact marks, a 30-round magazine, and reserve-ammo reloads.
+
+Rounds that connect raise a hitmarker on the crosshair: white for a body hit,
+gold for a head hit, and a longer-lived red marker for a kill. Each is paired
+with a short synthesized tick — the extracted banks carry no UI alias — routed
+around the gunfire compressor so the confirmation is not ducked by the shot
+that earned it.
+
+## Enemies
+
+Six PLA assault enemies spawn from the map's authored multiplayer markers and
+move with the baked Detour crowd. They patrol, acquire the player through
+field-of-view and collision-based line-of-sight checks, pursue, fire, remember
+the last seen position, die, and respawn. The browser uses the exported PLA
+body, M27 world model, and converted `pb_*` body animations, with separate
+head, torso, and leg damage zones. The HUD shows player health and the current
+alive enemy count.
+
+Enemy fire is audible and locatable. Every shot lights a pooled additive sprite
+at the shooter's `tag_flash` and plays a panned report through an HRTF
+`PannerNode` whose distances are tuned to Radiant inches, with a distance-driven
+lowpass standing in for air absorption. The export ships only the
+player-perspective M27 alias, so that report is derived from it rather than
+sampled from a true `_npc` variant; extracting those from `mpl_common` would
+replace the filtering with the authored sound. The flashes are deliberately
+unlit sprites — a `PointLight` per shot would recompile every material it
+reached, undoing the load-time shader warm-up.
+
+## Rebuild collision and navigation
+
+Python 3 is required. The scene composer also runs the collision exporter:
 
 ```powershell
 python .tools/compose_scene.py
+npm run bake:navmesh
 ```
 
-This rebuilds `export/web/hijacked.gltf` and `export/web/hijacked.bin` from the
-world geometry under `export/maps/mp` and the OBJ/MTL assets under
-`export/model_export`.
+The first command rebuilds the render scene, the collision-only glTF, and the
+spawn/pathnode navigation hints. The second command turns that collision mesh
+into the serialized Recast navmesh loaded by the browser.
+
+Generated runtime assets are in `export/web`:
+
+- `hijacked.gltf` / `hijacked.bin`: visible map
+- `hijacked_collision.gltf` / `.bin`: physics-only geometry
+- `hijacked_nav_hints.json`: spawns, pathnodes, and traversal links
+- `hijacked.navmesh.bin` / `.json`: baked Recast mesh and build metadata
+
+The collision export combines filtered BSP render surfaces with each placed
+xmodel's authored `collLod`. The extracted game files do not include usable T6
+clipmap/physics brushes, so this is a close geometry-derived approximation
+rather than the original engine collision.
+
+## Tests
+
+Run fast collision and navmesh tests with:
+
+```powershell
+npm run test:unit
+```
+
+With the localhost server running on port 8000, run the Chrome/Edge smoke test:
+
+```powershell
+npm run test:browser
+```
+
+`npm test` runs both sets.

@@ -1,0 +1,33 @@
+{
+  "name": "pluto_t6_full_game",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Browser-based Three.js viewer and navigation tools for the Hijacked map export.",
+  "scripts": {
+    "bake:navmesh": "node .tools/bake_navmesh.mjs",
+    "test": "node --test",
+    "test:unit": "node --test test/player-controller.test.mjs test/player-health.test.mjs test/weapon-controller.test.mjs test/t6-sab-audio.test.mjs test/xanim-to-json.test.mjs tests/navmesh-bake.test.mjs",
+    "test:browser": "node --test test/browser-smoke.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/luckeyfaraday/hijacked-web-viewer.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/luckeyfaraday/hijacked-web-viewer/issues"
+  },
+  "homepage": "https://github.com/luckeyfaraday/hijacked-web-viewer#readme",
+  "dependencies": {
+    "@recast-navigation/core": "0.43.1",
+    "@recast-navigation/generators": "0.43.1",
+    "@recast-navigation/three": "0.43.1",
+    "three": "0.185.1"
+  },
+  "devDependencies": {
+    "playwright-core": "^1.62.1"
+  }
+}

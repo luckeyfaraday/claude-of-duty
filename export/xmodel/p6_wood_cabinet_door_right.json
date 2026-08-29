@@ -1,0 +1,30 @@
+{
+    "$schema": "http://openassettools.dev/schema/xmodel.v1.json",
+    "_game": "t6",
+    "_type": "xmodel",
+    "_version": 2,
+    "collLod": 2,
+    "flags": 2621440,
+    "lightingOriginOffset": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.5
+    },
+    "lightingOriginRange": 0.5,
+    "lods": [
+        {
+            "distance": 1000.0,
+            "file": "model_export/p6_wood_cabinet_door_right_lod0.glb"
+        },
+        {
+            "distance": 2500.0,
+            "file": "model_export/p6_wood_cabinet_door_right_lod1.glb"
+        },
+        {
+            "distance": 4896.57763671875,
+            "file": "model_export/p6_wood_cabinet_door_right_lod2.glb"
+        }
+    ],
+    "rootBoneName": "p6_wood_cabinet_door_right_lod0",
+    "type": "rigid"
+}
