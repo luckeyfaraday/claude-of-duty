@@ -133,6 +133,7 @@ let enemies = null;
 let playerHealth = null;
 let hitmarkerLife = 0;
 let hitmarkerMaxLife = 0.18;
+let automationPaused = false;
 
 const weaponEffects = new WeaponEffects(scene);
 // Reload audio is authored into the clip as notetracks, so the cues play from
@@ -258,6 +259,168 @@ function setDebugVisibility() {
       if (object.isMesh && object.material) object.material.visible = collisionVisible;
     });
   }
+}
+
+const debugRound = (value) => Number.isFinite(value)
+  ? Math.round(value * 1000) / 1000
+  : null;
+const debugVector = (vector) => vector
+  ? [debugRound(vector.x), debugRound(vector.y), debugRound(vector.z)]
+  : null;
+
+function setAutomationActive(active = true) {
+  locked = Boolean(active);
+  automationPaused = false;
+  document.body.classList.toggle('locked', locked);
+  blocker.style.display = locked ? 'none' : 'flex';
+  if (!locked) {
+    clearKeys();
+    weapon.setTrigger(false);
+    viewmodel.setAiming(false);
+  }
+  return locked;
+}
+
+function getDebugState() {
+  const feet = player?.feetPosition ?? null;
+  const forward = camera.getWorldDirection(new THREE.Vector3());
+  const render = renderer.info.render;
+  const size = renderer.getDrawingBufferSize(new THREE.Vector2());
+  return {
+    ready,
+    active: locked,
+    paused: automationPaused,
+    player: player ? {
+      feet: debugVector(feet),
+      eye: debugVector(player.position),
+      velocity: debugVector(player.velocity),
+      forward: debugVector(forward),
+      grounded: player.isGrounded,
+      crouched: player.crouched,
+      enabled: player.enabled,
+      health: debugRound(playerHealth?.health ?? 0),
+      maxHealth: debugRound(playerHealth?.maxHealth ?? 0),
+      dead: Boolean(playerHealth?.dead),
+      protected: (playerHealth?.protectionTimer ?? 0) > 0,
+    } : null,
+    weapon: {
+      magazine: weapon.magazine,
+      magazineSize: weapon.magazineSize,
+      reserveAmmo: weapon.reserveAmmo,
+      reloading: weapon.reloading,
+      triggerHeld: weapon.triggerHeld,
+      fireCount: weapon.fireCount,
+      aiming: viewmodel.aimBlend > 0.5,
+    },
+    enemies: enemies?.enemies.map((enemy) => ({
+      index: enemy.index,
+      position: debugVector(enemy.root.position),
+      health: debugRound(enemy.health),
+      maxHealth: debugRound(enemy.maxHealth),
+      dead: enemy.dead,
+      state: enemy.state,
+      playerVisible: enemy.playerVisible,
+      lineOfFireClear: enemy.lineOfFireClear,
+      reactionSeconds: debugRound(enemy.reactionTimer),
+      burstShotsRemaining: enemy.burstShotsRemaining,
+      burstPauseSeconds: debugRound(enemy.burstPauseTimer),
+      reloadSeconds: debugRound(enemy.reloadTimer),
+      magazine: enemy.magazine,
+      shotsFired: enemy.shotsFired,
+      suppressedSeconds: debugRound(enemy.suppressionTimer),
+      lastSeenSeconds: debugRound(enemy.lastSeenTimer),
+      searchSeconds: debugRound(enemy.searchTimer),
+      combatTarget: debugVector(enemy.combatTarget),
+      searchTarget: debugVector(enemy.searchTarget),
+      distanceToPlayer: player
+        ? debugRound(enemy.root.position.distanceTo(player.position))
+        : null,
+      visualState: enemy.visualState,
+      visualFrame: enemy.visualFrameIndex,
+    })) ?? [],
+    overlays: {
+      navigation: navigationVisible,
+      collision: collisionVisible,
+      pathPoints,
+    },
+    performance: {
+      drawCalls: render.calls,
+      triangles: render.triangles,
+      lines: render.lines,
+      points: render.points,
+      geometries: renderer.info.memory.geometries,
+      textures: renderer.info.memory.textures,
+      drawingBuffer: [size.x, size.y],
+      pixelRatio: debugRound(renderer.getPixelRatio()),
+    },
+    hud: hud.textContent,
+  };
+}
+
+function createDebugApi() {
+  return {
+    getState: getDebugState,
+    setActive: setAutomationActive,
+    pause() {
+      automationPaused = true;
+      clearKeys();
+      weapon.setTrigger(false);
+      return getDebugState();
+    },
+    resume() {
+      automationPaused = false;
+      return getDebugState();
+    },
+    teleportPlayer(position) {
+      if (!player || !Array.isArray(position) || position.length !== 3) return false;
+      const target = new THREE.Vector3(...position.map(Number));
+      if (![target.x, target.y, target.z].every(Number.isFinite)) return false;
+      player.reset(target, { eye: false, resolve: true });
+      return debugVector(player.feetPosition);
+    },
+    lookAt(position) {
+      if (!Array.isArray(position) || position.length !== 3) return false;
+      const target = new THREE.Vector3(...position.map(Number));
+      if (![target.x, target.y, target.z].every(Number.isFinite)) return false;
+      camera.lookAt(target);
+      return debugVector(camera.getWorldDirection(new THREE.Vector3()));
+    },
+    showNavigation(visible = true) {
+      navigationVisible = Boolean(visible);
+      setDebugVisibility();
+      return navigationVisible;
+    },
+    showCollision(visible = true) {
+      collisionVisible = Boolean(visible);
+      setDebugVisibility();
+      return collisionVisible;
+    },
+    damagePlayer(amount) {
+      if (!playerHealth) return 0;
+      playerHealth.protectionTimer = 0;
+      return playerHealth.takeDamage(amount, { type: 'debug' });
+    },
+    respawnPlayer() {
+      playerHealth?.respawn();
+      return getDebugState().player;
+    },
+    respawnEnemies() {
+      enemies?.enemies.forEach((enemy) => enemy.spawnAt(enemy.spawnPoint));
+      return enemies?.aliveCount ?? 0;
+    },
+    teleportEnemy(index, position) {
+      const enemy = enemies?.enemies[Math.trunc(Number(index))];
+      if (!enemy || !Array.isArray(position) || position.length !== 3) return false;
+      const target = new THREE.Vector3(...position.map(Number));
+      if (![target.x, target.y, target.z].every(Number.isFinite)) return false;
+      return enemy.teleport(target) ? debugVector(enemy.root.position) : false;
+    },
+    alertEnemies(radius = 2000) {
+      if (!enemies || !player) return 0;
+      enemies.alert(player.position, Math.max(0, Number(radius) || 0), player.position);
+      return enemies.enemies.filter((enemy) => enemy.engaged).length;
+    },
+  };
 }
 
 document.addEventListener('pointerlockchange', () => {
@@ -478,6 +641,7 @@ async function start() {
     globalThis.hijacked = {
       scene, camera, renderer, player, navigation, collisionRoot, hints, viewmodel,
       weapon, weaponEffects, playerHealth, enemies, reloadWeapon,
+      debug: createDebugApi(),
     };
 
     ready = true;
@@ -499,7 +663,8 @@ async function start() {
 function tick() {
   requestAnimationFrame(tick);
   const dt = Math.min(clock.getDelta(), 0.1);
-  if (player && locked) {
+  const simulationActive = locked && !automationPaused;
+  if (player && simulationActive) {
     player.update(dt, {
       forward: keys.KeyW,
       backward: keys.KeyS,
@@ -509,9 +674,9 @@ function tick() {
       jump: keys.Space,
     });
   }
-  if (locked) navigation?.update(1 / 60, dt, 5);
-  enemies?.update(dt, { active: locked });
-  playerHealth?.update(locked ? dt : 0);
+  if (simulationActive) navigation?.update(1 / 60, dt, 5);
+  enemies?.update(dt, { active: simulationActive });
+  playerHealth?.update(simulationActive ? dt : 0);
   weaponEffects.update(dt);
   // Panned enemy fire is only meaningful while the listener tracks the camera.
   weaponEffects.updateListener(camera);
@@ -529,7 +694,7 @@ function tick() {
       moving,
     });
     if (weapon.reloading && !viewmodel.reloading) weapon.finishReload();
-    weapon.update(dt, { canFire: locked && !sprinting && !playerHealth?.dead });
+    weapon.update(dt, { canFire: simulationActive && !sprinting && !playerHealth?.dead });
 
     hud.textContent =
       `xyz ${p.x.toFixed(1)} ${p.y.toFixed(1)} ${p.z.toFixed(1)}\n` +

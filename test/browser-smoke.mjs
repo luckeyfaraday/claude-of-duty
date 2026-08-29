@@ -136,8 +136,10 @@ test('Hijacked viewer loads collision, navigation, and walking controls', { time
           api.renderer.getContext().drawingBufferHeight,
         combatBalance: {
           damage: api.enemies.enemyDamage,
-          fireInterval: api.enemies.fireInterval,
-          maxAttackers: api.enemies.maxAttackers,
+          shotInterval: api.enemies.enemyShotInterval,
+          burstShots: [api.enemies.burstShotMin, api.enemies.burstShotMax],
+          reaction: [api.enemies.reactionTimeMin, api.enemies.reactionTimeMax],
+          magazine: api.enemies.enemyMagazineSize,
         },
         spawnClasses: api.enemies?.enemies.map((enemy) => enemy.spawnPoint.classname) ?? [],
         spawnMarkerIndices: api.enemies?.enemies.map((enemy) => enemy.spawnPoint.markerIndex) ?? [],
@@ -178,7 +180,13 @@ test('Hijacked viewer loads collision, navigation, and walking controls', { time
     assert.ok(enemySetup.renderPixelRatio <= 1, `render scale should favor responsiveness: ${enemySetup.renderPixelRatio}`);
     assert.ok(enemySetup.renderPixels <= 1600 * 900,
       `drawing buffer should stay within its pixel budget: ${enemySetup.renderPixels}`);
-    assert.deepEqual(enemySetup.combatBalance, { damage: 3, fireInterval: 0.65, maxAttackers: 2 });
+    assert.deepEqual(enemySetup.combatBalance, {
+      damage: 3,
+      shotInterval: 0.16,
+      burstShots: [2, 4],
+      reaction: [0.35, 0.95],
+      magazine: 24,
+    });
     assert.deepEqual(enemySetup.spawnClasses, Array(6).fill('mp_tdm_spawn_team2_start'),
       `enemies should use the authored opposing-team starts: ${enemySetup.spawnClasses}`);
     assert.equal(new Set(enemySetup.spawnMarkerIndices).size, 6, 'each enemy should own a distinct spawn marker');
@@ -200,24 +208,27 @@ test('Hijacked viewer loads collision, navigation, and walking controls', { time
       };
       enemy.state = 'attack';
       enemy.playerVisible = false;
-      enemy.fireTimer = 0;
       enemy.decisionTimer = 10;
+      const shotsBefore = enemy.shotsFired;
       enemy.update(1 / 60, true);
       manager.canSeePlayer = original;
       enemy.state = 'patrol';
       enemy.decisionTimer = 0;
-      return { calls, retryScheduled: enemy.fireTimer > 0 };
+      return { calls, didNotFire: enemy.shotsFired === shotsBefore };
     });
     assert.equal(cachedVisibility.calls, 0, 'attack ticks should use cached visibility instead of raycasting every frame');
-    assert.equal(cachedVisibility.retryScheduled, true, 'blocked attacks should schedule their next fire check');
+    assert.equal(cachedVisibility.didNotFire, true, 'enemies without cached visibility should not fire');
 
-    const firingSlots = await page.evaluate(() => {
+    const uncappedFire = await page.evaluate(() => {
       const manager = globalThis.hijacked.enemies;
+      const originalBlockCheck = manager.hasFriendlyLineBlock;
+      manager.hasFriendlyLineBlock = () => false;
       manager.enemies.forEach((enemy) => {
         enemy.state = 'attack';
         enemy.playerVisible = true;
       });
       const allowed = manager.enemies.filter((enemy) => manager.canEnemyFire(enemy)).length;
+      manager.hasFriendlyLineBlock = originalBlockCheck;
       manager.enemies.forEach((enemy) => {
         enemy.state = 'patrol';
         enemy.playerVisible = false;
@@ -225,7 +236,97 @@ test('Hijacked viewer loads collision, navigation, and walking controls', { time
       });
       return allowed;
     });
-    assert.equal(firingSlots, 2, 'only two enemies should be allowed to fire simultaneously');
+    assert.equal(uncappedFire, 6, 'every enemy with visibility and a clear firing line should be allowed to shoot');
+
+    const friendlyLine = await page.evaluate(() => {
+      const api = globalThis.hijacked;
+      const manager = api.enemies;
+      const [shooter, blocker, ...others] = manager.enemies;
+      const originalPositions = manager.enemies.map((enemy) => enemy.root.position.clone());
+      const feet = api.player.feetPosition;
+      shooter.root.position.set(feet.x - 500, feet.y, feet.z);
+      blocker.root.position.set(feet.x - 250, feet.y, feet.z);
+      others.forEach((enemy, index) => {
+        enemy.root.position.set(feet.x - 450 + index * 20, feet.y, feet.z + 500 + index * 50);
+      });
+      manager.enemies.forEach((enemy) => enemy.root.updateMatrixWorld(true));
+      const blocked = manager.hasFriendlyLineBlock(shooter);
+      blocker.root.position.z += 100;
+      blocker.root.updateMatrixWorld(true);
+      const cleared = !manager.hasFriendlyLineBlock(shooter);
+      manager.enemies.forEach((enemy, index) => {
+        enemy.root.position.copy(originalPositions[index]);
+        enemy.root.updateMatrixWorld(true);
+      });
+      return { blocked, cleared };
+    });
+    assert.deepEqual(friendlyLine, { blocked: true, cleared: true },
+      'an enemy should hold fire only while a teammate physically crosses its shot line');
+
+    const naturalCadence = await page.evaluate(() => {
+      const manager = globalThis.hijacked.enemies;
+      const enemy = manager.enemies[0];
+      const originalCanFire = manager.canEnemyFire;
+      const originalFire = manager.enemyFire;
+      let fired = 0;
+      manager.canEnemyFire = () => true;
+      manager.enemyFire = () => { fired += 1; };
+      enemy.state = 'attack';
+      enemy.playerVisible = true;
+      enemy.reactionTimer = 0.4;
+      enemy.burstPauseTimer = 0;
+      enemy.reloadTimer = 0;
+      enemy.fireTimer = 0;
+      enemy.magazine = 2;
+      enemy.burstShotsRemaining = 2;
+      enemy.updateWeapon(0.2);
+      const waitedForReaction = fired === 0;
+      enemy.updateWeapon(0.2);
+      enemy.fireTimer = 0;
+      enemy.updateWeapon(0);
+      const result = {
+        waitedForReaction,
+        fired,
+        magazine: enemy.magazine,
+        reloading: enemy.reloadTimer > 0,
+      };
+      manager.canEnemyFire = originalCanFire;
+      manager.enemyFire = originalFire;
+      enemy.spawnAt(enemy.spawnPoint);
+      return result;
+    });
+    assert.equal(naturalCadence.waitedForReaction, true, 'newly acquired targets should have a reaction delay');
+    assert.equal(naturalCadence.fired, 2, 'enemies should fire short bursts when their line is clear');
+    assert.equal(naturalCadence.magazine, 0, 'enemy shots should consume their own magazine');
+    assert.equal(naturalCadence.reloading, true, 'an empty enemy magazine should force a reload pause');
+
+    const searchBehavior = await page.evaluate(() => {
+      const manager = globalThis.hijacked.enemies;
+      const enemy = manager.enemies[0];
+      const originalVisibility = manager.canSeePlayer;
+      manager.canSeePlayer = () => false;
+      enemy.engaged = true;
+      enemy.state = 'chase';
+      enemy.lastSeen.copy(globalThis.hijacked.player.position);
+      enemy.lastSeenTimer = 0;
+      enemy.searchTimer = 0;
+      enemy.decide();
+      const searching = {
+        state: enemy.state,
+        timer: enemy.searchTimer,
+        hasTarget: Boolean(enemy.searchTarget),
+      };
+      enemy.searchTimer = 0;
+      enemy.decide();
+      const finishedState = enemy.state;
+      manager.canSeePlayer = originalVisibility;
+      enemy.spawnAt(enemy.spawnPoint);
+      return { searching, finishedState };
+    });
+    assert.equal(searchBehavior.searching.state, 'search', 'an enemy should search after losing its memory target');
+    assert.ok(searchBehavior.searching.timer > 0, 'searching should last for a deliberate time window');
+    assert.equal(searchBehavior.searching.hasTarget, true, 'searchers should investigate a nearby navigation point');
+    assert.equal(searchBehavior.finishedState, 'patrol', 'an exhausted search should return to patrol');
 
     const enemyDamage = await page.evaluate(() => {
       const api = globalThis.hijacked;
@@ -241,6 +342,7 @@ test('Hijacked viewer loads collision, navigation, and walking controls', { time
         before,
         after: enemy.health,
         state: enemy.state,
+        suppressionTimer: enemy.suppressionTimer,
       };
     });
     assert.equal(enemyDamage.region, 'head', 'enemy hitboxes should report which zone was struck');
@@ -249,6 +351,7 @@ test('Hijacked viewer loads collision, navigation, and walking controls', { time
     assert.equal(enemyDamage.missed, null, 'a hit on nothing should report no damage');
     assert.equal(enemyDamage.before - enemyDamage.after, 68, 'head hitbox should double damage');
     assert.equal(enemyDamage.state, 'chase', 'a surviving hit should alert the enemy');
+    assert.ok(enemyDamage.suppressionTimer > 0, 'a hit should temporarily reduce enemy accuracy');
 
     const combatFeedback = await page.evaluate(() => {
       const api = globalThis.hijacked;

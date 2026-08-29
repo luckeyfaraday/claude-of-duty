@@ -57,7 +57,11 @@ that earned it.
 Six PLA assault enemies spawn from the map's authored multiplayer markers and
 move with the baked Detour crowd. They patrol, acquire the player through
 field-of-view and collision-based line-of-sight checks, pursue, fire, remember
-the last seen position, die, and respawn. The browser uses the exported PLA
+the last seen position, search nearby navigation points after losing contact,
+die, and respawn. Every enemy with visibility and a teammate-safe firing line
+can shoot; individual reaction delays, bursts, reloads, movement-sensitive
+accuracy, suppression, and tactical repositioning keep the fight readable
+without an artificial attacker cap. The browser uses the exported PLA
 body, M27 world model, and converted `pb_*` body animations, with separate
 head, torso, and leg damage zones. The HUD shows player health and the current
 alive enemy count.
@@ -112,3 +116,36 @@ npm run test:browser
 ```
 
 `npm test` runs both sets.
+
+## AI visual testing
+
+The repository includes a Playwright harness that gives coding agents both a
+rendered view of the game and a JSON snapshot of its internal state. It starts
+its own local server and headless Chrome/Edge, so no manual setup is required:
+
+```powershell
+npm run ai:state
+npm run ai:screenshot
+npm run ai:test
+npm run ai:enemy
+npm run ai:record -- 10
+```
+
+Outputs are written to `artifacts/ai-game/`:
+
+- `before.png` and `screenshot.png`: visual before/after evidence
+- `before-state.json` and `state.json`: player, weapon, enemy, overlay, and
+  renderer state
+- `console.log`: browser console, page, and network failures
+- `trace.zip`: a Playwright trace with screenshots and DOM snapshots
+- `recording.webm`: video produced by `ai:record`
+- `report.json`: machine-readable checks and pass/fail status
+
+Set `AI_GAME_HEADED=1` to watch the controlled browser. `BROWSER_TEST_URL` can
+point the harness at an existing server, and `BROWSER_PATH` can select a custom
+Chrome/Edge executable.
+
+At runtime, `globalThis.hijacked.debug` provides a stable automation surface:
+`getState`, `setActive`, `pause`, `resume`, `teleportPlayer`, `lookAt`, overlay
+toggles, damage/respawn controls, and enemy reset. Keep this surface stable when
+changing runtime internals because tests and coding agents depend on it.

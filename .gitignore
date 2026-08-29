@@ -1,5 +1,6 @@
 *
 !/.gitignore
+!/AGENTS.md
 !/README.md
 !/package.json
 !/package-lock.json
@@ -13,6 +14,7 @@
 !/.tools/bake_navmesh.mjs
 !/.tools/xanim_to_json.mjs
 !/.tools/extract_t6_sab_audio.mjs
+!/.tools/ai-game.mjs
 !/export/
 !/export/web/
 !/export/web/**
