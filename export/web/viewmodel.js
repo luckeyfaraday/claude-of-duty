@@ -21,6 +21,20 @@ const CAMO_MATERIAL_PATTERN = /_camo\d*$/i;
 // sight base. See computeAdsAlignment().
 const SIGHT_INSERT_PATTERN = /tritium/i;
 
+// The rear sight carries no tag and no material of its own, so it is measured
+// off the posed geometry instead: the top of the rear sight, which is the point
+// a shooter levels the front post against. Taking the floor of the notch instead
+// buries the post behind the sight body — the post tip is authored level with
+// that floor, so it grazes it and nothing stands up in the opening. Levelling on
+// the top instead drops the rear sight just below centre and frames the front
+// sight above it, which is the picture the game itself shows.
+// Thresholds are in rig units, about one per inch on the shipped weapons.
+const REAR_SIGHT_MIN_RADIUS = 2;
+const REAR_SIGHT_PLANE_BAND = 0.35;
+// Wide enough to span the rear sight's shoulders, which stand 0.2 either side of
+// the centreline on this rig, and still far short of anything else in the band.
+const REAR_SIGHT_HALF_WIDTH = 0.5;
+
 function findNode(root, name) {
   let found = null;
   root.traverse((object) => {
@@ -49,10 +63,20 @@ function applyCustomCamo(root, texture) {
 }
 
 export class Viewmodel {
-  constructor({ fov = 75, adsFov = 55, adsDistance = 7 } = {}) {
+  // adsEyeRelief is the gap the aiming eye keeps behind the *rear* sight, which
+  // is what decides whether the rear sight is in front of the camera at all.
+  // adsDistance only applies to rigs with no rear sight to find, where it keeps
+  // its old meaning: the distance from the eye to tag_sights.
+  constructor({
+    fov = 75,
+    adsFov = 55,
+    adsDistance = 7,
+    adsEyeRelief = 3.5,
+  } = {}) {
     this.baseFov = fov;
     this.adsFov = adsFov;
     this.adsDistance = adsDistance;
+    this.adsEyeRelief = adsEyeRelief;
 
     this.camera = new THREE.PerspectiveCamera(fov, 1, 0.5, 500);
     this.scene = new THREE.Scene();
@@ -112,6 +136,7 @@ export class Viewmodel {
     this.fireAction = null;
     this.adsFireAction = null;
     this.reloading = false;
+    this.weaponRoot = null;
   }
 
   async load(handsUrl, weaponUrl, magazineUrl, onProgress) {
@@ -158,6 +183,7 @@ export class Viewmodel {
     weapon.scene.matrixAutoUpdate = false;
     weapon.scene.matrix.copy(jGun.matrixWorld).invert();
     tagWeapon.add(weapon.scene);
+    this.weaponRoot = weapon.scene;
 
     // Anchor tag_view at the camera origin so the authored hip pose shows.
     this.root.updateMatrixWorld(true);
@@ -206,47 +232,104 @@ export class Viewmodel {
     this.tagFlash.add(this.muzzleFlash, this.muzzleLight);
   }
 
-  // ADS: rotate the rig so the gun points straight down the view axis
-  // (squaring up the sight picture) and put tag_sights on that axis.
+  // ADS: line the eye, the rear sight and the front post up on one axis. The
+  // sight picture is a two-point problem — squaring the barrel to the view and
+  // centring the front post alone leaves the rear sight wherever it happens to
+  // fall. Worse, the eye used to be anchored on tag_sights, which this rig
+  // authors on the *front* sight base, putting the camera between the two
+  // sights: the rear sight sat about 4 units behind the camera and was never
+  // drawn, so only the front post was ever visible down the sight.
   computeAdsAlignment() {
     const jGun = findNode(this.root, 'j_gun');
     const tagSights = findNode(this.root, 'tag_sights');
     if (!tagSights || !jGun) return;
-    const sight = tagSights.getWorldPosition(new THREE.Vector3());
     const gunQuat = jGun.getWorldQuaternion(new THREE.Quaternion());
-    const gunFwd = new THREE.Vector3(1, 0, 0).applyQuaternion(gunQuat).normalize();
     const gunUp = new THREE.Vector3(0, 0, 1).applyQuaternion(gunQuat).normalize();
 
-    // The gun's own back/up/right axes, orthonormalized. makeBasis puts them in
-    // the columns, which reads camera coordinates back into the rig; the rig is
-    // what has to move, so transpose it into the rig-to-camera direction. (The
-    // shipped HK416 holds its idle pose exactly square to the view, making this
-    // matrix identity for that rig, but a pose with any tilt needs the rotation
-    // taken out rather than applied twice over.)
-    const zAxis = gunFwd.clone().negate();
+    const front = this.findSightTip(jGun);
+    const rear = front && this.findRearSight(jGun, front);
+
+    // With both sights the sight line itself is the aim axis and the rear sight
+    // anchors the eye relief. With only one there is no line to solve, so the
+    // barrel stands in for it and tag_sights anchors the eye, as before.
+    const anchor = rear ?? tagSights.getWorldPosition(new THREE.Vector3());
+    const relief = rear ? this.adsEyeRelief : this.adsDistance;
+    const back = rear
+      ? rear.clone().sub(front).normalize()
+      : new THREE.Vector3(-1, 0, 0).applyQuaternion(gunQuat).normalize();
+
+    // Back/up/right, orthonormalized. makeBasis puts them in the columns, which
+    // reads camera coordinates back into the rig; the rig is what has to move,
+    // so transpose it into the rig-to-camera direction.
+    const zAxis = back;
     const yAxis = gunUp.clone().addScaledVector(zAxis, -gunUp.dot(zAxis)).normalize();
     const xAxis = new THREE.Vector3().crossVectors(yAxis, zAxis).normalize();
-    const gunToCamera = new THREE.Matrix4().makeBasis(xAxis, yAxis, zAxis).transpose();
+    const sightToCamera = new THREE.Matrix4().makeBasis(xAxis, yAxis, zAxis).transpose();
 
     this.adsMatrix
-      .multiplyMatrices(new THREE.Matrix4().makeTranslation(0, 0, -this.adsDistance), gunToCamera)
-      .multiply(new THREE.Matrix4().makeTranslation(-sight.x, -sight.y, -sight.z));
+      .multiplyMatrices(new THREE.Matrix4().makeTranslation(0, 0, -relief), sightToCamera)
+      .multiply(new THREE.Matrix4().makeTranslation(-anchor.x, -anchor.y, -anchor.z));
 
-    // tag_sights is authored on the sight base, about 0.4 units below the front
-    // post tip the eye actually aligns with, so centring the tag alone floats
-    // the whole sight picture ~35px above the ray the shot follows (see
-    // WeaponEffects.fire, which casts through the exact screen centre). Slide
-    // the rig perpendicular to the view axis until the post tip lands on it;
-    // the depth term is left alone so the tag still sets the eye relief.
-    const tip = this.findSightTip(jGun)?.applyMatrix4(this.adsMatrix);
-    if (tip) this.adsMatrix.premultiply(new THREE.Matrix4().makeTranslation(-tip.x, -tip.y, 0));
+    // On the fallback path tag_sights is authored on the sight base, about 0.4
+    // units below the front post tip the eye actually aligns with, so centring
+    // the tag alone floats the sight picture above the ray the shot follows
+    // (see WeaponEffects.fire, which casts through the exact screen centre).
+    // Slide the rig perpendicular to the view axis until the post tip lands on
+    // it; the depth term is left alone so the tag still sets the eye relief.
+    // With a rear sight the two-point solve already puts both points on the
+    // axis, so there is nothing left to correct.
+    if (front && !rear) {
+      const tip = front.clone().applyMatrix4(this.adsMatrix);
+      this.adsMatrix.premultiply(new THREE.Matrix4().makeTranslation(-tip.x, -tip.y, 0));
+    }
     this.adsMatrix.decompose(this.adsPos, this.adsQuat, this.adsScale);
   }
 
+  // The top of the rear sight in world space. Precision matters here: the solve
+  // above runs its axis through whatever point this returns, so an error of e
+  // leaves the rear sight sitting e/adsEyeRelief off the front post on screen —
+  // a hundredth of a unit is worth a couple of pixels.
+  findRearSight(jGun, frontTip) {
+    const toGun = new THREE.Matrix4().copy(jGun.matrixWorld).invert();
+    const front = frontTip.clone().applyMatrix4(toGun);
+    const vertex = new THREE.Vector3();
+    let best = null;
+
+    // Only the weapon: the hands wrap the grip and handguard and could stray
+    // into the search band, and there is no material to tell them apart here.
+    (this.weaponRoot ?? this.root).traverse((object) => {
+      if (!object.isMesh) return;
+      const toGunLocal = new THREE.Matrix4().multiplyMatrices(toGun, object.matrixWorld);
+      const position = object.geometry.getAttribute('position');
+      const index = object.geometry.getIndex();
+      const count = index ? index.count : position.count;
+      for (let i = 0; i < count; i += 1) {
+        const vertexIndex = index ? index.getX(i) : i;
+        vertex.fromBufferAttribute(position, vertexIndex);
+        if (object.isSkinnedMesh) object.applyBoneTransform(vertexIndex, vertex);
+        vertex.applyMatrix4(toGunLocal);
+        // j_gun holds the engine's joint axes: X down the barrel, Y left, Z up.
+        if (vertex.x > front.x - REAR_SIGHT_MIN_RADIUS) continue;
+        if (Math.abs(vertex.y - front.y) > REAR_SIGHT_HALF_WIDTH) continue;
+        if (Math.abs(vertex.z - front.z) > REAR_SIGHT_PLANE_BAND) continue;
+        if (!best || vertex.z > best.z) best = vertex.clone();
+      }
+    });
+    if (!best) return null;
+    // The winning vertex is one of the two shoulders, so its own lateral offset
+    // is meaningless — the sight is symmetric about the weapon's centreline and
+    // that is where the eye looks. Keeping the shoulder's 0.2 offset would swing
+    // the sight picture sideways by 0.2/adsEyeRelief, most of a degree.
+    best.y = front.y;
+    return jGun.localToWorld(best);
+  }
+
   // Top-centre of the front post's tritium insert in world space, read off the
-  // posed geometry. On this rig it lands within 0.04 units of the centre of the
-  // front hood ring, which is the sight picture the player reads. Rigs that
-  // ship no such element fall back to tag_sights alone.
+  // posed geometry — the far half of the sight picture, and the point the shot
+  // ray is made to pass through. It is authored level with the floor of the rear
+  // notch, which is why the notch floor is the one point that must *not* be used
+  // to aim: see findRearSight. Rigs that ship no such element fall back to
+  // tag_sights alone.
   findSightTip(jGun) {
     const box = new THREE.Box3();
     const vertex = new THREE.Vector3();
