@@ -11,7 +11,8 @@ export class WeaponController {
 
     this.magazineSize = Math.floor(magazineSize);
     this.magazine = this.magazineSize;
-    this.reserveAmmo = Math.max(0, Math.floor(reserveAmmo));
+    this.startingReserveAmmo = Math.max(0, Math.floor(reserveAmmo));
+    this.reserveAmmo = this.startingReserveAmmo;
     this.shotInterval = 60 / roundsPerMinute;
     this.onFire = onFire;
     this.onEmpty = onEmpty;
@@ -22,6 +23,17 @@ export class WeaponController {
     this.fireCount = 0;
     this.emptyNotified = false;
     this.immediateShot = false;
+  }
+
+  resetLoadout({ reserveAmmo = this.startingReserveAmmo } = {}) {
+    this.magazine = this.magazineSize;
+    this.reserveAmmo = Math.max(0, Math.floor(Number(reserveAmmo) || 0));
+    this.triggerHeld = false;
+    this.reloading = false;
+    this.cooldown = 0;
+    this.emptyNotified = false;
+    this.immediateShot = false;
+    return { magazine: this.magazine, reserveAmmo: this.reserveAmmo };
   }
 
   get canReload() {

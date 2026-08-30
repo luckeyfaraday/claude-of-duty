@@ -31,6 +31,7 @@ Usage:
   npm run ai:game -- screenshot
   npm run ai:game -- test
   npm run ai:game -- enemy-test
+  npm run ai:game -- life-test
   npm run ai:game -- record [seconds]
 
 Environment:
@@ -103,7 +104,7 @@ async function run() {
     process.stdout.write(usage());
     return;
   }
-  if (!['state', 'screenshot', 'test', 'enemy-test', 'record'].includes(command)) {
+  if (!['state', 'screenshot', 'test', 'enemy-test', 'life-test', 'record'].includes(command)) {
     throw new Error(`Unknown command: ${command}\n\n${usage()}`);
   }
 
@@ -233,6 +234,25 @@ async function run() {
       await page.waitForTimeout(4500);
       await page.evaluate(() => globalThis.hijacked.debug.pause());
       inputProbe = { staged };
+    } else if (command === 'life-test') {
+      inputProbe = await page.evaluate(() => {
+        const before = globalThis.hijacked.debug.getState();
+        globalThis.hijacked.debug.setWeaponAmmo(3, 4);
+        globalThis.hijacked.debug.resume();
+        globalThis.hijacked.debug.damagePlayer(1000);
+        return { before };
+      });
+      await page.waitForTimeout(250);
+      inputProbe.dead = await page.evaluate(() => globalThis.hijacked.debug.getState());
+      await page.screenshot({ path: path.join(artifactRoot, 'death.png') });
+      // Headless SwiftShader can deliver far fewer animation frames than wall
+      // time while screenshots are being encoded, so wait on game state.
+      await page.waitForFunction(
+        () => globalThis.hijacked.debug.getState().player.dead === false,
+        null,
+        { timeout: 20_000 },
+      );
+      await page.evaluate(() => globalThis.hijacked.debug.pause());
     } else if (command === 'record') {
       await page.evaluate(() => globalThis.hijacked.debug.resume());
       await page.keyboard.down('w');
@@ -264,6 +284,13 @@ async function run() {
       squadUsesMultipleTargets: new Set(state.enemies
         .map((enemy) => JSON.stringify(enemy.combatTarget))
         .filter((target) => target !== 'null')).size > 1,
+      noBrowserErrors: errors.length === 0,
+    } : command === 'life-test' ? {
+      deathStateVisible: inputProbe.dead.player.dead === true && inputProbe.dead.player.respawnSeconds > 0,
+      deathRecorded: state.match.standings.find((entry) => entry.id === 'player')?.deaths === 1,
+      playerRespawned: state.player.dead === false && state.player.health === state.player.maxHealth,
+      loadoutRestored: state.weapon.magazine === state.weapon.magazineSize && state.weapon.reserveAmmo === 240,
+      safeSpawnChanged: distance(inputProbe.before.player.feet, state.player.feet) > 100,
       noBrowserErrors: errors.length === 0,
     } : {
       ready: state.ready === true,

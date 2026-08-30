@@ -175,13 +175,58 @@
     .fe-backdrop, .fe-fog, .fe-prompt { animation: none; }
     .fe-bar { transition: none; }
   }
+  /* Kept as the automation-visible text snapshot (getState().hud) but hidden;
+     the visible HUD below is drawn with the game's own art. */
   #hud {
     position: fixed; top: 12px; left: 12px; z-index: 2; min-width: 260px;
     padding: 9px 11px; border: 1px solid rgba(127, 255, 196, .26);
     border-radius: 5px; background: rgba(0, 8, 10, .64); color: #9fffc4;
     font: 12px/1.45 ui-monospace, SFMono-Regular, Consolas, monospace;
-    white-space: pre; pointer-events: none;
+    white-space: pre; pointer-events: none; display: none;
   }
+  /* ---------- HUD (original art, rebuilt layout) ---------- */
+  #hud-minimap {
+    position: fixed; top: 14px; left: 14px; z-index: 2; width: 176px; height: 176px;
+    overflow: hidden; background: #000 url('ui/hud/mp_minimap_overlay.png') center/cover no-repeat;
+    opacity: 0; transition: opacity .2s ease-out; pointer-events: none;
+  }
+  .hud-minimap-rot { position: absolute; inset: 0; }
+  .hud-minimap-map { position: absolute; background-repeat: no-repeat; }
+  .hud-minimap-arrow {
+    position: absolute; left: 50%; top: 50%; width: 32px; height: 32px; margin: -16px;
+    background-size: contain; background-repeat: no-repeat; background-position: center;
+    filter: drop-shadow(0 0 2px rgba(0, 0, 0, .8));
+  }
+  .hud-minimap-ping {
+    position: absolute; width: 16px; height: 16px;
+    background: url('ui/hud/compassping_enemyfiring.png') center/contain no-repeat;
+  }
+  #hud-compass {
+    position: fixed; top: 196px; left: 14px; z-index: 2; width: 264px; height: 40px;
+    overflow: hidden; opacity: 0; transition: opacity .2s ease-out; pointer-events: none;
+  }
+  .hud-compass-tape {
+    position: absolute; left: 0; top: 0; height: 100%;
+    overflow: hidden; background-repeat: no-repeat;
+  }
+  #hud-ammo {
+    position: fixed; right: 22px; bottom: 18px; z-index: 2; display: flex;
+    flex-direction: column; align-items: flex-end; gap: 2px; opacity: 0;
+    transition: opacity .2s ease-out; pointer-events: none;
+    filter: drop-shadow(0 1px 3px rgba(0, 0, 0, .9));
+  }
+  #hud-weapon-name {
+    color: #e8f4ee; font: 600 13px/1 var(--fe-ui); font-stretch: condensed;
+    letter-spacing: .22em; text-transform: uppercase; min-height: 13px;
+  }
+  #hud-ammo-row { display: flex; align-items: flex-end; }
+  .hud-digit {
+    width: 24px; height: 48px; background-size: contain;
+    background-repeat: no-repeat; background-position: center bottom;
+  }
+  .hud-digit-reserve { width: 17px; height: 34px; }
+  .hud-digit-divider { margin: 0 3px; }
+  body.locked #hud-minimap, body.locked #hud-compass, body.locked #hud-ammo { opacity: 1; }
   #crosshair {
     position: fixed; left: 50%; top: 50%; z-index: 2; width: 5px; height: 5px;
     margin: -2px; border-radius: 50%; background: rgba(255,255,255,.9);
@@ -199,8 +244,44 @@
   #hitmarker[data-kind="kill"] line { stroke: #ff4a3d; }
   #damage {
     position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: 0;
-    background: radial-gradient(circle, transparent 35%, rgba(145, 0, 0, .82) 100%);
+    background: url('ui/hud/overlay_low_health.png') center/cover no-repeat;
   }
+  #match-status {
+    position: fixed; z-index: 2; top: 18px; left: 50%; transform: translateX(-50%);
+    min-width: 210px; padding: 7px 16px; text-align: center; opacity: 0;
+    color: #eef8ff; background: rgba(3, 10, 14, .68); border-bottom: 2px solid var(--fe-accent);
+    font: 600 14px/1.25 var(--fe-ui); letter-spacing: .12em; pointer-events: none;
+  }
+  #match-status small { color: rgba(220, 235, 245, .72); letter-spacing: .18em; }
+  #killfeed {
+    position: fixed; z-index: 2; top: 20px; right: 18px; width: 300px;
+    display: flex; flex-direction: column; align-items: flex-end; gap: 4px;
+    color: #edf6ff; font: 600 12px/1.3 var(--fe-ui); pointer-events: none;
+    text-shadow: 0 1px 4px #000;
+  }
+  .killfeed-entry { padding: 3px 7px; background: rgba(2, 8, 12, .58); }
+  .killfeed-entry .killer { color: var(--fe-accent); }
+  #death-card {
+    position: fixed; z-index: 4; left: 50%; bottom: 14%; transform: translateX(-50%);
+    min-width: 330px; padding: 14px 24px; display: none; text-align: center;
+    color: #f3f8fc; background: rgba(3, 8, 12, .84); border-top: 2px solid #ff5b4d;
+    font: 600 15px/1.5 var(--fe-ui); letter-spacing: .12em; pointer-events: none;
+  }
+  #death-card strong { display: block; color: #ff8b80; font-size: 19px; text-transform: uppercase; }
+  #scoreboard {
+    position: fixed; z-index: 5; inset: 0; display: none; align-items: center; justify-content: center;
+    background: rgba(1, 5, 8, .78); color: #edf7ff; font-family: var(--fe-ui);
+  }
+  #scoreboard.visible { display: flex; }
+  .scoreboard-panel { width: min(650px, 90vw); padding: 24px; background: rgba(7, 17, 24, .96); border-top: 3px solid var(--fe-accent); }
+  .scoreboard-panel h2 { margin: 0 0 4px; letter-spacing: .25em; text-transform: uppercase; }
+  .scoreboard-panel p { margin: 0 0 18px; color: rgba(220, 235, 245, .7); }
+  .scoreboard-row { display: grid; grid-template-columns: 44px 1fr 70px 70px; gap: 12px; padding: 7px 10px; border-top: 1px solid rgba(160, 200, 220, .16); }
+  .scoreboard-row.player { color: var(--fe-accent); background: rgba(127, 255, 196, .08); }
+  .scoreboard-row.head { color: rgba(220, 235, 245, .58); font-size: 11px; letter-spacing: .15em; text-transform: uppercase; }
+  #match-result { color: var(--fe-accent); font-size: 18px; }
+  body.locked #match-status { opacity: 1; }
+  body.locked.player-dead #crosshair, body.locked.player-dead #hud-ammo { opacity: 0; transition: none; }
 </style>
 <script type="importmap">
 { "imports": {
@@ -251,6 +332,23 @@
   </div>
 </div>
 <div id="hud">loading…</div>
+<div id="hud-minimap"></div>
+<div id="hud-compass"></div>
+<div id="hud-ammo">
+  <div id="hud-weapon-name"></div>
+  <div id="hud-ammo-row"></div>
+</div>
+<div id="match-status"></div>
+<div id="killfeed"></div>
+<div id="death-card"><strong id="death-killer"></strong><span id="respawn-copy"></span></div>
+<div id="scoreboard">
+  <div class="scoreboard-panel">
+    <h2>Free for all</h2>
+    <p id="match-result"></p>
+    <div class="scoreboard-row head"><span>#</span><span>Player</span><span>Kills</span><span>Deaths</span></div>
+    <div id="scoreboard-rows"></div>
+  </div>
+</div>
 <div id="crosshair"></div>
 <svg id="hitmarker" viewBox="0 0 26 26" data-kind="torso" aria-hidden="true">
   <line x1="3" y1="3" x2="9" y2="9"></line>
@@ -271,6 +369,8 @@ import { WeaponController } from './weapon-controller.js';
 import { WeaponEffects } from './weapon-effects.js';
 import { EnemyManager } from './enemy-system.js';
 import { PlayerHealth } from './player-health.js';
+import { FreeForAllMatch } from './free-for-all-match.js';
+import { Hud } from './hud.js';
 import { Frontend } from './frontend.js';
 import { loadCollisionWorld } from './collision-world.js';
 import { optimizeStaticScene } from './scene-optimizer.js';
@@ -483,6 +583,22 @@ const hud = document.getElementById('hud');
 const damageOverlay = document.getElementById('damage');
 const crosshair = document.getElementById('crosshair');
 const hitmarker = document.getElementById('hitmarker');
+const matchStatus = document.getElementById('match-status');
+const killfeed = document.getElementById('killfeed');
+const deathCard = document.getElementById('death-card');
+const deathKiller = document.getElementById('death-killer');
+const respawnCopy = document.getElementById('respawn-copy');
+const scoreboard = document.getElementById('scoreboard');
+const scoreboardRows = document.getElementById('scoreboard-rows');
+const matchResult = document.getElementById('match-result');
+const hudArt = new Hud({
+  minimap: document.getElementById('hud-minimap'),
+  compass: document.getElementById('hud-compass'),
+  ammoRow: document.getElementById('hud-ammo-row'),
+  weaponName: document.getElementById('hud-weapon-name'),
+  damage: damageOverlay,
+});
+const lastEnemyShots = new Map();
 const keys = Object.create(null);
 const clock = new THREE.Clock();
 const bootStartedAt = performance.now();
@@ -513,8 +629,13 @@ let frameWorkSampleCount = 0;
 let frameWorkSampleIndex = 0;
 let frameWorkWarmupUntil = Number.POSITIVE_INFINITY;
 let hudElapsed = 1;
-let lastDamageOpacity = '';
 let lastAdsState = false;
+let deathSource = null;
+let scoreboardHeld = false;
+let matchEndedHandled = false;
+
+const match = new FreeForAllMatch({ scoreLimit: 30, timeLimitSeconds: 300 });
+match.register('player', 'YOU', { human: true });
 
 const weaponEffects = new WeaponEffects(scene);
 // Reload audio is authored into the clip as notetracks, so the cues play from
@@ -524,7 +645,7 @@ viewmodel.onNotetrack = (cue) => {
 };
 const weapon = new WeaponController({
   magazineSize: 30,
-  reserveAmmo: 120,
+  reserveAmmo: 240,
   roundsPerMinute: 750,
   onFire: () => fireShot(),
   onEmpty: () => reloadWeapon(),
@@ -540,6 +661,71 @@ scene.add(pathLine);
 
 function progress(name, event) {
   frontend.progress(name, event);
+}
+
+function combatantId(actor) {
+  if (!actor) return null;
+  return actor === player ? 'player' : Number.isInteger(actor.index) ? `bot-${actor.index}` : null;
+}
+
+function resetPlayerLife() {
+  const spawn = enemies?.safeSpawnFor(player);
+  if (spawn) {
+    player.setSpawn(spawn.position, { eye: false });
+    camera.quaternion.setFromEuler(new THREE.Euler(0, spawn.yaw, 0, 'YXZ'));
+  }
+  player.respawn();
+  player.setEnabled(true);
+  weapon.resetLoadout();
+  viewmodel.scene.visible = true;
+  viewmodel.setAiming(false);
+  deathSource = null;
+  document.body.classList.remove('player-dead');
+  deathCard.style.display = 'none';
+}
+
+function restartMatch() {
+  match.reset();
+  matchEndedHandled = false;
+  scoreboardHeld = false;
+  scoreboard.classList.remove('visible');
+  enemies?.enemies.forEach((enemy) => enemy.spawnAt(enemies.respawnFor(enemy)));
+  playerHealth?.respawn();
+  renderMatchUi();
+}
+
+function renderMatchUi() {
+  const state = match.getState();
+  const playerEntry = state.standings.find((entry) => entry.id === 'player');
+  const minutes = Math.floor(state.remainingSeconds / 60);
+  const seconds = String(state.remainingSeconds % 60).padStart(2, '0');
+  matchStatus.innerHTML = `${playerEntry?.kills ?? 0} / ${state.scoreLimit} &nbsp; <small>${minutes}:${seconds} · #${playerEntry?.place ?? 1}</small>`;
+
+  killfeed.replaceChildren(...state.feed.map((event) => {
+    const row = document.createElement('div');
+    row.className = 'killfeed-entry';
+    const killer = document.createElement('span');
+    killer.className = 'killer';
+    killer.textContent = event.killer;
+    row.append(killer, document.createTextNode(`  ›  ${event.victim}`));
+    return row;
+  }));
+
+  scoreboardRows.replaceChildren(...state.standings.map((entry) => {
+    const row = document.createElement('div');
+    row.className = `scoreboard-row${entry.human ? ' player' : ''}`;
+    for (const value of [entry.place, entry.name, entry.kills, entry.deaths]) {
+      const cell = document.createElement('span');
+      cell.textContent = value;
+      row.appendChild(cell);
+    }
+    return row;
+  }));
+  const winner = state.standings.find((entry) => entry.id === state.winnerId);
+  matchResult.textContent = state.phase === 'ended'
+    ? `${winner?.id === 'player' ? 'VICTORY' : `${winner?.name ?? 'Unknown'} wins`} · press Enter to play again`
+    : `First to ${state.scoreLimit} kills · hold Tab for scores`;
+  scoreboard.classList.toggle('visible', scoreboardHeld || state.phase === 'ended');
 }
 
 // Pause-menu buttons drive the same state the keyboard shortcuts do, so the
@@ -628,6 +814,7 @@ function showHitmarker(kind) {
 
 function fireShot() {
   if (!viewmodel.fire()) return;
+  if (playerHealth?.protectionTimer > 0) playerHealth.protectionTimer = 0;
   const hit = weaponEffects.fire(camera, collisionRoot, viewmodel.muzzlePosition(), {
     targets: enemies?.hitTargets ?? [],
   });
@@ -721,6 +908,7 @@ function getDebugState() {
       health: debugRound(playerHealth?.health ?? 0),
       maxHealth: debugRound(playerHealth?.maxHealth ?? 0),
       dead: Boolean(playerHealth?.dead),
+      respawnSeconds: debugRound(playerHealth?.respawnTimer ?? 0),
       protected: (playerHealth?.protectionTimer ?? 0) > 0,
     } : null,
     weapon: {
@@ -752,6 +940,7 @@ function getDebugState() {
       lastSeenSeconds: debugRound(enemy.lastSeenTimer),
       searchSeconds: debugRound(enemy.searchTimer),
       combatTarget: debugVector(enemy.combatTarget),
+      targetId: enemies?.targetId(enemy.currentTarget) ?? null,
       searchTarget: debugVector(enemy.searchTarget),
       distanceToPlayer: player
         ? debugRound(enemy.root.position.distanceTo(player.position))
@@ -788,6 +977,7 @@ function getDebugState() {
       scene: mapOptimization,
     },
     menu: frontend.getState(),
+    match: match.getState(),
     hud: hud.textContent,
   };
 }
@@ -840,6 +1030,11 @@ function createDebugApi() {
       playerHealth.protectionTimer = 0;
       return playerHealth.takeDamage(amount, { type: 'debug' });
     },
+    setWeaponAmmo(magazine, reserveAmmo) {
+      weapon.magazine = THREE.MathUtils.clamp(Math.trunc(Number(magazine) || 0), 0, weapon.magazineSize);
+      weapon.reserveAmmo = Math.max(0, Math.trunc(Number(reserveAmmo) || 0));
+      return { magazine: weapon.magazine, reserveAmmo: weapon.reserveAmmo };
+    },
     respawnPlayer() {
       playerHealth?.respawn();
       return getDebugState().player;
@@ -847,6 +1042,10 @@ function createDebugApi() {
     respawnEnemies() {
       enemies?.enemies.forEach((enemy) => enemy.spawnAt(enemy.spawnPoint));
       return enemies?.aliveCount ?? 0;
+    },
+    restartMatch() {
+      restartMatch();
+      return match.getState();
     },
     teleportEnemy(index, position) {
       const enemy = enemies?.enemies[Math.trunc(Number(index))];
@@ -900,10 +1099,14 @@ document.addEventListener('contextmenu', (event) => {
 
 document.addEventListener('keydown', (event) => {
   keys[event.code] = true;
-  if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.code)) {
+  if (['Space', 'Tab', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.code)) {
     event.preventDefault();
   }
   if (event.repeat || !ready) return;
+  if (event.code === 'Enter' && match.phase === 'ended') {
+    restartMatch();
+    return;
+  }
   // Any key but Esc starts or resumes from the shell — Esc is what released
   // the pointer lock to get here, and the browser owns it for a moment after.
   if (frontend.visible) {
@@ -924,8 +1127,18 @@ document.addEventListener('keydown', (event) => {
     setDebugVisibility();
   }
   if (event.code === 'KeyP') showPathToCrosshair();
+  if (event.code === 'Tab') {
+    scoreboardHeld = true;
+    renderMatchUi();
+  }
 });
-document.addEventListener('keyup', (event) => { keys[event.code] = false; });
+document.addEventListener('keyup', (event) => {
+  keys[event.code] = false;
+  if (event.code === 'Tab') {
+    scoreboardHeld = false;
+    renderMatchUi();
+  }
+});
 
 async function start() {
   try {
@@ -998,14 +1211,17 @@ async function start() {
       spawnProtection: 3,
       regenDelay: 4,
       regenPerSecond: 25,
-      onDeath: () => {
+      onDeath: ({ source }) => {
+        deathSource = source;
+        match.recordKill(combatantId(source), 'player');
         player.setEnabled(false);
         weapon.setTrigger(false);
         viewmodel.setAiming(false);
+        viewmodel.scene.visible = false;
+        document.body.classList.add('player-dead');
       },
       onRespawn: () => {
-        player.respawn();
-        player.setEnabled(true);
+        resetPlayerLife();
       },
     });
 
@@ -1024,11 +1240,20 @@ async function start() {
           weaponEffects,
           hints,
           count: 6,
+          onDeath: (victim, source) => {
+            match.recordKill(combatantId(source), `bot-${victim.index}`);
+          },
         })).load({ onProgress: (label, event) => progress(label, event) })
       : Promise.resolve()
     ).finally(() => frontend.stage('enemy'));
 
     await Promise.all([viewmodelPromise, weaponEffects.loadAudio(), enemyPromise, environmentReady]);
+
+    const botNames = ['ADMIRAL', 'CORSAIR', 'DEADEYE', 'MARINER', 'ROGUE', 'VIPER'];
+    for (const enemy of enemies?.enemies ?? []) {
+      match.register(`bot-${enemy.index}`, botNames[enemy.index] ?? `BOT ${enemy.index + 1}`);
+    }
+    renderMatchUi();
 
     // Give each enemy its own probe term before the warm-up below, so the
     // patched materials are compiled behind the loading blocker rather than
@@ -1115,7 +1340,7 @@ function tick() {
   requestAnimationFrame(tick);
   const frameWorkStartedAt = performance.now();
   const dt = Math.min(clock.getDelta(), 0.1);
-  const simulationActive = locked && !automationPaused;
+  const simulationActive = locked && !automationPaused && match.phase === 'playing';
   if (player && simulationActive) {
     player.update(dt, {
       forward: keys.KeyW,
@@ -1129,6 +1354,7 @@ function tick() {
   if (simulationActive) navigation?.update(1 / 60, dt, 5);
   enemies?.update(dt, { active: simulationActive });
   playerHealth?.update(simulationActive ? dt : 0);
+  if (simulationActive) match.update(dt);
   weaponEffects.update(dt);
   // Panned enemy fire is only meaningful while the listener tracks the camera.
   if (simulationActive) weaponEffects.updateListener(camera);
@@ -1148,6 +1374,46 @@ function tick() {
     if (weapon.reloading && !viewmodel.reloading) weapon.finishReload();
     weapon.update(dt, { canFire: simulationActive && !sprinting && !playerHealth?.dead });
 
+    if (playerHealth?.dead) {
+      const sourcePosition = Number.isInteger(deathSource?.index) && !deathSource.dead
+        ? enemies?.targetPosition(deathSource)
+        : null;
+      if (sourcePosition) camera.lookAt(sourcePosition);
+      const sourceEntry = match.getState().standings.find((entry) => entry.id === combatantId(deathSource));
+      deathKiller.textContent = sourceEntry ? `Killed by ${sourceEntry.name}` : 'Killed in action';
+      respawnCopy.textContent = `Respawning in ${Math.max(0, playerHealth.respawnTimer).toFixed(1)} seconds`;
+      deathCard.style.display = 'block';
+    }
+
+    // A minimap ping lights when an enemy's shot counter ticks; carrying the
+    // last seen count keeps respawn resets from flashing a stale ping.
+    for (const enemy of enemies?.enemies ?? []) {
+      const seen = lastEnemyShots.get(enemy.index) ?? 0;
+      if (enemy.shotsFired > seen) hudArt.markEnemyFire(enemy.index);
+      lastEnemyShots.set(enemy.index, enemy.shotsFired);
+    }
+
+    yawPitch.setFromQuaternion(camera.quaternion);
+    hudArt.update({
+      x: p.x,
+      z: p.z,
+      yaw: yawPitch.y,
+      enemies: enemies?.enemies.map((enemy) => ({
+        index: enemy.index,
+        x: enemy.root.position.x,
+        z: enemy.root.position.z,
+        dead: enemy.dead,
+      })) ?? [],
+      weapon: {
+        magazine: weapon.magazine,
+        reserveAmmo: weapon.reserveAmmo,
+        ready: viewmodel.ready,
+      },
+      health: playerHealth?.health ?? 100,
+      hitFlash: playerHealth?.hitFlash ?? 0,
+      dead: Boolean(playerHealth?.dead),
+    });
+
     hudElapsed += dt;
     if (hudElapsed >= 0.1) {
       hudElapsed = 0;
@@ -1162,12 +1428,15 @@ function tick() {
         `nav ${navigation ? (navigationVisible ? 'shown' : 'ready') : 'unavailable'}  ` +
         `collision ${collisionVisible ? 'shown' : 'ready'}  path ${pathPoints}`;
       if (hud.textContent !== nextHud) hud.textContent = nextHud;
+      renderMatchUi();
     }
   }
-  const damageOpacity = String((playerHealth?.hitFlash ?? 0) * 0.55);
-  if (damageOpacity !== lastDamageOpacity) {
-    damageOverlay.style.opacity = damageOpacity;
-    lastDamageOpacity = damageOpacity;
+  if (match.phase === 'ended' && !matchEndedHandled) {
+    matchEndedHandled = true;
+    player?.setEnabled(false);
+    weapon.setTrigger(false);
+    viewmodel.setAiming(false);
+    renderMatchUi();
   }
   const adsState = viewmodel.aimBlend > 0.5;
   if (adsState !== lastAdsState) {

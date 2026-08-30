@@ -95,6 +95,7 @@ test('Hijacked viewer loads collision, navigation, and walking controls', { time
 
     const enemySetup = await page.evaluate(() => {
       const api = globalThis.hijacked;
+      const respawnSamples = api.enemies?.enemies.map((enemy) => api.enemies.respawnFor(enemy)) ?? [];
       return {
         count: api.enemies?.enemies.length ?? 0,
         alive: api.enemies?.aliveCount ?? 0,
@@ -190,8 +191,8 @@ test('Hijacked viewer loads collision, navigation, and walking controls', { time
             enemy.spawnPoint.authoredPosition.x - api.player.feetPosition.x,
             enemy.spawnPoint.authoredPosition.z - api.player.feetPosition.z,
           )) ?? [],
-        respawnAssignmentErrors: api.enemies?.enemies.map((enemy) =>
-          api.enemies.respawnFor(enemy).position.distanceTo(enemy.spawnPoint.position)) ?? [],
+        respawnClasses: respawnSamples.map((spawn) => spawn.classname),
+        respawnNavProjected: respawnSamples.map((spawn) => api.navigation.projectPoint(spawn.position).success),
         navProjected: api.enemies?.enemies.every((enemy) =>
           api.navigation.projectPoint(enemy.root.position).success) ?? false,
       };
@@ -225,22 +226,23 @@ test('Hijacked viewer loads collision, navigation, and walking controls', { time
     assert.ok(enemySetup.renderPixels <= 1600 * 900,
       `drawing buffer should stay within its pixel budget: ${enemySetup.renderPixels}`);
     assert.deepEqual(enemySetup.combatBalance, {
-      damage: 3,
+      damage: 24,
       shotInterval: 0.16,
       burstShots: [2, 4],
       reaction: [0.35, 0.95],
       aimConvergeTime: 2,
       magazine: 24,
     });
-    assert.deepEqual(enemySetup.spawnClasses, Array(6).fill('mp_tdm_spawn_team2_start'),
-      `enemies should use the authored opposing-team starts: ${enemySetup.spawnClasses}`);
+    assert.deepEqual(enemySetup.spawnClasses, Array(6).fill('mp_dm_spawn'),
+      `enemies should use authored free-for-all starts: ${enemySetup.spawnClasses}`);
     assert.equal(new Set(enemySetup.spawnMarkerIndices).size, 6, 'each enemy should own a distinct spawn marker');
     assert.ok(enemySetup.spawnAssignmentErrors.every((error) => error < 0.01),
       `enemies should begin on their assigned spawn markers: ${enemySetup.spawnAssignmentErrors}`);
-    assert.ok(enemySetup.spawnDistancesFromPlayer.every((distance) => distance > 4000),
-      `enemy starts should be at the opposing end of the map: ${enemySetup.spawnDistancesFromPlayer}`);
-    assert.ok(enemySetup.respawnAssignmentErrors.every((error) => error < 0.01),
-      `enemies should respawn at their own markers: ${enemySetup.respawnAssignmentErrors}`);
+    assert.ok(enemySetup.spawnDistancesFromPlayer.every((distance) => distance > 1000),
+      `initial FFA starts should leave the player breathing room: ${enemySetup.spawnDistancesFromPlayer}`);
+    assert.deepEqual(enemySetup.respawnClasses, Array(6).fill('mp_dm_spawn'),
+      `enemy respawns should remain on authored FFA markers: ${enemySetup.respawnClasses}`);
+    assert.ok(enemySetup.respawnNavProjected.every(Boolean), 'enemy respawns should remain on the navmesh');
 
     const cachedVisibility = await page.evaluate(() => {
       const manager = globalThis.hijacked.enemies;
@@ -317,6 +319,7 @@ test('Hijacked viewer loads collision, navigation, and walking controls', { time
       manager.canEnemyFire = () => true;
       manager.enemyFire = () => { fired += 1; };
       enemy.state = 'attack';
+      enemy.currentTarget = manager.player;
       enemy.playerVisible = true;
       enemy.reactionTimer = 0.4;
       enemy.burstPauseTimer = 0;
@@ -414,6 +417,39 @@ test('Hijacked viewer loads collision, navigation, and walking controls', { time
     assert.equal(enemyDamage.before - enemyDamage.after, 68, 'head hitbox should double damage');
     assert.equal(enemyDamage.state, 'chase', 'a surviving hit should alert the enemy');
     assert.ok(enemyDamage.suppressionTimer > 0, 'a hit should temporarily reduce enemy accuracy');
+
+    const ffaCombat = await page.evaluate(() => {
+      const api = globalThis.hijacked;
+      const [shooter, victim] = api.enemies.enemies;
+      const feet = api.player.feetPosition;
+      shooter.root.position.set(feet.x - 900, feet.y, feet.z + 400);
+      victim.root.position.set(feet.x - 760, feet.y, feet.z + 400);
+      shooter.root.updateMatrixWorld(true);
+      victim.root.updateMatrixWorld(true);
+      shooter.currentTarget = victim;
+      shooter.playerVisible = true;
+      const random = Math.random;
+      Math.random = () => 0.5;
+      let shot = null;
+      let shots = 0;
+      while (!victim.dead && shots < 30) {
+        shot = api.enemies.enemyFire(shooter);
+        shots += 1;
+      }
+      Math.random = random;
+      const match = api.debug.getState().match;
+      const shooterScore = match.standings.find((entry) => entry.id === `bot-${shooter.index}`);
+      const victimScore = match.standings.find((entry) => entry.id === `bot-${victim.index}`);
+      api.debug.restartMatch();
+      return {
+        hitActor: shot.hitActor,
+        shots,
+        shooterKills: shooterScore.kills,
+        victimDeaths: victimScore.deaths,
+      };
+    });
+    assert.deepEqual(ffaCombat, { hitActor: 'bot-1', shots: 5, shooterKills: 1, victimDeaths: 1 },
+      'bots should damage, kill, and score against other bots in free-for-all');
 
     const combatFeedback = await page.evaluate(() => {
       const api = globalThis.hijacked;

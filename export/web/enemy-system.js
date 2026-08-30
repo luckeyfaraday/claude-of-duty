@@ -377,6 +377,7 @@ class Enemy {
     this.searchTimer = 0;
     this.searchStep = 0;
     this.engaged = false;
+    this.currentTarget = null;
     this.walkTime = Math.random() * Math.PI * 2;
     this.deathBlend = 0;
     this.playerVisible = false;
@@ -491,6 +492,7 @@ class Enemy {
     this.searchTimer = 0;
     this.searchStep = 0;
     this.engaged = false;
+    this.currentTarget = null;
     this.decisionTimer = Math.random() * 0.25;
     this.fireTimer = 0;
     this.reactionTimer = 0;
@@ -532,26 +534,26 @@ class Enemy {
     this.currentAction = { _clip: { name: state } };
   }
 
-  takeDamage(amount, hit = null) {
+  takeDamage(amount, hit = null, source = null) {
     if (this.dead) return 0;
     const damage = Math.max(0, Number(amount) || 0);
     const applied = Math.min(this.health, damage);
     this.health -= applied;
-    this.lastSeen.copy(this.manager.player.position);
+    this.currentTarget = source && source !== this ? source : this.manager.player;
+    this.lastSeen.copy(this.manager.targetPosition(this.currentTarget));
     this.lastSeenTimer = 6;
     this.engaged = true;
     this.searchTimer = 0;
     this.suppressionTimer = Math.max(this.suppressionTimer, 1.25);
     this.reactionTimer = Math.min(this.reactionTimer, 0.12);
-    if (this.health <= 0) this.die();
+    if (this.health <= 0) this.die(this.currentTarget);
     else {
       this.state = 'chase';
-      this.manager.alert(this.root.position, 800, this.manager.player.position);
     }
     return applied;
   }
 
-  die() {
+  die(source = null) {
     if (this.dead) return;
     this.dead = true;
     this.state = 'dead';
@@ -563,6 +565,7 @@ class Enemy {
       this.agent = null;
     }
     this.playAction('death', 0.08);
+    this.manager.onDeath?.(this, source);
   }
 
   eyePosition(target = new THREE.Vector3()) {
@@ -592,24 +595,14 @@ class Enemy {
   }
 
   decide() {
-    const playerHealth = this.manager.playerHealth;
-    if (playerHealth?.dead) {
-      this.playerVisible = false;
-      this.engaged = false;
-      this.searchTimer = 0;
-      this.lineOfFireClear = false;
-      this.state = 'patrol';
-      if (!this.patrolTarget) this.choosePatrolTarget();
-      return;
-    }
-
-    const playerPosition = this.manager.player.position;
-    const distance = this.root.position.distanceTo(playerPosition);
+    if (this.manager.targetDead(this.currentTarget)) this.currentTarget = null;
     const alreadyAlerted = this.engaged || this.lastSeenTimer > 0 ||
       ['chase', 'attack', 'reposition', 'search'].includes(this.state);
     const wasVisible = this.playerVisible;
-    const visible = distance <= this.manager.visionRange &&
-      this.manager.canSeePlayer(this, alreadyAlerted ? -0.2 : this.manager.visionCosine);
+    const acquired = this.manager.selectTarget(this, alreadyAlerted ? -0.2 : this.manager.visionCosine);
+    if (acquired) this.currentTarget = acquired;
+    const visible = Boolean(this.currentTarget &&
+      this.manager.canSeeTarget(this, this.currentTarget, alreadyAlerted ? -0.2 : this.manager.visionCosine));
     this.playerVisible = visible;
 
     if (visible) {
@@ -621,7 +614,10 @@ class Enemy {
         this.reactionTimer = this.manager.reactionTimeMin + Math.random() *
           (this.manager.reactionTimeMax - this.manager.reactionTimeMin);
       }
-      this.lastSeen.copy(playerPosition);
+      const targetPosition = this.manager.targetPosition(this.currentTarget);
+      const targetFeet = this.manager.targetFeet(this.currentTarget);
+      const distance = this.root.position.distanceTo(targetPosition);
+      this.lastSeen.copy(targetPosition);
       this.lastSeenTimer = this.manager.memoryTime;
       this.engaged = true;
       this.searchTimer = 0;
@@ -647,7 +643,7 @@ class Enemy {
       } else {
         this.state = 'chase';
         this.combatTarget = null;
-        const projected = this.manager.navigation.projectPoint(this.manager.player.feetPosition);
+        const projected = this.manager.navigation.projectPoint(targetFeet);
         if (projected.success && projected.point) this.agent?.requestMoveTarget(projected.point);
       }
       return;
@@ -679,6 +675,7 @@ class Enemy {
     }
 
     this.engaged = false;
+    this.currentTarget = null;
     this.searchTarget = null;
     this.state = 'patrol';
     if (!this.patrolTarget || planarDistance(this.root.position, this.patrolTarget) < 50) {
@@ -700,7 +697,7 @@ class Enemy {
     if (wasReloading && this.reloadTimer === 0) this.magazine = this.manager.enemyMagazineSize;
 
     const combatState = this.state === 'attack' || this.state === 'reposition';
-    if (!combatState || !this.playerVisible || this.manager.playerHealth?.dead ||
+    if (!combatState || !this.playerVisible || this.manager.targetDead(this.currentTarget) ||
         this.reactionTimer > 0 || this.reloadTimer > 0 || this.burstPauseTimer > 0) return;
 
     if (this.magazine <= 0) {
@@ -783,7 +780,7 @@ class Enemy {
     const combatFacing = this.playerVisible &&
       (this.state === 'attack' || this.state === 'reposition');
     if (combatFacing) {
-      _direction.subVectors(this.manager.player.position, this.root.position).setY(0);
+      _direction.subVectors(this.manager.targetPosition(this.currentTarget), this.root.position).setY(0);
       if (_direction.lengthSq() > 1) {
         const targetYaw = Math.atan2(-_direction.x, -_direction.z);
         this.root.rotation.y = dampAngle(this.root.rotation.y, targetYaw, 10, dt);
@@ -819,6 +816,7 @@ export class EnemyManager {
     playerHealth,
     weaponEffects,
     hints,
+    onDeath = null,
     count = 6,
     enemyHealth = 100,
     moveSpeed = 230,
@@ -826,7 +824,7 @@ export class EnemyManager {
     attackRange = 850,
     fieldOfView = 125,
     memoryTime = 5,
-    enemyDamage = 3,
+    enemyDamage = 24,
     enemyShotInterval = 0.16,
     burstShotMin = 2,
     burstShotMax = 4,
@@ -847,7 +845,7 @@ export class EnemyManager {
       throw new Error('EnemyManager requires scene, crowd navigation, collision, and player');
     }
     Object.assign(this, {
-      scene, navigation, collisionWorld, player, playerHealth, weaponEffects, hints,
+      scene, navigation, collisionWorld, player, playerHealth, weaponEffects, hints, onDeath,
       count, enemyHealth, moveSpeed, visionRange, attackRange, memoryTime,
       enemyDamage, enemyShotInterval, burstShotMin, burstShotMax,
       burstPauseMin, burstPauseMax, enemyMagazineSize, enemyReloadTime,
@@ -874,6 +872,7 @@ export class EnemyManager {
     this.bakedWeaponMeshCount = 0;
     this.spawnCandidates = [];
     this.patrolPoints = [];
+    this.recentSpawnMarkers = [];
   }
 
   async load({
@@ -937,7 +936,7 @@ export class EnemyManager {
     this.bakedWeaponMeshCount = bakeSkinnedMeshes(this.weaponTemplate);
     collapseBakedBody(this.weaponTemplate, this.weaponAtlas);
     this.prepareNavigationPoints();
-    const spawns = this.spawnCandidates.slice(0, Math.min(this.count, this.spawnCandidates.length));
+    const spawns = this.pickInitialSpawns();
     for (let i = 0; i < spawns.length; i += 1) this.enemies.push(new Enemy(this, spawns[i], i));
     return this;
   }
@@ -946,8 +945,9 @@ export class EnemyManager {
     const playerFeet = this.player.feetPosition;
     const authoredSpawns = this.hints?.spawns ?? [];
     const spawnClassPriority = [
-      // The player starts at the team-one/bow end of Hijacked. These are the
-      // six original opposing-team locations at the stern end of the map.
+      // Free-for-all markers cover the whole yacht and prevent the old
+      // six-versus-one opening cluster at the opposite end of the map.
+      'mp_dm_spawn',
       'mp_tdm_spawn_team2_start',
       'mp_tdm_spawn_allies_start',
       'mp_tdm_spawn',
@@ -973,11 +973,7 @@ export class EnemyManager {
         })
         .filter(Boolean);
       if (projected.length < this.count) continue;
-      // Team-specific starts retain their authored slot order. Generic
-      // fallback spawns choose the farthest markers, never the closest ones.
-      if (classname === 'mp_tdm_spawn' || classname === 'mp_dm_spawn') {
-        projected.sort((a, b) => b.distance - a.distance);
-      }
+      if (classname === 'mp_tdm_spawn') projected.sort((a, b) => b.distance - a.distance);
       this.spawnCandidates = projected;
       break;
     }
@@ -1005,7 +1001,7 @@ export class EnemyManager {
     const data = hit?.object?.userData?.enemyHit;
     if (!data?.enemy || data.enemy.dead) return null;
     const multiplier = data.multiplier ?? 1;
-    const damage = data.enemy.takeDamage(baseDamage * multiplier, hit);
+    const damage = data.enemy.takeDamage(baseDamage * multiplier, hit, this.player);
     return {
       enemy: data.enemy,
       region: data.region ?? 'torso',
@@ -1016,8 +1012,69 @@ export class EnemyManager {
   }
 
   canSeePlayer(enemy, minimumDot = this.visionCosine) {
+    return this.canSeeTarget(enemy, this.player, minimumDot);
+  }
+
+  pickInitialSpawns() {
+    const remaining = [...this.spawnCandidates];
+    const selected = [];
+    while (remaining.length && selected.length < this.count) {
+      let bestIndex = 0;
+      let bestScore = -Infinity;
+      for (let i = 0; i < remaining.length; i += 1) {
+        const candidate = remaining[i];
+        const distances = [planarDistance(candidate.position, this.player.feetPosition)];
+        for (const chosen of selected) distances.push(planarDistance(candidate.position, chosen.position));
+        const score = Math.min(...distances);
+        if (score > bestScore) {
+          bestScore = score;
+          bestIndex = i;
+        }
+      }
+      selected.push(remaining.splice(bestIndex, 1)[0]);
+    }
+    return selected;
+  }
+
+  targetDead(target) {
+    if (!target) return true;
+    return target === this.player ? Boolean(this.playerHealth?.dead) : Boolean(target.dead);
+  }
+
+  targetId(target) {
+    if (!target) return null;
+    return target === this.player ? 'player' : `bot-${target.index}`;
+  }
+
+  targetPosition(target, result = new THREE.Vector3()) {
+    if (!target || target === this.player) return result.copy(this.player.position);
+    return result.copy(target.root.position).addScaledVector(UP, 42);
+  }
+
+  targetFeet(target, result = new THREE.Vector3()) {
+    if (!target || target === this.player) return result.copy(this.player.feetPosition);
+    return result.copy(target.root.position);
+  }
+
+  selectTarget(enemy, minimumDot = this.visionCosine) {
+    let best = null;
+    let bestDistance = Infinity;
+    const candidates = [this.player, ...this.enemies];
+    for (const candidate of candidates) {
+      if (candidate === enemy || this.targetDead(candidate)) continue;
+      const distance = enemy.root.position.distanceTo(this.targetPosition(candidate, _target));
+      if (distance > this.visionRange || distance >= bestDistance) continue;
+      if (!this.canSeeTarget(enemy, candidate, minimumDot)) continue;
+      best = candidate;
+      bestDistance = distance;
+    }
+    return best;
+  }
+
+  canSeeTarget(enemy, target, minimumDot = this.visionCosine) {
+    if (!target || this.targetDead(target)) return false;
     enemy.eyePosition(_origin);
-    _target.copy(this.player.position);
+    this.targetPosition(target, _target);
     _direction.subVectors(_target, _origin);
     const distance = _direction.length();
     if (distance <= 0.001) return true;
@@ -1031,12 +1088,15 @@ export class EnemyManager {
 
   enemyFire(enemy) {
     enemy.muzzlePosition(_origin);
-    const feet = this.player.feetPosition;
-    _target.set(feet.x, feet.y + 42, feet.z);
+    const intended = enemy.currentTarget ?? this.player;
+    const feet = this.targetFeet(intended, new THREE.Vector3());
+    this.targetPosition(intended, _target);
     const distance = _origin.distanceTo(_target);
-    const playerSpeed = Math.hypot(this.player.velocity.x, this.player.velocity.z);
+    const targetSpeed = intended === this.player
+      ? Math.hypot(this.player.velocity.x, this.player.velocity.z)
+      : intended.movementSpeed;
     const spread = enemyShotSpread(distance, {
-      playerSpeed,
+      playerSpeed: targetSpeed,
       shooterSpeed: enemy.movementSpeed,
       suppressed: enemy.suppressionTimer > 0,
       aimConvergence: enemy.aimConvergence,
@@ -1049,21 +1109,35 @@ export class EnemyManager {
     this.raycaster.set(_origin, _direction);
     this.raycaster.near = 1;
     this.raycaster.far = this.attackRange + 200;
-    _sphere.center.set(feet.x, feet.y + 39, feet.z);
-    _sphere.radius = 19;
-    const playerHit = this.raycaster.ray.intersectSphere(_sphere, _point);
+    let hitActor = null;
+    let actorHit = null;
+    let actorDistance = Infinity;
+    for (const candidate of [this.player, ...this.enemies]) {
+      if (candidate === enemy || this.targetDead(candidate)) continue;
+      this.targetFeet(candidate, _friendCenter);
+      _sphere.center.set(_friendCenter.x, _friendCenter.y + 39, _friendCenter.z);
+      _sphere.radius = 19;
+      const point = this.raycaster.ray.intersectSphere(_sphere, new THREE.Vector3());
+      const along = point ? point.distanceTo(_origin) : Infinity;
+      if (along <= this.raycaster.far && along < actorDistance) {
+        actorDistance = along;
+        actorHit = point;
+        hitActor = candidate;
+      }
+    }
     // Visibility was already established by the enemy's cached decision.
     // A second full collision-tree raycast for every bullet was the largest
     // recurring main-thread stall in close combat.
-    const hitPlayer = Boolean(playerHit);
-    const end = hitPlayer
-      ? playerHit.clone()
+    const hitPlayer = hitActor === this.player;
+    const end = actorHit
+      ? actorHit.clone()
       : _origin.clone().addScaledVector(_direction, this.raycaster.far);
     this.weaponEffects?.addTracer(_origin.clone(), end);
     this.weaponEffects?.addMuzzleFlash(_origin, _direction);
     this.weaponEffects?.playEnemyShot(_origin, enemy.index);
     if (hitPlayer) this.playerHealth?.takeDamage(this.enemyDamage, enemy);
-    return { hitPlayer, spread };
+    else if (hitActor) hitActor.takeDamage(this.enemyDamage, null, enemy);
+    return { hitPlayer, hitActor: this.targetId(hitActor), spread };
   }
 
   canEnemyFire(candidate) {
@@ -1074,17 +1148,17 @@ export class EnemyManager {
 
   hasFriendlyLineBlock(candidate) {
     candidate.muzzlePosition(_origin);
-    const feet = this.player.feetPosition;
-    _target.set(feet.x, feet.y + 42, feet.z);
+    const intended = candidate.currentTarget ?? this.player;
+    this.targetPosition(intended, _target);
     _direction.subVectors(_target, _origin);
     const distance = _direction.length();
     if (distance <= 1) return false;
     _direction.multiplyScalar(1 / distance);
     this.raycaster.ray.set(_origin, _direction);
     const radiusSquared = this.friendlyFireRadius * this.friendlyFireRadius;
-    for (const teammate of this.enemies) {
-      if (teammate === candidate || teammate.dead) continue;
-      _friendCenter.copy(teammate.root.position).addScaledVector(UP, 42);
+    for (const teammate of [this.player, ...this.enemies]) {
+      if (teammate === candidate || teammate === intended || this.targetDead(teammate)) continue;
+      this.targetPosition(teammate, _friendCenter);
       this.raycaster.ray.closestPointToPoint(_friendCenter, _friendClosest);
       const along = _friendClosest.distanceTo(_origin);
       if (along > 8 && along < distance - 24 &&
@@ -1100,7 +1174,7 @@ export class EnemyManager {
   }
 
   findEngagementPoint(enemy) {
-    const feet = this.player.feetPosition;
+    const feet = this.targetFeet(enemy.currentTarget ?? this.player, new THREE.Vector3());
     _direction.subVectors(enemy.root.position, feet).setY(0);
     if (_direction.lengthSq() < 1) {
       const angle = (enemy.index / Math.max(1, this.enemies.length)) * Math.PI * 2;
@@ -1144,6 +1218,7 @@ export class EnemyManager {
     for (const enemy of this.enemies) {
       if (enemy.dead || enemy.root.position.distanceToSquared(origin) > radius * radius) continue;
       enemy.lastSeen.copy(lastSeen);
+      enemy.currentTarget = this.player;
       enemy.lastSeenTimer = Math.max(enemy.lastSeenTimer, 3.5);
       enemy.engaged = true;
       enemy.searchTimer = 0;
@@ -1152,16 +1227,54 @@ export class EnemyManager {
   }
 
   respawnFor(enemy) {
-    if (!enemy.spawnPoint) return { position: enemy.root.position.clone(), yaw: enemy.root.rotation.y };
-    return {
+    return this.safeSpawnFor(enemy) ?? {
       ...enemy.spawnPoint,
       position: enemy.spawnPoint.position.clone(),
       authoredPosition: enemy.spawnPoint.authoredPosition.clone(),
     };
   }
 
-  update(deltaSeconds) {
-    for (const enemy of this.enemies) enemy.update(deltaSeconds, true);
+  safeSpawnFor(actor = null) {
+    let best = null;
+    let bestScore = -Infinity;
+    for (const candidate of this.spawnCandidates) {
+      let nearest = Infinity;
+      let visibleThreats = 0;
+      for (const other of [this.player, ...this.enemies]) {
+        if (other === actor || this.targetDead(other)) continue;
+        const otherPosition = this.targetPosition(other, _target);
+        const distance = candidate.position.distanceTo(otherPosition);
+        nearest = Math.min(nearest, distance);
+        _origin.copy(candidate.position).addScaledVector(UP, 42);
+        _direction.subVectors(otherPosition, _origin);
+        const rayDistance = _direction.length();
+        if (rayDistance > 1) {
+          _direction.multiplyScalar(1 / rayDistance);
+          this.raycaster.ray.set(_origin, _direction);
+          const wall = this.collisionWorld.raycastFirst(this.raycaster.ray, 2, rayDistance);
+          if (!wall || wall.distance >= rayDistance - 4) visibleThreats += 1;
+        }
+      }
+      const recentlyUsed = this.recentSpawnMarkers.indexOf(candidate.markerIndex);
+      const recentPenalty = recentlyUsed < 0 ? 0 : (this.recentSpawnMarkers.length - recentlyUsed) * 240;
+      const score = Math.min(nearest, 2200) - visibleThreats * 1300 - recentPenalty;
+      if (score > bestScore) {
+        bestScore = score;
+        best = candidate;
+      }
+    }
+    if (!best) return null;
+    this.recentSpawnMarkers.push(best.markerIndex);
+    if (this.recentSpawnMarkers.length > 8) this.recentSpawnMarkers.shift();
+    return {
+      ...best,
+      position: best.position.clone(),
+      authoredPosition: best.authoredPosition.clone(),
+    };
+  }
+
+  update(deltaSeconds, { active = true } = {}) {
+    for (const enemy of this.enemies) enemy.update(deltaSeconds, Boolean(active));
   }
 
   dispose() {

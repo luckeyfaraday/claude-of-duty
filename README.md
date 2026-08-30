@@ -23,6 +23,7 @@ Controls:
 - `C` or `Ctrl`: crouch; `B`: respawn
 - `Left mouse`: fire; `R`: reload
 - `Right mouse`: aim down sights
+- `Tab`: hold the free-for-all scoreboard
 - `N`: navmesh overlay; `V`: collision overlay
 - `P`: find and draw a navmesh path to the point under the crosshair
 - `Esc`: pause and release the mouse
@@ -59,6 +60,20 @@ python .tools/export_ui.py
 It dumps `ui_mp.ff` and converts the dozen images the menu uses into
 `export/web/ui/` (~1.4 MB), leaving the other 513 in the zone.
 
+The original in-game HUD art is exported the same way into
+`export/web/ui/hud/`:
+
+```powershell
+python .tools/export_hud.py
+```
+
+It dumps `common_mp.ff` and `mp_hijacked.ff` and converts everything matching
+the HUD filters — compass ring, pings, and the `compass_map_mp_hijacked` radar
+map, waypoints, killstreak and killfeed icons, fire-mode selectors, grenade
+icons, damage feedback, and the low-health overlays (~2 MB). The HUD's layout
+menudefs do not dump for T6, so the browser would rebuild placement itself and
+draw with this art.
+
 ## First-person viewmodel
 
 The viewer renders a weapon viewmodel (FBI shortsleeve viewhands holding the
@@ -76,7 +91,8 @@ The M27 fires automatic camera-centered hitscan rounds against the collision
 scene. Shots use the authored hip/ADS fire animations and include view recoil,
 a `tag_flash` muzzle flash, the extracted M27 player-shot/decay/LFE audio layers,
 tracers, persistent
-impact marks, a 30-round magazine, and reserve-ammo reloads.
+impact marks, a 30-round magazine, and eight reserve magazines. Every respawn
+restores the full `30/240` life loadout.
 
 Rounds that connect raise a hitmarker on the crosshair: white for a body hit,
 gold for a head hit, and a longer-lived red marker for a kill. Each is paired
@@ -84,19 +100,33 @@ with a short synthesized tick — the extracted banks carry no UI alias — rout
 around the gunfire compressor so the confirmation is not ducked by the shot
 that earned it.
 
-## Enemies
+## Free for all
 
-Six PLA assault enemies spawn from the map's authored multiplayer markers and
+The browser runs a seven-combatant free-for-all: the player and six named PLA
+bots, first to 30 kills or the leader after five minutes. The match HUD shows
+score, time, placement, and a kill feed; holding `Tab` opens the full standings.
+Death keeps the fight visible behind a killer/respawn card, then selects a safe
+authored `mp_dm_spawn`, restores the loadout, and grants brief spawn protection.
+
+Six PLA assault enemies spawn across the map's authored FFA markers and
 move with the baked Detour crowd. They patrol, acquire the player through
 field-of-view and collision-based line-of-sight checks, pursue, fire, remember
 the last seen position, search nearby navigation points after losing contact,
-die, and respawn. Every enemy with visibility and a teammate-safe firing line
-can shoot; individual reaction delays, bursts, reloads, movement-sensitive
+die, and respawn. Bots use the same perception and damage paths against every
+other living combatant, so bot-versus-bot kills count in the standings. Every
+enemy with visibility and a clear firing line can shoot; individual reaction
+delays, bursts, reloads, movement-sensitive
 accuracy, suppression, and tactical repositioning keep the fight readable
 without an artificial attacker cap. The browser uses the exported PLA
 body, M27 world model, and converted `pb_*` body animations, with separate
-head, torso, and leg damage zones. The HUD shows player health and the current
-alive enemy count.
+head, torso, and leg damage zones.
+
+The HUD is drawn with the game's own art (`export/web/ui/hud/`, dumped by
+`.tools/export_hud.py`; layout rebuilt in `export/web/hud.js` since T6 HUD
+menudefs do not dump): a rotating radar minimap built on the
+`compass_map_mp_hijacked` radar texture with firing-enemy pings, the compass
+tape, and the digit-based ammo counter. Health reads through the low-health
+vignette and damage flash rather than a bar, as in the game.
 
 The rifle rides `tag_weapon_right`, the body's own weapon socket, the same way
 the viewmodel welds `j_gun` to the hands' `tag_weapon`. Two details do not come
@@ -177,6 +207,7 @@ npm run ai:state
 npm run ai:screenshot
 npm run ai:test
 npm run ai:enemy
+npm run ai:life
 npm run ai:record -- 10
 ```
 

@@ -51,3 +51,15 @@ test('empty trigger notifies once until released', () => {
   weapon.update(0.1);
   assert.equal(emptyCount, 2);
 });
+
+test('a new life restores the complete loadout and clears weapon activity', () => {
+  const weapon = new WeaponController({ magazineSize: 30, reserveAmmo: 240 });
+  weapon.magazine = 3;
+  weapon.reserveAmmo = 17;
+  weapon.setTrigger(true);
+  weapon.startReload();
+
+  assert.deepEqual(weapon.resetLoadout(), { magazine: 30, reserveAmmo: 240 });
+  assert.equal(weapon.triggerHeld, false);
+  assert.equal(weapon.reloading, false);
+});
