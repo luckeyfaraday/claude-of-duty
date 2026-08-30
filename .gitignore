@@ -4,6 +4,10 @@
 !/README.md
 !/package.json
 !/package-lock.json
+!/netlify.toml
+!/netlify/
+!/netlify/functions/
+!/netlify/functions/**
 !/test/
 !/test/**
 !/tests/

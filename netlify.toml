@@ -1,0 +1,15 @@
+# Netlify build settings for the git-connected deploy.
+#
+# `publish` restates the directory the site already serves rather than moving
+# it -- settings in this file override the ones in the Netlify UI, so leaving
+# it out would hand the site's root back to the repository root.
+#
+# The functions directory is the only genuinely new thing here: it carries
+# `plays.mjs`, which backs the title-screen play counter and declares its own
+# route (`/api/plays`) with the v2 `config` export.
+
+[build]
+  publish = "export/web"
+
+[functions]
+  directory = "netlify/functions"
