@@ -28,7 +28,7 @@ function usage() {
 
 Usage:
   npm run ai:game -- state
-  npm run ai:game -- screenshot
+  npm run ai:game -- screenshot [camo]
   npm run ai:game -- test
   npm run ai:game -- enemy-test
   npm run ai:game -- life-test
@@ -187,7 +187,19 @@ async function run() {
     await writeJson('before-state.json', before);
     await page.screenshot({ path: path.join(artifactRoot, 'before.png') });
 
-    if (command === 'test') {
+    if (command === 'screenshot' && commandArgument) {
+      const camos = await page.evaluate(() => globalThis.hijacked.debug.getState().weapon.availableCamos);
+      if (!camos.includes(commandArgument)) throw new Error(`Unknown weapon camo: ${commandArgument}`);
+      await page.evaluate((name) => globalThis.hijacked.debug.setWeaponCamo(name), camos[0]);
+      for (let i = 0; i < camos.length; i += 1) {
+        const selected = await page.evaluate(() => globalThis.hijacked.debug.getState().weapon.camo);
+        if (selected === commandArgument) break;
+        await page.keyboard.press('k');
+      }
+      const selected = await page.evaluate(() => globalThis.hijacked.debug.getState().weapon.camo);
+      if (selected !== commandArgument) throw new Error(`Could not select weapon camo: ${commandArgument}`);
+      inputProbe = { camo: selected, input: 'keyboard' };
+    } else if (command === 'test') {
       await page.evaluate(() => globalThis.hijacked.debug.resume());
       await page.keyboard.down('w');
       await page.waitForTimeout(900);

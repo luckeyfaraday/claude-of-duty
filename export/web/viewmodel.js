@@ -14,7 +14,10 @@ const VIEW_TO_CAMERA = new THREE.Matrix4().makeBasis(
 
 const { clamp, damp } = THREE.MathUtils;
 
-const CUSTOM_CAMO_URL = './images/openai-camo.png';
+const CUSTOM_CAMOS = Object.freeze({
+  openai: './images/openai-camo.png',
+  claude: './images/claude-camo.png',
+});
 const CAMO_MATERIAL_PATTERN = /_camo\d*$/i;
 // The red tritium insert capping the front post is the element the eye lines up
 // on, so it defines where the sight picture points, not the tag authored on the
@@ -72,6 +75,7 @@ export class Viewmodel {
     adsFov = 55,
     adsDistance = 7,
     adsEyeRelief = 3.5,
+    camo = 'openai',
   } = {}) {
     this.baseFov = fov;
     this.adsFov = adsFov;
@@ -137,6 +141,31 @@ export class Viewmodel {
     this.adsFireAction = null;
     this.reloading = false;
     this.weaponRoot = null;
+    this.camo = Object.hasOwn(CUSTOM_CAMOS, camo) ? camo : 'openai';
+    this.camoTextures = new Map();
+    this.camoRoots = [];
+  }
+
+  get availableCamos() {
+    return Object.keys(CUSTOM_CAMOS);
+  }
+
+  setCamo(name) {
+    const texture = this.camoTextures.get(name);
+    if (!texture) return false;
+    for (const root of this.camoRoots) applyCustomCamo(root, texture);
+    this.camo = name;
+    return true;
+  }
+
+  // Reports the camo actually on the gun, not the one asked for: a texture that
+  // failed to load leaves setCamo a no-op, and the caller's key binding and the
+  // debug state both read this back as the current skin.
+  cycleCamo() {
+    const names = this.availableCamos;
+    const next = names[(names.indexOf(this.camo) + 1) % names.length];
+    this.setCamo(next);
+    return this.camo;
   }
 
   async load(handsUrl, weaponUrl, magazineUrl, onProgress) {
@@ -147,7 +176,7 @@ export class Viewmodel {
     const loader = new GLTFLoader(manager);
     const textureLoader = new THREE.TextureLoader(manager);
     const load = (url, label) => loader.loadAsync(url, (event) => onProgress?.(label, event));
-    const [hands, weapon, magazine, customCamo] = await Promise.all([
+    const [hands, weapon, magazine, camoTextures] = await Promise.all([
       load(handsUrl, 'hands'),
       load(weaponUrl, 'weapon'),
       magazineUrl
@@ -156,11 +185,15 @@ export class Viewmodel {
           return null;
         })
         : Promise.resolve(null),
-      textureLoader.loadAsync(CUSTOM_CAMO_URL),
+      Promise.all(Object.entries(CUSTOM_CAMOS).map(async ([name, url]) => [
+        name,
+        await textureLoader.loadAsync(url),
+      ])),
     ]);
 
-    applyCustomCamo(weapon.scene, customCamo);
-    if (magazine) applyCustomCamo(magazine.scene, customCamo);
+    this.camoTextures = new Map(camoTextures);
+    this.camoRoots = [weapon.scene, ...(magazine ? [magazine.scene] : [])];
+    this.setCamo(this.camo);
 
     this.root.add(hands.scene, weapon.scene);
     // T6 ships the magazine as its own attachment xmodel rather than welding it

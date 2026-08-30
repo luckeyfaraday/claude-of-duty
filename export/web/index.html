@@ -919,6 +919,8 @@ function getDebugState() {
       triggerHeld: weapon.triggerHeld,
       fireCount: weapon.fireCount,
       aiming: viewmodel.aimBlend > 0.5,
+      camo: viewmodel.camo,
+      availableCamos: viewmodel.availableCamos,
     },
     enemies: enemies?.enemies.map((enemy) => ({
       index: enemy.index,
@@ -1035,6 +1037,9 @@ function createDebugApi() {
       weapon.reserveAmmo = Math.max(0, Math.trunc(Number(reserveAmmo) || 0));
       return { magazine: weapon.magazine, reserveAmmo: weapon.reserveAmmo };
     },
+    setWeaponCamo(name) {
+      return viewmodel.setCamo(String(name)) ? viewmodel.camo : false;
+    },
     respawnPlayer() {
       playerHealth?.respawn();
       return getDebugState().player;
@@ -1127,6 +1132,7 @@ document.addEventListener('keydown', (event) => {
     setDebugVisibility();
   }
   if (event.code === 'KeyP') showPathToCrosshair();
+  if (event.code === 'KeyK' && locked) viewmodel.cycleCamo();
   if (event.code === 'Tab') {
     scoreboardHeld = true;
     renderMatchUi();
@@ -1326,7 +1332,7 @@ async function start() {
     frontend.setReady([
       'WASD move · Shift sprint · Space jump · C/Ctrl crouch',
       'Left mouse fire · Right mouse aim · R reload · B respawn',
-      'N navmesh · V collision · P path · Esc pause',
+      'K cycle camo · N navmesh · V collision · P path · Esc pause',
       navigation ? '' : 'Navigation failed to load; collision and walking are still available.',
     ]);
   } catch (error) {
