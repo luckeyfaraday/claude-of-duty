@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <link rel="icon" href="data:,">
-<title>Hijacked — browser port</title>
+<title>Claude of Duty: Vibe Slops II</title>
 <style>
   :root {
     color-scheme: dark;
@@ -68,7 +68,7 @@
     align-items: center; gap: 28px;
   }
   .fe-wordmark {
-    margin: 0; font-size: clamp(34px, 6.4vw, 66px); line-height: 1; font-weight: 600;
+    margin: 0; font-size: clamp(26px, 4.6vw, 56px); line-height: 1; font-weight: 600;
     letter-spacing: .32em; text-indent: .32em; color: #f2f8ff;
     text-shadow: 0 3px 26px rgba(0, 0, 0, .9);
   }
@@ -77,6 +77,12 @@
     background: linear-gradient(90deg, transparent, var(--fe-accent), transparent);
     opacity: .8;
   }
+  /* Second title line, sized off the wordmark so the pause screen shrinks both. */
+  .fe-subtitle {
+    display: block; margin-top: .2em; font-size: .53em;
+    letter-spacing: .3em; text-indent: .3em; color: #dce8f4;
+  }
+  .fe-subtitle b { font-weight: 600; color: #f0531c; }
   .fe-sub {
     margin: 16px 0 0; font-size: 11px; letter-spacing: .34em;
     text-transform: uppercase; color: rgba(206, 224, 240, .62);
@@ -304,7 +310,7 @@
   <div class="fe-layer fe-vignette"></div>
   <div class="fe-content">
     <header>
-      <h1 class="fe-wordmark">HIJACKED</h1>
+      <h1 class="fe-wordmark">CLAUDE OF DUTY<span class="fe-subtitle">VIBE SLOPS <b>II</b></span></h1>
       <p class="fe-sub">Browser reconstruction</p>
     </header>
     <div class="fe-load">

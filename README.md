@@ -1,7 +1,7 @@
-# Hijacked Web Viewer
+# Claude of Duty: Vibe Slops II
 
-A browser-based Three.js viewer for the Black Ops II Hijacked map export, with
-first-person capsule collision and a baked Recast navigation mesh.
+A browser-based Three.js first-person shooter played on the Black Ops II
+Hijacked map export, with capsule collision and a baked Recast navigation mesh.
 
 ## Run it
 

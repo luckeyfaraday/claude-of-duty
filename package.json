@@ -2,7 +2,7 @@
   "name": "pluto_t6_full_game",
   "version": "1.0.0",
   "private": true,
-  "description": "Browser-based Three.js viewer and navigation tools for the Hijacked map export.",
+  "description": "Claude of Duty: Vibe Slops II — a browser-based Three.js shooter on the Hijacked map export.",
   "scripts": {
     "ai:game": "node .tools/ai-game.mjs",
     "ai:state": "node .tools/ai-game.mjs state",
