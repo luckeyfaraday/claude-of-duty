@@ -274,10 +274,12 @@ import { PlayerHealth } from './player-health.js';
 import { Frontend } from './frontend.js';
 import { loadCollisionWorld } from './collision-world.js';
 import { optimizeStaticScene } from './scene-optimizer.js';
+import { applyEnvironmentLighting, loadGradeLut, POST_SHADER, HAZE, applyMaterialClasses } from './lighting.js';
+import { loadProbeVolume, attachObjectProbe } from './light-probes.js';
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x87a8c8);
-scene.fog = new THREE.Fog(0x87a8c8, 1500, 9000);
+scene.fog = new THREE.Fog(0x87a8c8, HAZE.near, HAZE.far);
 
 const camera = new THREE.PerspectiveCamera(75, innerWidth / innerHeight, 1, 20000);
 camera.rotation.order = 'YXZ';
@@ -301,10 +303,155 @@ document.body.appendChild(renderer.domElement);
 const viewmodel = new Viewmodel();
 viewmodel.setSize(innerWidth, innerHeight);
 
-scene.add(new THREE.HemisphereLight(0xbfd8ff, 0x3a4a55, 1.1));
-const sun = new THREE.DirectionalLight(0xfff2d8, 1.6);
+// The prefiltered reflection probe supplies ambient and specular, so the
+// analytic lights only need to carve out direction. Both are turned down from
+// the flat-lit values they had before the environment existed; if the env
+// assets fail to load these still light the scene on their own.
+const hemi = new THREE.HemisphereLight(0xbfd8ff, 0x3a4a55, 0.35);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xfff2d8, 1.1);
 sun.position.set(-800, 1200, 600);
 scene.add(sun);
+
+// Baked SH probe volume: ambient that varies with where you are, rather than
+// one constant hemisphere everywhere. It supersedes `hemi`, which stays only
+// as the fallback if the volume fails to load. See .tools/bake_probes.mjs.
+// The bake integrates raw sky radiance, which is strongly blue; at full
+// strength it overwhelms the warm sunset grade. This scales it back to an
+// ambient term that shapes the scene without recolouring it.
+const PROBE_INTENSITY = 0.55;
+const lightProbe = new THREE.LightProbe();
+scene.add(lightProbe);
+const viewmodelProbe = new THREE.LightProbe();
+viewmodel.scene.add(viewmodelProbe);
+let probeVolume = null;
+let lightingApplied = null;
+loadProbeVolume()
+  .then((volume) => {
+    probeVolume = volume;
+    hemi.intensity = 0;
+    viewmodel.hemi.intensity = 0;
+    console.info('probe volume:', volume.layout.dims.join('x'), 'cells');
+  })
+  .catch((error) => console.warn('probe volume unavailable:', error));
+
+// Sampling is cheap but not free, and ambient changes slowly relative to the
+// camera, so refresh on movement rather than every frame.
+const probeAt = new THREE.Vector3(Infinity, Infinity, Infinity);
+// The SH currently loaded into the scene probe. Per-object probes store their
+// difference against this, so they need the same numbers.
+const sceneSH = new Float32Array(12);
+const enemyProbes = new Map();
+const enemyProbePosition = new THREE.Vector3();
+
+function updateLightProbes(position) {
+  if (!probeVolume) return;
+
+  if (position.distanceToSquared(probeAt) >= 24 * 24) {
+    probeAt.copy(position);
+    probeVolume.sample(position.x, position.y, position.z, sceneSH);
+    for (let i = 0; i < 12; i++) sceneSH[i] *= PROBE_INTENSITY;
+    probeVolume.applyTo(lightProbe, position.x, position.y, position.z, PROBE_INTENSITY);
+    // The weapon sits in the player's own light, slightly lifted so it never
+    // silhouettes to black in an unlit interior.
+    probeVolume.applyTo(viewmodelProbe, position.x, position.y, position.z, PROBE_INTENSITY * 1.15);
+  }
+
+  // Enemies move independently of the camera, so each samples at its own feet.
+  // Six trilinear lookups per frame is not worth throttling.
+  for (const [enemy, probe] of enemyProbes) {
+    if (enemy.dead) continue;
+    enemy.root.getWorldPosition(enemyProbePosition);
+    // Sample at torso height rather than the feet, which sit in floor contact
+    // shadow and read darker than the body actually is.
+    enemyProbePosition.y += 36;
+    probe.update(probeVolume, enemyProbePosition, sceneSH, PROBE_INTENSITY);
+  }
+}
+
+// Output chain. THREE disables tone mapping when a scene is drawn into a render
+// target, so the target holds raw linear HDR and the post pass does exposure,
+// ACES, the sRGB encode and the vision-set LUT in that order. A half-float
+// target is required: an 8-bit one would clip highlights before they were ever
+// tone mapped, which is exactly what blows out the sky.
+let gradeTarget = null;
+let gradeMaterial = null;
+let gradeScene = null;
+let gradeCamera = null;
+let visionTone = null;
+
+// Tuned against a capture of the real game, which is markedly more muted than
+// ACES + the warm tint + the LUT produce on their own.
+const SATURATION = 0.78;
+
+function applyVisionTone(material, tone) {
+  material.uniforms.lift.value.fromArray(tone.lift);
+  material.uniforms.highlightTint.value.fromArray(tone.highlightTint);
+  material.uniforms.saturation.value = SATURATION;
+}
+
+function sizeGradeTarget() {
+  if (!gradeTarget) return;
+  const ratio = renderer.getPixelRatio();
+  gradeTarget.setSize(Math.floor(innerWidth * ratio), Math.floor(innerHeight * ratio));
+}
+
+loadGradeLut().then((lut) => {
+  gradeTarget = new THREE.WebGLRenderTarget(1, 1, {
+    type: THREE.HalfFloatType,
+    depthBuffer: true,
+    stencilBuffer: false,
+    colorSpace: THREE.LinearSRGBColorSpace,
+  });
+  gradeTarget.texture.minFilter = THREE.LinearFilter;
+  gradeTarget.texture.magFilter = THREE.LinearFilter;
+  sizeGradeTarget();
+  gradeMaterial = new THREE.ShaderMaterial({
+    ...POST_SHADER,
+    uniforms: THREE.UniformsUtils.clone(POST_SHADER.uniforms),
+    depthTest: false,
+    depthWrite: false,
+  });
+  gradeMaterial.uniforms.lut.value = lut;
+  gradeMaterial.uniforms.amount.value = lut ? 1 : 0;
+  gradeScene = new THREE.Scene();
+  gradeCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+  gradeScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), gradeMaterial));
+  // The pass now owns tone mapping, so take the exposure the renderer was
+  // configured with and stop THREE applying it a second time on the quad.
+  gradeMaterial.uniforms.exposure.value = renderer.toneMappingExposure;
+  if (visionTone) applyVisionTone(gradeMaterial, visionTone);
+  console.info(`post: tone map + ${lut ? 'vision-set LUT' : 'no LUT'}, exposure ${renderer.toneMappingExposure}`);
+});
+
+// Sky, probe, tone mapping and fog tint all come from the map's own assets.
+// See export/web/lighting.js and .tools/bake_env.mjs.
+const environmentReady = applyEnvironmentLighting(renderer, scene)
+  .then((applied) => {
+    lightingApplied = applied;
+    // Feed the vision set's split tone into the post pass once it is built.
+    if (applied.vision) {
+      visionTone = applied.vision;
+      if (gradeMaterial) applyVisionTone(gradeMaterial, visionTone);
+    }
+    if (applied.environmentTexture) {
+      viewmodel.setEnvironment(applied.environmentTexture);
+    } else {
+      // No probe/sky: restore the standalone lighting levels.
+      hemi.intensity = 1.1;
+      sun.intensity = 1.6;
+      viewmodel.hemi.intensity = 1.3;
+      viewmodel.lamp.intensity = 1.7;
+    }
+    console.info('environment lighting:', applied);
+    return applied;
+  })
+  .catch((error) => {
+    console.warn('environment lighting unavailable:', error);
+    hemi.intensity = 1.1;
+    sun.intensity = 1.6;
+    return null;
+  });
 
 const blocker = document.getElementById('blocker');
 const menuButtons = [...blocker.querySelectorAll('.fe-btn')];
@@ -424,6 +571,14 @@ loader.setKTX2Loader(ktx2Loader);
 loader.setMeshoptDecoder(MeshoptDecoder);
 function loadGltf(url, label) {
   return loader.loadAsync(url, (event) => progress(label, event)).then((gltf) => {
+    // Chrome and bare metal need metalness to reflect the environment; without
+    // it they render as dark dielectrics and read as black. See lighting.js.
+    // Classify before spatial batching so InstancedMesh groups inherit the
+    // corrected PBR values.
+    if (gltf.scene) {
+      const reclassified = applyMaterialClasses(gltf.scene);
+      if (reclassified) console.info(`${label}: reclassified ${reclassified} materials`);
+    }
     frontend.stage(label);
     return gltf;
   });
@@ -604,6 +759,16 @@ function getDebugState() {
       visualState: enemy.visualState,
       visualFrame: enemy.visualFrameIndex,
     })) ?? [],
+    lighting: {
+      sky: Boolean(lightingApplied?.sky),
+      environment: Boolean(lightingApplied?.environment),
+      probeVolume: Boolean(probeVolume),
+      gradePass: Boolean(gradeMaterial && gradeTarget),
+      tone: Boolean(lightingApplied?.tone),
+      fog: Boolean(lightingApplied?.fog),
+      exposure: lightingApplied?.exposure ?? null,
+      enemyProbes: enemyProbes.size,
+    },
     overlays: {
       navigation: navigationVisible,
       collision: collisionVisible,
@@ -863,7 +1028,14 @@ async function start() {
       : Promise.resolve()
     ).finally(() => frontend.stage('enemy'));
 
-    await Promise.all([viewmodelPromise, weaponEffects.loadAudio(), enemyPromise]);
+    await Promise.all([viewmodelPromise, weaponEffects.loadAudio(), enemyPromise, environmentReady]);
+
+    // Give each enemy its own probe term before the warm-up below, so the
+    // patched materials are compiled behind the loading blocker rather than
+    // the first time an enemy comes into view.
+    for (const enemy of enemies?.enemies ?? []) {
+      enemyProbes.set(enemy, attachObjectProbe(enemy.root));
+    }
 
     // Compile map and enemy shader variants while the loading blocker is
     // still visible. Otherwise the first close enemy can trigger synchronous
@@ -914,6 +1086,12 @@ async function start() {
     globalThis.hijacked = {
       scene, camera, renderer, player, navigation, collisionRoot, collisionWorld, hints, viewmodel,
       weapon, weaponEffects, playerHealth, enemies, reloadWeapon, frontend,
+      lighting: {
+        lightProbe, viewmodelProbe, enemyProbes, sceneSH,
+        get probeVolume() { return probeVolume; },
+        get gradeMaterial() { return gradeMaterial; },
+        get gradeTarget() { return gradeTarget; },
+      },
       debug: createDebugApi(),
     };
 
@@ -1008,14 +1186,35 @@ function tick() {
     hitmarker.style.opacity = '0';
   }
 
-  renderer.clear();
-  renderer.render(scene, camera);
-  viewmodel.render(renderer);
+  updateLightProbes(camera.position);
+  renderFrame();
   if (ready && performance.now() >= frameWorkWarmupUntil) {
     frameWorkSamples[frameWorkSampleIndex] = performance.now() - frameWorkStartedAt;
     frameWorkSampleIndex = (frameWorkSampleIndex + 1) % frameWorkSamples.length;
     frameWorkSampleCount += 1;
   }
+}
+
+// With the grade active the world and viewmodel go into an sRGB-encoded target
+// and the LUT pass writes the canvas; without it they draw straight to screen.
+function renderFrame() {
+  if (gradeMaterial && gradeTarget) {
+    // Kept in sync here because the vision set's exposure is applied
+    // asynchronously and may land after this pass was built.
+    gradeMaterial.uniforms.exposure.value = renderer.toneMappingExposure;
+    renderer.setRenderTarget(gradeTarget);
+    renderer.clear();
+    renderer.render(scene, camera);
+    viewmodel.render(renderer);
+    renderer.setRenderTarget(null);
+    gradeMaterial.uniforms.tDiffuse.value = gradeTarget.texture;
+    renderer.clear();
+    renderer.render(gradeScene, gradeCamera);
+    return;
+  }
+  renderer.clear();
+  renderer.render(scene, camera);
+  viewmodel.render(renderer);
 }
 
 start();
@@ -1027,6 +1226,7 @@ addEventListener('resize', () => {
   viewmodel.setSize(innerWidth, innerHeight);
   renderer.setPixelRatio(renderPixelRatio());
   renderer.setSize(innerWidth, innerHeight);
+  sizeGradeTarget();
 });
 </script>
 </body>
