@@ -16,6 +16,10 @@ const { clamp, damp } = THREE.MathUtils;
 
 const CUSTOM_CAMO_URL = './images/openai-camo.png';
 const CAMO_MATERIAL_PATTERN = /_camo\d*$/i;
+// The red tritium insert capping the front post is the element the eye lines up
+// on, so it defines where the sight picture points, not the tag authored on the
+// sight base. See computeAdsAlignment().
+const SIGHT_INSERT_PATTERN = /tritium/i;
 
 function findNode(root, name) {
   let found = null;
@@ -213,16 +217,62 @@ export class Viewmodel {
     const gunFwd = new THREE.Vector3(1, 0, 0).applyQuaternion(gunQuat).normalize();
     const gunUp = new THREE.Vector3(0, 0, 1).applyQuaternion(gunQuat).normalize();
 
-    // Camera back/up expressed against the gun frame, orthonormalized.
+    // The gun's own back/up/right axes, orthonormalized. makeBasis puts them in
+    // the columns, which reads camera coordinates back into the rig; the rig is
+    // what has to move, so transpose it into the rig-to-camera direction. (The
+    // shipped HK416 holds its idle pose exactly square to the view, making this
+    // matrix identity for that rig, but a pose with any tilt needs the rotation
+    // taken out rather than applied twice over.)
     const zAxis = gunFwd.clone().negate();
     const yAxis = gunUp.clone().addScaledVector(zAxis, -gunUp.dot(zAxis)).normalize();
     const xAxis = new THREE.Vector3().crossVectors(yAxis, zAxis).normalize();
-    const camToGun = new THREE.Matrix4().makeBasis(xAxis, yAxis, zAxis);
+    const gunToCamera = new THREE.Matrix4().makeBasis(xAxis, yAxis, zAxis).transpose();
 
     this.adsMatrix
-      .multiplyMatrices(new THREE.Matrix4().makeTranslation(0, 0, -this.adsDistance), camToGun)
+      .multiplyMatrices(new THREE.Matrix4().makeTranslation(0, 0, -this.adsDistance), gunToCamera)
       .multiply(new THREE.Matrix4().makeTranslation(-sight.x, -sight.y, -sight.z));
+
+    // tag_sights is authored on the sight base, about 0.4 units below the front
+    // post tip the eye actually aligns with, so centring the tag alone floats
+    // the whole sight picture ~35px above the ray the shot follows (see
+    // WeaponEffects.fire, which casts through the exact screen centre). Slide
+    // the rig perpendicular to the view axis until the post tip lands on it;
+    // the depth term is left alone so the tag still sets the eye relief.
+    const tip = this.findSightTip(jGun)?.applyMatrix4(this.adsMatrix);
+    if (tip) this.adsMatrix.premultiply(new THREE.Matrix4().makeTranslation(-tip.x, -tip.y, 0));
     this.adsMatrix.decompose(this.adsPos, this.adsQuat, this.adsScale);
+  }
+
+  // Top-centre of the front post's tritium insert in world space, read off the
+  // posed geometry. On this rig it lands within 0.04 units of the centre of the
+  // front hood ring, which is the sight picture the player reads. Rigs that
+  // ship no such element fall back to tag_sights alone.
+  findSightTip(jGun) {
+    const box = new THREE.Box3();
+    const vertex = new THREE.Vector3();
+    this.root.traverse((object) => {
+      if (!object.isMesh) return;
+      const materials = Array.isArray(object.material) ? object.material : [object.material];
+      if (!materials.some((material) => SIGHT_INSERT_PATTERN.test(material?.name ?? ''))) return;
+      // Every surface of the exported weapon shares one position buffer and is
+      // cut out of it by index, so walk the indices, not the whole attribute.
+      const position = object.geometry.getAttribute('position');
+      const index = object.geometry.getIndex();
+      const count = index ? index.count : position.count;
+      for (let i = 0; i < count; i += 1) {
+        const vertexIndex = index ? index.getX(i) : i;
+        vertex.fromBufferAttribute(position, vertexIndex);
+        if (object.isSkinnedMesh) object.applyBoneTransform(vertexIndex, vertex);
+        object.localToWorld(vertex);
+        box.expandByPoint(jGun.worldToLocal(vertex));
+      }
+    });
+    if (box.isEmpty()) return null;
+
+    // j_gun holds the engine's joint axes: X down the barrel, Y left, Z up.
+    const tip = box.getCenter(new THREE.Vector3());
+    tip.z = box.max.z;
+    return jGun.localToWorld(tip);
   }
 
   // Loads xanim-derived JSON clips (see .tools/xanim_to_json.mjs) and turns
