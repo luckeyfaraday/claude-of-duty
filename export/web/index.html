@@ -1200,7 +1200,7 @@ async function start() {
         console.warn('Viewmodel unavailable:', error);
       })
       .finally(() => frontend.stage('viewmodel'));
-    const [renderGltf, loadedCollisionWorld, hints] = await Promise.all([
+    const [renderGltf, loadedCollisionWorld, hints, ladders] = await Promise.all([
       loadGltf('hijacked_optimized.glb', 'map').then((gltf) => {
         // KTX2 texture decoding is complete when GLTFLoader resolves.
         frontend.stage('textures');
@@ -1211,6 +1211,15 @@ async function start() {
       fetch('hijacked_nav_hints.json').then((response) => {
         if (!response.ok) throw new Error(`nav hints HTTP ${response.status}`);
         return response.json();
+      }),
+      // Baked by `npm run bake:ladders`; the map export carries no ladder
+      // surface flags, so climbing needs these volumes.
+      fetch('hijacked_ladders.json').then((response) => {
+        if (!response.ok) throw new Error(`ladders HTTP ${response.status}`);
+        return response.json();
+      }).catch((error) => {
+        console.warn('Ladders unavailable:', error);
+        return null;
       }),
     ]);
     mapOptimization = optimizeStaticScene(renderGltf.scene);
@@ -1233,6 +1242,7 @@ async function start() {
       jumpHeight: 48,
       maxSlopeAngle: 45,
       fallResetY: -700,
+      ladders,
     });
     playerHealth = new PlayerHealth({
       maxHealth: 100,

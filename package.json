@@ -13,6 +13,7 @@
     "ai:record": "node .tools/ai-game.mjs record",
     "bake:map": "node .tools/bake_map.mjs",
     "bake:collision": "node .tools/bake_collision_bvh.mjs",
+    "bake:ladders": "node .tools/bake_ladders.mjs",
     "bake:navmesh": "node .tools/bake_navmesh.mjs",
     "bake:env": "node .tools/bake_env.mjs",
     "bake:probes": "node .tools/bake_probes.mjs",
