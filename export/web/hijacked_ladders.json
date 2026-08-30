@@ -1,0 +1,97 @@
+{
+  "format": "hijacked-ladders-v1",
+  "source": "export/web/hijacked_collision.gltf",
+  "coordinateSystem": "three-y-up",
+  "pattern": "ladder",
+  "count": 4,
+  "volumes": [
+    {
+      "name": "i_clt_ladder_construction_01",
+      "center": [
+        -1529.851,
+        26.458,
+        -330.874
+      ],
+      "right": [
+        0.645,
+        0,
+        -0.764
+      ],
+      "normal": [
+        0.764,
+        0,
+        0.645
+      ],
+      "halfWidth": 13.5,
+      "halfDepth": 2.5,
+      "bottom": -43.5,
+      "top": 96.415
+    },
+    {
+      "name": "i_clt_ladder_construction_01",
+      "center": [
+        -1241.696,
+        -106.542,
+        -188
+      ],
+      "right": [
+        0,
+        0,
+        1
+      ],
+      "normal": [
+        -1,
+        0,
+        0
+      ],
+      "halfWidth": 13.5,
+      "halfDepth": 2.5,
+      "bottom": -176.5,
+      "top": -36.585
+    },
+    {
+      "name": "i_clt_ladder_construction_01",
+      "center": [
+        866.696,
+        -44.542,
+        -281
+      ],
+      "right": [
+        0,
+        0,
+        -1
+      ],
+      "normal": [
+        1,
+        0,
+        0
+      ],
+      "halfWidth": 13.5,
+      "halfDepth": 2.5,
+      "bottom": -114.5,
+      "top": 25.415
+    },
+    {
+      "name": "i_clt_ladder_construction_01",
+      "center": [
+        1123.304,
+        89.958,
+        -278
+      ],
+      "right": [
+        0,
+        0,
+        1
+      ],
+      "normal": [
+        -1,
+        0,
+        0
+      ],
+      "halfWidth": 13.5,
+      "halfDepth": 2.5,
+      "bottom": 20,
+      "top": 159.915
+    }
+  ]
+}

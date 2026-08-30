@@ -19,6 +19,7 @@ const _groundOrigin = new THREE.Vector3();
 const _groundRay = new THREE.Ray(new THREE.Vector3(), new THREE.Vector3(0, -1, 0));
 const _candidateStart = new THREE.Vector3();
 const _candidateEnd = new THREE.Vector3();
+const _ladderWish = new THREE.Vector3();
 
 function numberOr(value, fallback) {
   return Number.isFinite(value) ? value : fallback;
@@ -59,6 +60,46 @@ function copyPosition(value, fallback) {
     return new THREE.Vector3(value.x, value.y, value.z);
   }
   return fallback.clone();
+}
+
+function levelAxis(value, fallback) {
+  const axis = new THREE.Vector3(
+    Number(value?.[0] ?? value?.x) || 0,
+    0,
+    Number(value?.[2] ?? value?.z) || 0,
+  );
+  return axis.lengthSq() < 1e-8 ? fallback.clone() : axis.normalize();
+}
+
+/**
+ * Normalise one baked ladder descriptor into the form the controller uses.
+ *
+ * A ladder is an upright box: `right` runs along the rungs, `normal` points out
+ * of one climbing face, and both faces are climbable because the export carries
+ * no hint about which side is bolted to a wall.
+ */
+export function createLadderVolume(descriptor) {
+  if (!descriptor) return null;
+  const center = copyPosition(
+    Array.isArray(descriptor.center)
+      ? { x: descriptor.center[0], y: descriptor.center[1], z: descriptor.center[2] }
+      : descriptor.center,
+    new THREE.Vector3(),
+  );
+  const right = levelAxis(descriptor.right, new THREE.Vector3(1, 0, 0));
+  const normal = levelAxis(descriptor.normal, new THREE.Vector3(0, 0, 1));
+  const halfWidth = Math.max(0, numberOr(descriptor.halfWidth, 16));
+  const halfDepth = Math.max(0, numberOr(descriptor.halfDepth, 4));
+  const bottom = numberOr(descriptor.bottom, center.y - 64);
+  const top = numberOr(descriptor.top, center.y + 64);
+  if (!(top > bottom)) return null;
+  return { name: descriptor.name ?? 'ladder', center, right, normal, halfWidth, halfDepth, bottom, top };
+}
+
+/** Accepts a bare array of descriptors or the baked `{ volumes: [...] }` file. */
+export function createLadderVolumes(source) {
+  const list = Array.isArray(source) ? source : (source?.volumes ?? []);
+  return list.map(createLadderVolume).filter(Boolean);
 }
 
 /**
@@ -155,6 +196,23 @@ export class PlayerController {
     this.jumpBufferTime = Math.max(0, numberOr(options.jumpBufferTime, 0.12));
     this.fallResetY = Number.isFinite(options.fallResetY) ? options.fallResetY : null;
 
+    // Ladders are volumes rather than surfaces: the collision mesh only knows
+    // the prop is solid, so climbing is driven entirely by these boxes.
+    this.ladderClimbSpeed = Math.max(0, numberOr(options.ladderClimbSpeed, 180));
+    this.ladderGripSpeed = Math.max(0, numberOr(options.ladderGripSpeed, 120));
+    this.ladderReach = Math.max(0, numberOr(options.ladderReach, 12));
+    this.ladderPushSpeed = Math.max(0, numberOr(options.ladderPushSpeed, 220));
+    this.ladderExitSpeed = Math.max(0, numberOr(options.ladderExitSpeed, 220));
+    this.ladderTopClearance = Math.max(0, numberOr(options.ladderTopClearance, 4));
+    this.ladderExitTime = Math.max(0, numberOr(options.ladderExitTime, 0.3));
+    // A ladder bolted flat against geometry can be mounted from the wrong face.
+    // Rather than hang there weightless, let go once the climb stops making
+    // progress it was asked to make.
+    this.ladderStallTime = Math.max(0, numberOr(options.ladderStallTime, 0.4));
+    // How squarely the player must be pushing at a face before they mount it,
+    // so brushing past a ladder while strafing does not grab it.
+    this.ladderMountBias = clamp(numberOr(options.ladderMountBias, 0.25), 0, 1);
+
     this.velocity = new THREE.Vector3();
     this.collider = new Capsule(new THREE.Vector3(), new THREE.Vector3(), this.radius);
     this.input = {
@@ -167,6 +225,7 @@ export class PlayerController {
     this.onFloor = false;
     this.grounded = false;
     this.crouched = false;
+    this.onLadder = false;
     this.enabled = true;
     this._accumulator = 0;
     this._jumpBufferTimer = 0;
@@ -174,6 +233,11 @@ export class PlayerController {
     this._jumpHeld = false;
     this._collisionNormal = new THREE.Vector3(0, 1, 0);
     this._lastCollision = null;
+    this.ladders = createLadderVolumes(options.ladders);
+    this._ladder = null;
+    this._ladderSide = 1;
+    this._ladderExitTimer = 0;
+    this._ladderStall = 0;
 
     if (collisionSource && !sourceIsOctree) {
       this.buildCollision(collisionSource);
@@ -211,6 +275,17 @@ export class PlayerController {
   }
 
   /**
+   * Install climbable ladder volumes.  Accepts the baked ladder file, a bare
+   * array of descriptors, or already-normalised volumes.
+   */
+  setLadders(source) {
+    this.ladders = createLadderVolumes(source);
+    this._releaseLadder();
+    this._ladderExitTimer = 0;
+    return this;
+  }
+
+  /**
    * Change the respawn point.  By convention this is a feet position; pass
    * `{ eye: true }` when the supplied point is already a camera eye position.
    */
@@ -238,6 +313,8 @@ export class PlayerController {
     this.onFloor = false;
     this.grounded = false;
     this._lastCollision = null;
+    this._releaseLadder();
+    this._ladderExitTimer = 0;
 
     if (resolve && this.worldReady) this._resolveOverlaps();
     this._syncCamera();
@@ -289,6 +366,7 @@ export class PlayerController {
     if (!this.enabled) {
       this.velocity.set(0, 0, 0);
       this._accumulator = 0;
+      this._releaseLadder();
     }
     return this;
   }
@@ -336,8 +414,13 @@ export class PlayerController {
       velocity: this.velocity,
       grounded: this.onFloor,
       crouched: this.crouched,
+      onLadder: this.onLadder,
       worldReady: this.worldReady,
     };
+  }
+
+  get isOnLadder() {
+    return this.onLadder;
   }
 
   get position() {
@@ -379,8 +462,16 @@ export class PlayerController {
     this._jumpBufferTimer = Math.max(0, this._jumpBufferTimer - dt);
 
     this._updateCrouchState();
+    this._updateLadderState(dt);
 
-    if (this._jumpBufferTimer > 0 && (this.onFloor || this._coyoteTimer > 0)) {
+    // A jump always leaves the ladder, pushing back off the face so the player
+    // clears it instead of immediately re-grabbing.
+    if (this.onLadder && this._jumpBufferTimer > 0) {
+      this._detachLadder({ pushOff: this.ladderPushSpeed, hop: this.jumpSpeed * 0.6 });
+      this._jumpBufferTimer = 0;
+    }
+
+    if (!this.onLadder && this._jumpBufferTimer > 0 && (this.onFloor || this._coyoteTimer > 0)) {
       this.velocity.y = this.jumpSpeed;
       this.onFloor = false;
       this.grounded = false;
@@ -388,13 +479,17 @@ export class PlayerController {
       this._coyoteTimer = 0;
     }
 
-    this._updateHorizontalVelocity(dt);
-    if (this.onFloor) {
-      // A small downward bias keeps the capsule attached to gently uneven
-      // floors without allowing gravity to make it jitter through the mesh.
-      if (this.velocity.y <= 0) this.velocity.y = -this.groundSnapSpeed;
+    if (this.onLadder) {
+      this._updateLadderVelocity();
     } else {
-      this.velocity.y = Math.max(this.velocity.y - this.gravity * dt, -this.maxFallSpeed);
+      this._updateHorizontalVelocity(dt);
+      if (this.onFloor) {
+        // A small downward bias keeps the capsule attached to gently uneven
+        // floors without allowing gravity to make it jitter through the mesh.
+        if (this.velocity.y <= 0) this.velocity.y = -this.groundSnapSpeed;
+      } else {
+        this.velocity.y = Math.max(this.velocity.y - this.gravity * dt, -this.maxFallSpeed);
+      }
     }
 
     // Octree.capsuleIntersect is an overlap test rather than a swept test.
@@ -404,20 +499,32 @@ export class PlayerController {
     const moveSteps = Math.max(1, Math.ceil(travel / this.maxCollisionStep));
     const moveDt = dt / moveSteps;
     _movement.copy(this.velocity).multiplyScalar(moveDt);
+    const climbSpeedY = this.velocity.y;
+    const previousFeetY = this.collider.start.y - this.radius;
     let groundedDuringMove = false;
     for (let i = 0; i < moveSteps; i += 1) {
       this.collider.translate(_movement);
       this._resolveCollisions();
+      // Rung tops are walkable-facing triangles.  On a ladder they must not
+      // arrest the climb the way a floor would.
+      if (this.onLadder) this.velocity.y = climbSpeedY;
       groundedDuringMove = groundedDuringMove || this.onFloor;
     }
-    // Keep a floor contact found by an earlier movement slice even if the
-    // last slice only moved tangentially and generated no new overlap.
-    if (!groundedDuringMove && this.velocity.y <= this.maxGroundProbeRiseSpeed) {
-      groundedDuringMove = this._probeGround();
+
+    if (this.onLadder) {
+      this.onFloor = false;
+      this.grounded = false;
+      this._updateLadderExit(dt, previousFeetY);
+    } else {
+      // Keep a floor contact found by an earlier movement slice even if the
+      // last slice only moved tangentially and generated no new overlap.
+      if (!groundedDuringMove && this.velocity.y <= this.maxGroundProbeRiseSpeed) {
+        groundedDuringMove = this._probeGround();
+      }
+      this.onFloor = groundedDuringMove;
+      this.grounded = groundedDuringMove;
+      if (groundedDuringMove && this.velocity.y < 0) this.velocity.y = 0;
     }
-    this.onFloor = groundedDuringMove;
-    this.grounded = groundedDuringMove;
-    if (groundedDuringMove && this.velocity.y < 0) this.velocity.y = 0;
 
     if (this.fallResetY !== null && this.collider.start.y - this.radius < this.fallResetY) {
       this.reset(this.spawn, { eye: this.spawnIsEye, resolve: true });
@@ -425,19 +532,7 @@ export class PlayerController {
   }
 
   _updateHorizontalVelocity(dt) {
-    _wish.set(0, 0, 0);
-    _forward.set(0, 0, -1).applyQuaternion(this.camera.quaternion);
-    _forward.y = 0;
-    if (_forward.lengthSq() < 1e-8) _forward.set(0, 0, -1);
-    else _forward.normalize();
-    _right.crossVectors(_forward, this.camera.up);
-    _right.y = 0;
-    if (_right.lengthSq() < 1e-8) _right.set(1, 0, 0);
-    else _right.normalize();
-
-    _wish.addScaledVector(_forward, this.input.forward);
-    _wish.addScaledVector(_right, this.input.strafe);
-    if (_wish.lengthSq() > 1) _wish.normalize();
+    this._wishDirection(_wish);
 
     const speed = this.crouched
       ? this.crouchSpeed
@@ -461,6 +556,158 @@ export class PlayerController {
       this._setCapsuleHeight(this.height);
       this.crouched = false;
     }
+  }
+
+  /** Flat wish direction from the current input, in world space. */
+  _wishDirection(target) {
+    _forward.set(0, 0, -1).applyQuaternion(this.camera.quaternion);
+    _forward.y = 0;
+    if (_forward.lengthSq() < 1e-8) _forward.set(0, 0, -1);
+    else _forward.normalize();
+    _right.crossVectors(_forward, this.camera.up);
+    _right.y = 0;
+    if (_right.lengthSq() < 1e-8) _right.set(1, 0, 0);
+    else _right.normalize();
+
+    target.set(0, 0, 0);
+    target.addScaledVector(_forward, this.input.forward);
+    target.addScaledVector(_right, this.input.strafe);
+    if (target.lengthSq() > 1) target.normalize();
+    return target;
+  }
+
+  /**
+   * Where the capsule sits relative to a ladder, or null when out of reach.
+   *
+   * `across` is signed along the volume normal so `side` records which face the
+   * player is climbing; `along` is the offset across the rungs.
+   */
+  _ladderContact(ladder) {
+    if (!ladder) return null;
+    const feetY = this.collider.start.y - this.radius;
+    const headY = this.collider.end.y + this.radius;
+    // Reach above the rails so a climber clears the lip under _updateLadderExit
+    // rather than silently losing contact on the way up.
+    if (headY < ladder.bottom || feetY > ladder.top + this.ladderTopClearance * 2) return null;
+
+    const dx = this.collider.start.x - ladder.center.x;
+    const dz = this.collider.start.z - ladder.center.z;
+    const along = dx * ladder.right.x + dz * ladder.right.z;
+    if (Math.abs(along) > ladder.halfWidth + this.radius) return null;
+
+    const across = dx * ladder.normal.x + dz * ladder.normal.z;
+    const standoff = ladder.halfDepth + this.radius;
+    if (Math.abs(across) > standoff + this.ladderReach) return null;
+
+    return { along, across, standoff, feetY, side: across >= 0 ? 1 : -1 };
+  }
+
+  /** Attach to, or drop off, a ladder before this step's movement is built. */
+  _updateLadderState(dt) {
+    this._ladderExitTimer = Math.max(0, this._ladderExitTimer - dt);
+
+    if (this.onLadder) {
+      // Strafing off the end of the rungs, or climbing out of the volume,
+      // simply lets go.
+      if (!this._ladderContact(this._ladder)) this._detachLadder();
+      return;
+    }
+
+    if (this._ladderExitTimer > 0 || this.ladders.length === 0) return;
+
+    this._wishDirection(_ladderWish);
+    if (_ladderWish.lengthSq() < 1e-6) return;
+
+    for (const ladder of this.ladders) {
+      const contact = this._ladderContact(ladder);
+      if (!contact) continue;
+      // Nothing left to climb means this is a ledge to walk off, not a mount.
+      if (ladder.top - contact.feetY < this.ladderTopClearance) continue;
+      const into = -(_ladderWish.x * ladder.normal.x + _ladderWish.z * ladder.normal.z) * contact.side;
+      if (into < this.ladderMountBias) continue;
+      this.onLadder = true;
+      this._ladder = ladder;
+      this._ladderSide = contact.side;
+      return;
+    }
+  }
+
+  /**
+   * Drive the climb.  Velocity is set outright rather than accelerated so the
+   * ladder feels crisp, and because gravity is not integrated while attached.
+   */
+  _updateLadderVelocity() {
+    const ladder = this._ladder;
+    const side = this._ladderSide;
+    this._wishDirection(_ladderWish);
+
+    // Pushing at the face climbs, pulling away descends; sliding along the
+    // rungs is how the player steps off sideways.
+    const into = -(_ladderWish.x * ladder.normal.x + _ladderWish.z * ladder.normal.z) * side;
+    const along = _ladderWish.x * ladder.right.x + _ladderWish.z * ladder.right.z;
+    this.velocity.y = into * this.ladderClimbSpeed;
+
+    // Close any remaining gap to the face, but never push into it once in
+    // contact, which would fight the collision resolver and jitter the camera.
+    const contact = this._ladderContact(ladder);
+    const gap = contact ? Math.abs(contact.across) - contact.standoff : 0;
+    const grip = gap > 0 ? Math.min(gap / this.fixedTimeStep, this.ladderGripSpeed) : 0;
+
+    const strafe = along * this.ladderClimbSpeed * 0.5;
+    this.velocity.x = ladder.right.x * strafe - ladder.normal.x * side * grip;
+    this.velocity.z = ladder.right.z * strafe - ladder.normal.z * side * grip;
+  }
+
+  /** Leave the ladder once the player tops out, lands, or stops making headway. */
+  _updateLadderExit(dt, previousFeetY) {
+    const ladder = this._ladder;
+    const feetY = this.collider.start.y - this.radius;
+
+    // Geometry the volume knows nothing about — the wall behind a ladder, an
+    // overhang at the top — can pin a climb in place.  Treat sustained failure
+    // to move as a signal to let go.
+    const wanted = Math.abs(this.velocity.y) * dt;
+    if (wanted > 1e-4 && Math.abs(feetY - previousFeetY) < wanted * 0.25) {
+      this._ladderStall += dt;
+      if (this._ladderStall >= this.ladderStallTime) {
+        this._detachLadder();
+        return;
+      }
+    } else {
+      this._ladderStall = 0;
+    }
+
+    if (this.velocity.y > 0 && feetY >= ladder.top + this.ladderTopClearance) {
+      // Step over the lip away from the climbing face, where the surface the
+      // ladder serves has to be, and let gravity settle the landing.
+      this._detachLadder({ pushOff: -this.ladderExitSpeed });
+      return;
+    }
+    // Let go once there is floor underfoot.  The rails usually stop a little
+    // above the ground, and the capsule rests a skin width clear of it, so an
+    // exact `feetY <= bottom` test would strand the player on the last rung.
+    if (this.velocity.y < 0 && (feetY <= ladder.bottom || this._probeGround())) {
+      this._detachLadder();
+    }
+  }
+
+  /** Detach, optionally shoving the player off the face. */
+  _detachLadder({ pushOff = 0, hop = 0 } = {}) {
+    const ladder = this._ladder;
+    const side = this._ladderSide;
+    this._releaseLadder();
+    this._ladderExitTimer = this.ladderExitTime;
+    if (ladder && pushOff !== 0) {
+      this.velocity.x = ladder.normal.x * side * pushOff;
+      this.velocity.z = ladder.normal.z * side * pushOff;
+    }
+    if (hop !== 0) this.velocity.y = hop;
+  }
+
+  _releaseLadder() {
+    this.onLadder = false;
+    this._ladder = null;
+    this._ladderStall = 0;
   }
 
   _setCapsuleHeight(height) {
