@@ -224,6 +224,68 @@ export function repairHorizonSeam(px, w, h, { dip = 0.88, maxRows = 20, gap = 8 
   return repaired;
 }
 
+/**
+ * Wash the sky into atmospheric haze toward and below the horizon.
+ *
+ * Two problems, one fix. The lower hemisphere of the skybox is never seen in
+ * game - the ocean covers it - so the artists left junk down there, including
+ * a black cloud mass on the -X face that reads as smoke sitting on our
+ * horizon. And the band just above the horizon is the most saturated part of
+ * the art, which is what makes the sky look unnatural next to the real game,
+ * where distance washes out into pale haze.
+ *
+ * Blending toward the measured horizon colour handles both: everything below
+ * the horizon becomes clean haze, and the vivid band above it is muted with a
+ * falloff that leaves the zenith alone.
+ */
+export function applySkyHaze(faces, size, { strength = 0.6, falloff = 0.30 } = {}) {
+  // Horizon colour: mean of the texels sitting within a narrow elevation band.
+  // The band widens until it catches something, because at small face sizes no
+  // texel direction may land inside a fixed narrow band at all.
+  let haze = null;
+  for (let band = 0.02; band <= 0.5 && !haze; band *= 2) {
+    let hr = 0, hg = 0, hb = 0, n = 0;
+    for (let f = 0; f < 6; f++) {
+      const px = faces[f];
+      for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++) {
+          const u = ((x + 0.5) / size) * 2 - 1;
+          const v = ((y + 0.5) / size) * 2 - 1;
+          const d = faceDir(f, u, v);
+          const e = d[1] / Math.hypot(d[0], d[1], d[2]);
+          if (Math.abs(e) > band) continue;
+          const o = (y * size + x) * 3;
+          hr += px[o]; hg += px[o + 1]; hb += px[o + 2];
+          n++;
+        }
+      }
+    }
+    if (n) haze = [hr / n, hg / n, hb / n];
+  }
+  if (!haze) return null;
+
+  for (let f = 0; f < 6; f++) {
+    const px = faces[f];
+    for (let y = 0; y < size; y++) {
+      for (let x = 0; x < size; x++) {
+        const u = ((x + 0.5) / size) * 2 - 1;
+        const v = ((y + 0.5) / size) * 2 - 1;
+        const d = faceDir(f, u, v);
+        const len = Math.hypot(d[0], d[1], d[2]);
+        const e = d[1] / len;
+        // Below the horizon go fully to haze; above it, fade out with height.
+        const t = e < 0 ? 1 : strength * Math.exp(-e / falloff);
+        if (t <= 0.001) continue;
+        const o = (y * size + x) * 3;
+        for (let c = 0; c < 3; c++) {
+          px[o + c] = Math.round(px[o + c] * (1 - t) + haze[c] * t);
+        }
+      }
+    }
+  }
+  return haze.map((v) => Math.round(v));
+}
+
 function writeCube(dir, faces, size) {
   fs.mkdirSync(dir, { recursive: true });
   faces.forEach((px, i) => {
@@ -270,8 +332,10 @@ function run() {
       const faces = resampleCube(src, src.w);
       let fixed = 0;
       for (const face of faces) fixed += repairHorizonSeam(face, src.w, src.w);
+      const haze = applySkyHaze(faces, src.w);
       writeCube(path.join(OUT, 'env'), faces, src.w);
       console.log(`  -> textures/env/*.png (${src.w}px, glTF axes), ${fixed} seam rows repaired`);
+      console.log(`     horizon haze rgb(${haze.join(', ')})`);
     }
   } else {
     console.warn('sky: skybox_mp_hijacked_ft.dds not found');

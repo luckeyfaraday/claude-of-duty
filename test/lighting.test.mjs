@@ -107,6 +107,38 @@ test('horizon seam repair removes a dark band but keeps a large dark mass', asyn
   assert.equal(rowMean(mass, 35), before, 'and is left exactly as it was');
 });
 
+test('sky haze washes out below the horizon and leaves the zenith alone', async () => {
+  const { applySkyHaze, faceDir } = await import('../.tools/bake_env.mjs');
+  const size = 16;
+  // Faces: bright everywhere, with a black blob buried below the horizon -
+  // exactly the junk the source skybox carries where the ocean hides it.
+  const faces = [];
+  for (let f = 0; f < 6; f++) {
+    const px = Buffer.alloc(size * size * 3, 220);
+    for (let y = 0; y < size; y++) {
+      for (let x = 0; x < size; x++) {
+        const u = ((x + 0.5) / size) * 2 - 1;
+        const v = ((y + 0.5) / size) * 2 - 1;
+        const d = faceDir(f, u, v);
+        const e = d[1] / Math.hypot(...d);
+        if (e < -0.4) px.fill(0, (y * size + x) * 3, (y * size + x) * 3 + 3);
+      }
+    }
+    faces.push(px);
+  }
+
+  const haze = applySkyHaze(faces, size);
+  assert.ok(Array.isArray(haze) && haze.length === 3, 'returns the measured horizon colour');
+
+  const sample = (f, x, y) => faces[f][(y * size + x) * 3];
+  // -Y face centre is straight down: must be fully hazed, no trace of black.
+  assert.equal(sample(3, size / 2, size / 2), haze[0],
+    'below-horizon blob should be replaced completely by haze');
+  // +Y face centre is the zenith: essentially untouched.
+  assert.ok(sample(2, size / 2, size / 2) > 210,
+    `zenith should keep its colour, got ${sample(2, size / 2, size / 2)}`);
+});
+
 test('vision tone lifts shadows cool and tints highlights warm', async () => {
   const { visionTone, parseVisionGrade } = await import('../export/web/lighting.js');
   // the real mp_hijacked values
