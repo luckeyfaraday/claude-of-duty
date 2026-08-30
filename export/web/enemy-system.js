@@ -360,6 +360,7 @@ class Enemy {
     this.decisionTimer = Math.random() * 0.2;
     this.fireTimer = 0;
     this.reactionTimer = 0;
+    this.aimConvergence = 0;
     this.burstShotsRemaining = 0;
     this.burstPauseTimer = 0;
     this.reloadTimer = 0;
@@ -493,6 +494,7 @@ class Enemy {
     this.decisionTimer = Math.random() * 0.25;
     this.fireTimer = 0;
     this.reactionTimer = 0;
+    this.aimConvergence = 0;
     this.burstShotsRemaining = 0;
     this.burstPauseTimer = 0;
     this.reloadTimer = 0;
@@ -612,6 +614,10 @@ class Enemy {
 
     if (visible) {
       if (!wasVisible) {
+        // T6 records a new first-sight time and converges its aim over the
+        // following frames. Reacquisition therefore starts imprecise even
+        // when this bot still remembers the target's last position.
+        this.aimConvergence = 0;
         this.reactionTimer = this.manager.reactionTimeMin + Math.random() *
           (this.manager.reactionTimeMax - this.manager.reactionTimeMin);
       }
@@ -688,6 +694,9 @@ class Enemy {
     this.burstPauseTimer = Math.max(0, this.burstPauseTimer - dt);
     this.reloadTimer = Math.max(0, this.reloadTimer - dt);
     this.suppressionTimer = Math.max(0, this.suppressionTimer - dt);
+    this.aimConvergence = this.playerVisible
+      ? Math.min(1, this.aimConvergence + dt / this.manager.aimConvergeTime)
+      : Math.max(0, this.aimConvergence - dt / this.manager.aimConvergeTime);
     if (wasReloading && this.reloadTimer === 0) this.magazine = this.manager.enemyMagazineSize;
 
     const combatState = this.state === 'attack' || this.state === 'reposition';
@@ -827,6 +836,7 @@ export class EnemyManager {
     enemyReloadTime = 2.4,
     reactionTimeMin = 0.35,
     reactionTimeMax = 0.95,
+    aimConvergeTime = 2,
     friendlyFireRadius = 25,
     combatSpacing = 105,
     minAttackRange = 320,
@@ -842,12 +852,13 @@ export class EnemyManager {
       enemyDamage, enemyShotInterval, burstShotMin, burstShotMax,
       burstPauseMin, burstPauseMax, enemyMagazineSize, enemyReloadTime,
       reactionTimeMin, reactionTimeMax, friendlyFireRadius, combatSpacing,
-      minAttackRange, searchDuration, respawnDelay,
+      aimConvergeTime, minAttackRange, searchDuration, respawnDelay,
     });
     this.burstShotMin = Math.max(1, Math.floor(this.burstShotMin));
     this.burstShotMax = Math.max(this.burstShotMin, Math.floor(this.burstShotMax));
     this.burstPauseMax = Math.max(this.burstPauseMin, this.burstPauseMax);
     this.reactionTimeMax = Math.max(this.reactionTimeMin, this.reactionTimeMax);
+    this.aimConvergeTime = Math.max(0.1, this.aimConvergeTime);
     this.visionCosine = Math.cos(THREE.MathUtils.degToRad(fieldOfView / 2));
     this.enemies = [];
     this.clips = Object.create(null);
@@ -1028,6 +1039,7 @@ export class EnemyManager {
       playerSpeed,
       shooterSpeed: enemy.movementSpeed,
       suppressed: enemy.suppressionTimer > 0,
+      aimConvergence: enemy.aimConvergence,
     });
     _target.x += (Math.random() - 0.5) * spread;
     _target.y += (Math.random() - 0.5) * spread;

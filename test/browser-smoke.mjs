@@ -178,6 +178,7 @@ test('Hijacked viewer loads collision, navigation, and walking controls', { time
           shotInterval: api.enemies.enemyShotInterval,
           burstShots: [api.enemies.burstShotMin, api.enemies.burstShotMax],
           reaction: [api.enemies.reactionTimeMin, api.enemies.reactionTimeMax],
+          aimConvergeTime: api.enemies.aimConvergeTime,
           magazine: api.enemies.enemyMagazineSize,
         },
         spawnClasses: api.enemies?.enemies.map((enemy) => enemy.spawnPoint.classname) ?? [],
@@ -228,6 +229,7 @@ test('Hijacked viewer loads collision, navigation, and walking controls', { time
       shotInterval: 0.16,
       burstShots: [2, 4],
       reaction: [0.35, 0.95],
+      aimConvergeTime: 2,
       magazine: 24,
     });
     assert.deepEqual(enemySetup.spawnClasses, Array(6).fill('mp_tdm_spawn_team2_start'),
@@ -342,6 +344,23 @@ test('Hijacked viewer loads collision, navigation, and walking controls', { time
     assert.equal(naturalCadence.fired, 2, 'enemies should fire short bursts when their line is clear');
     assert.equal(naturalCadence.magazine, 0, 'enemy shots should consume their own magazine');
     assert.equal(naturalCadence.reloading, true, 'an empty enemy magazine should force a reload pause');
+
+    const aimConvergence = await page.evaluate(() => {
+      const enemy = globalThis.hijacked.enemies.enemies[0];
+      enemy.spawnAt(enemy.spawnPoint);
+      enemy.playerVisible = true;
+      enemy.updateWeapon(0.5);
+      const acquired = enemy.aimConvergence;
+      enemy.playerVisible = false;
+      enemy.updateWeapon(0.25);
+      const decayed = enemy.aimConvergence;
+      enemy.spawnAt(enemy.spawnPoint);
+      return { acquired, decayed };
+    });
+    assert.ok(Math.abs(aimConvergence.acquired - 0.25) < 0.001,
+      `aim should converge over two seconds of sight: ${JSON.stringify(aimConvergence)}`);
+    assert.ok(Math.abs(aimConvergence.decayed - 0.125) < 0.001,
+      `aim should lose convergence without sight: ${JSON.stringify(aimConvergence)}`);
 
     const searchBehavior = await page.evaluate(() => {
       const manager = globalThis.hijacked.enemies;

@@ -21,3 +21,11 @@ test('suppression adds an accuracy penalty instead of disabling fire', () => {
   const suppressed = enemyShotSpread(500, { suppressed: true });
   assert.equal(suppressed - normal, 18);
 });
+
+test('newly acquired targets start inaccurate and converge to settled spread', () => {
+  const acquiring = enemyShotSpread(500, { aimConvergence: 0 });
+  const settling = enemyShotSpread(500, { aimConvergence: 0.5 });
+  const settled = enemyShotSpread(500, { aimConvergence: 1 });
+  assert.equal(acquiring - settled, 20);
+  assert.equal(settling, (acquiring + settled) / 2);
+});
