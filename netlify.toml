@@ -1,21 +1,26 @@
 # Netlify build settings for the git-connected deploy.
 #
-# `publish` restates the directory the site already serves rather than moving
-# it -- settings in this file override the ones in the Netlify UI, so leaving
-# it out would hand the site's root back to the repository root.
+# The site was set up as a plain static publish with its base directory set to
+# `export/web`, which is why it needed no config file at all until now. A
+# function changes that: everything resolves relative to the base, so with the
+# base inside `export/web` the function directory, the root `package.json` that
+# provides its one dependency, and the publish directory itself all land in the
+# wrong place -- `export/web/export/web` in the case of the publish directory.
 #
-# The functions directory is the only genuinely new thing here: it carries
-# `plays.mjs`, which backs the title-screen play counter and declares its own
-# route (`/api/plays`) with the v2 `config` export.
+# So the base moves to the repository root and the three paths are stated from
+# there. Settings here override the ones in the Netlify UI.
 
 [build]
+  base = ""
   publish = "export/web"
 
 [build.environment]
-  # @netlify/blobs 11 needs Node >= 22.12. A site keeps the default Node it was
-  # created with, and this one predates that, so the version is stated here
-  # rather than inherited -- an older Node cannot install or run the function.
+  # @netlify/blobs 11 requires Node >= 22.12, and a site keeps whatever default
+  # Node it was created with. With the base at the root there is now a real
+  # dependency install, so the version has to be said out loud.
   NODE_VERSION = "22"
 
+# `plays.mjs` backs the title-screen play counter and declares its own route
+# (`/api/plays`) through the v2 `config` export, so there are no redirects here.
 [functions]
   directory = "netlify/functions"
