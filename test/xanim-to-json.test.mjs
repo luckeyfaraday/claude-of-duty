@@ -67,6 +67,39 @@ test('reload clip carries hands, gun motion, and notetracks', () => {
   }
 });
 
+// Quantized trans tracks store mins plus the full range the samples span, and
+// the encoder normalizes each axis so its samples run the whole 0..max range.
+// Folding an extra 1/max into the range as well decodes every translation at
+// about 1/65535 of its authored size, which is not obviously wrong in isolation
+// — the values stay finite and the clip still plays. It cost the magazine its
+// entire trip out of the magwell and the bolt its whole cycle, and it survived
+// because the round-trip test above reads both sides through this same decoder.
+// So assert the decode against magnitudes measured off the source bytes.
+test('quantized translation tracks decode at their authored scale', () => {
+  const parsed = parseXAnim(readXanim('viewmodel_hk416_reload'));
+  const span = (bone, axis) => {
+    const values = [];
+    for (let i = axis; i < bone.pos.values.length; i += 3) values.push(bone.pos.values[i]);
+    return Math.max(...values) - Math.min(...values);
+  };
+
+  // The magazine is carried clear of the weapon and dropped: 167 units on the
+  // axis it travels furthest along, not the 0.003 a doubled divide leaves.
+  const clip = parsed.bones.find((bone) => bone.name === 'tag_clip');
+  assert.ok(clip?.pos, 'tag_clip carries a translation track');
+  assert.ok(Math.abs(span(clip, 0) - 167.9) < 1,
+    `tag_clip should travel its authored 167 units, got ${span(clip, 0).toFixed(3)}`);
+  // It is authored as a displacement from the magwell, so it opens on zero.
+  assert.ok(Math.hypot(...clip.pos.values.slice(0, 3)) < 0.01,
+    `tag_clip should open on the origin, got ${clip.pos.values.slice(0, 3)}`);
+
+  // The u8 path quantizes separately from the u16 one, so cover it too: the
+  // gun's own recoil kick during the same clip.
+  const weapon = parsed.bones.find((bone) => bone.name === 'tag_weapon');
+  assert.ok(Math.abs(span(weapon, 2) - 6.8) < 0.5,
+    `tag_weapon should kick its authored 6.8 units, got ${span(weapon, 2).toFixed(3)}`);
+});
+
 test('exported web clips match the source binaries', () => {
   for (const name of fs.readdirSync(animsDir).filter((file) => file.endsWith('.json'))) {
     const clip = JSON.parse(fs.readFileSync(path.join(animsDir, name), 'utf8'));

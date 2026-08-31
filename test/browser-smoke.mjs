@@ -830,7 +830,7 @@ test('Hijacked viewer loads collision, navigation, and walking controls', { time
       // track, so a working reload physically moves it out of the magwell.
       const clip = viewmodel.root.getObjectByName('tag_clip');
       const rest = clip?.position.clone() ?? null;
-      // Idle never animates tag_clip, so this is the attachment's bind pose.
+      // The hk416 idle carries no tag_clip channel, so this is the bind pose.
       const bindQuat = clip?.quaternion.clone() ?? null;
       let magTravel = 0;
       let magSwing = 0;
@@ -904,15 +904,20 @@ test('Hijacked viewer loads collision, navigation, and walking controls', { time
     );
     assert.equal(reload.timelineCleared, true, 'the timeline should be released when the reload ends');
     assert.equal(reload.hasMagazine, true, 'the magazine attachment model should be mounted at tag_clip');
-    // The clip's tag_clip position track is a constant source-scene placement,
-    // so once rebased the magazine must stay seated for the whole reload
-    // rather than being thrown 163 units out of the world by the raw track.
-    assert.ok(reload.magTravel < 0.5,
-      `the magazine should stay in the magwell, drifted ${reload.magTravel}`);
+    // A mag change physically removes the magazine, so the tag_clip position
+    // track has to carry it clear of the weapon. This guarded the opposite for
+    // as long as the xanim trans decode divided by the quantization range twice
+    // (see .tools/xanim_to_json.mjs): every translation in every clip came out
+    // at about 1/65535 of its authored size, the magazine only jittered in the
+    // well, and the constant it degenerated to was read back as an authored
+    // source-scene placement. The hk416 track spans 167 units; anything past
+    // the length of the weapon means it actually left.
+    assert.ok(reload.magTravel > 20,
+      `the magazine should leave the magwell, drifted only ${reload.magTravel}`);
     assert.ok(reload.magReseated < 0.5,
       `the magazine should end seated, ended ${reload.magReseated} from rest`);
-    // The clip's rotation channel is what actually takes the magazine out of
-    // the well and puts it back, in step with the mag_out/mag_in cues.
+    // The clip's rotation channel turns the magazine as it comes out and lines
+    // it back up going in, in step with the mag_out/mag_in cues.
     assert.ok(reload.magSwingDeg > 60,
       `the magazine should swing out of the well, peaked at ${reload.magSwingDeg} deg`);
     assert.ok(reload.magEndAngleDeg < 2,

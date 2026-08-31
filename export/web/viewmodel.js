@@ -489,11 +489,11 @@ export class Viewmodel {
         if (bone.pos?.values?.length) {
           const times = bone.pos.frames.map((frame) => frame / data.fps);
           const values = bone.pos.values.slice();
-          // The magazine's tag_clip track carries a constant 163-unit placement
-          // that belongs to the source animation scene, not to this rig, the
-          // same way the body xanims place j_mainroot (see enemy-system.js).
-          // Applied as authored it throws the magazine out of the world, so
-          // rebase it onto the attachment's own bind position in the magwell.
+          // tag_clip's track is authored as a displacement from wherever the
+          // magazine starts: every reload clip opens it on the origin and walks
+          // it out of the well and back. The attachment carries its own bind
+          // position in the magwell, so anchor the displacement on that rather
+          // than treating it as a placement in this rig's space.
           if (bone.name === 'tag_clip') {
             const offset = [
               node.position.x - values[0],
