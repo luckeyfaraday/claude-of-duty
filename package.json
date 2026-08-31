@@ -19,7 +19,7 @@
     "bake:probes": "node .tools/bake_probes.mjs",
     "perf:probe": "node .tools/perf_probe.mjs",
     "test": "node --test",
-    "test:unit": "node --test test/collision-world.test.mjs test/scene-optimizer.test.mjs test/player-controller.test.mjs test/player-health.test.mjs test/weapon-controller.test.mjs test/viewmodel-ads.test.mjs test/viewmodel-camo.test.mjs test/hud.test.mjs test/free-for-all-match.test.mjs test/play-counter.test.mjs test/enemy-tactics.test.mjs test/frontend.test.mjs test/t6-sab-audio.test.mjs test/xanim-to-json.test.mjs test/notetracks.test.mjs test/lighting.test.mjs test/light-probes.test.mjs tests/navmesh-bake.test.mjs",
+    "test:unit": "node --test test/collision-world.test.mjs test/scene-optimizer.test.mjs test/player-controller.test.mjs test/player-health.test.mjs test/weapon-controller.test.mjs test/viewmodel-ads.test.mjs test/viewmodel-camo.test.mjs test/hud.test.mjs test/free-for-all-match.test.mjs test/medals.test.mjs test/play-counter.test.mjs test/enemy-tactics.test.mjs test/frontend.test.mjs test/t6-sab-audio.test.mjs test/xanim-to-json.test.mjs test/notetracks.test.mjs test/lighting.test.mjs test/light-probes.test.mjs tests/navmesh-bake.test.mjs",
     "test:browser": "node --test test/browser-smoke.mjs"
   },
   "repository": {
