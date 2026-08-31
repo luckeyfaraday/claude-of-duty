@@ -74,6 +74,48 @@ icons, damage feedback, and the low-health overlays (~2 MB). The HUD's layout
 menudefs do not dump for T6, so the browser would rebuild placement itself and
 draw with this art.
 
+## Play counter
+
+The title screen shows how many people have played, under the prompt:
+
+```
+3 PLAYERS · 8 PLAYS
+```
+
+`players` counts browsers that have started a match, `plays` counts sessions
+that have. The split is deliberate: `players` is the honest answer to "how many
+people have played", and `plays` is the one that moves.
+
+`export/web/play-counter.js` holds the client half and, like `frontend.js`,
+touches no DOM so it tests in node. A play is recorded when pointer lock is
+granted, not when the page loads, so social-card scrapers and bounced tabs
+never reach it; the automation harness enters through `setAutomationActive`
+without taking a lock, so the smoke tests stay out of the totals too. The first
+record per page session latches, so resuming from the pause menu does not count
+again. New-versus-returning is a `vibeslops:player` key in `localStorage` —
+clearing site data counts you again, which is unavoidable without asking
+anonymous players to sign in.
+
+The server half is `netlify/functions/plays.mjs`, on Netlify Blobs. Both counts
+live under one key so a reader cannot catch the pair mid-update, and the
+increment is a compare-and-swap against the entry's ETag with a short retry
+ladder: Blobs has no atomic add, and a plain read-modify-write would silently
+drop a count whenever two players started at the same moment.
+
+The counter is decoration and fails silently — offline, blocked, or served by
+the static dev server above, which has no function and simply 404s, the line
+stays blank rather than breaking the frontend. There is no "am I in production"
+check, so `netlify dev` exercises the real thing against its own local blob
+store:
+
+```powershell
+npx netlify dev
+```
+
+`netlify.toml` exists only to name the publish and functions directories; it
+restates the `export/web` the site already served, since a `netlify.toml`
+overrides the Netlify UI's settings.
+
 ## First-person viewmodel
 
 The viewer renders a weapon viewmodel (FBI shortsleeve viewhands holding the

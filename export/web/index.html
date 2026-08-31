@@ -144,6 +144,17 @@
     animation: fe-pulse 2.2s ease-in-out infinite;
   }
   @keyframes fe-pulse { 0%, 100% { opacity: .4; } 50% { opacity: 1; } }
+  /* The play counter is a footnote to the prompt, not a second call to
+     action: it shares the tracking but drops the pulse and the accent. No
+     display rule here, so `hidden` still hides it before the totals land. */
+  .fe-count {
+    margin: 0; font-size: 11px; letter-spacing: .22em; text-indent: .22em;
+    text-transform: uppercase; color: rgba(206, 224, 240, .55);
+    text-shadow: 0 1px 8px rgba(0, 0, 0, .9);
+  }
+  .fe-start-foot {
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+  }
 
   .fe-heading {
     margin: 0; font-size: 20px; font-weight: 600; letter-spacing: .38em;
@@ -339,7 +350,10 @@
         <img src="ui/menu_mp_map_select_hijacked_final.png" alt="Hijacked" width="256" height="128">
         <figcaption>mp_hijacked</figcaption>
       </figure>
-      <p class="fe-prompt">Click to play</p>
+      <div class="fe-start-foot">
+        <p class="fe-prompt">Click to play</p>
+        <p class="fe-count" id="fe-count" hidden></p>
+      </div>
     </div>
     <div class="fe-pause">
       <h2 class="fe-heading">Paused</h2>
@@ -395,6 +409,7 @@ import { PlayerHealth } from './player-health.js';
 import { FreeForAllMatch } from './free-for-all-match.js';
 import { Hud } from './hud.js';
 import { Frontend } from './frontend.js';
+import { PlayCounter } from './play-counter.js';
 import { loadCollisionWorld } from './collision-world.js';
 import { optimizeStaticScene } from './scene-optimizer.js';
 import { applyEnvironmentLighting, loadGradeLut, POST_SHADER, HAZE, applyMaterialClasses } from './lighting.js';
@@ -592,6 +607,22 @@ const frontend = new Frontend({
   onPlay: () => renderer.domElement.requestPointerLock(),
   onResume: () => renderer.domElement.requestPointerLock(),
 });
+
+// The title-screen play counter. It fetches on its own and is never awaited by
+// the load, so a blocked request or an endpoint that is not there leaves the
+// line blank instead of holding up the game. Reading `localStorage` at all
+// throws in a sandboxed frame, hence the guard around the property itself.
+const playCounter = new PlayCounter({
+  storage: (() => { try { return window.localStorage; } catch { return null; } })(),
+  fetch: (...args) => window.fetch(...args),
+});
+const countLine = document.getElementById('fe-count');
+function renderPlayCount() {
+  if (!countLine) return;
+  countLine.textContent = playCounter.text;
+  countLine.hidden = !playCounter.text;
+}
+playCounter.load().then(renderPlayCount);
 // Weights are roughly the wall-clock share each stage takes, not its byte size.
 frontend.expect({
   map: 14,
@@ -1093,8 +1124,13 @@ function createDebugApi() {
 document.addEventListener('pointerlockchange', () => {
   locked = document.pointerLockElement === renderer.domElement;
   document.body.classList.toggle('locked', locked);
-  if (locked) frontend.enter();
-  else frontend.suspend();
+  // Counting here rather than in `frontend.enter()` keeps the automation
+  // harness out of the totals: `setAutomationActive` and the debug `showMenu`
+  // enter the game without ever taking a pointer lock.
+  if (locked) {
+    frontend.enter();
+    playCounter.record().then(renderPlayCount);
+  } else frontend.suspend();
   if (!locked) {
     clearKeys();
     weapon.setTrigger(false);
