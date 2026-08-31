@@ -9,7 +9,7 @@
  * Netlify Blobs is the whole backend -- it needs no configuration inside a
  * function, and the free tier is far past anything this site will do.
  */
-import { getStore } from '@netlify/blobs';
+import { getDeployStore, getStore } from '@netlify/blobs';
 
 const KEY = 'totals';
 
@@ -71,8 +71,19 @@ export async function increment(store, newPlayer) {
   return null;
 }
 
+/**
+ * Production counts into one site-wide store; every other context gets a store
+ * scoped to its own deploy. `getStore` is shared across all deploys of a site,
+ * so without this a deploy preview would write into the real totals and anyone
+ * clicking through a preview would seed the number the site advertises.
+ */
+function counterStore() {
+  const options = { name: 'play-counter', consistency: 'strong' };
+  return process.env.CONTEXT === 'production' ? getStore(options) : getDeployStore(options);
+}
+
 export default async (request) => {
-  const store = getStore({ name: 'play-counter', consistency: 'strong' });
+  const store = counterStore();
 
   if (request.method === 'GET') {
     return json(totalsFrom(await store.get(KEY, { type: 'json', consistency: 'strong' })));
