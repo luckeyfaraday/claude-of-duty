@@ -97,6 +97,19 @@ test('the more-than threshold awards above, not at, its size', () => {
   assert.deepEqual(refs(tracker.onKill()), ['killstreak_more_than_10']);
 });
 
+// A streak that crosses several rungs at once has to pop the biggest medal
+// first, and that must not depend on the order the exporter happened to emit:
+// scoreinfo lists killstreaks descending, LOGIC_DEFS ascending.
+test('several rungs crossed at once come back highest first, whatever the table order', () => {
+  const ascending = LOGIC_DEFS;
+  const descending = [...LOGIC_DEFS].reverse();
+  const expected = ['killstreak_more_than_10', 'killstreak_10', 'killstreak_5'];
+  for (const defs of [ascending, descending]) {
+    const { tracker } = makeTracker(4200, defs);
+    assert.deepEqual(refs(tracker.killstreaksFor(11)), expected);
+  }
+});
+
 test('dying resets streak, chain and latched streak medals', () => {
   const { clock, tracker } = makeTracker();
   tracker.onKill();

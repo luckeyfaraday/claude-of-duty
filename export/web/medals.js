@@ -27,7 +27,32 @@ function parseDefinitions(defs) {
     const more = moreThanPattern.exec(def.ref);
     if (more) tables[`${more[1]}MoreThan`].set(Number(more[2]), def);
   }
-  return { tables, byRef };
+
+  // One kill can cross several killstreak rungs at once, and the popups read
+  // best with the biggest medal on top. Rank the rungs here rather than trust
+  // the order the table arrives in: scoreinfo happens to list them descending,
+  // but nothing about the export guarantees it. `more_than_N` sits just above
+  // `N`, since it is the rarer award of the two.
+  const killstreakRungs = [];
+  for (const [threshold, def] of tables.killstreak) {
+    killstreakRungs.push({
+      latch: threshold,
+      rank: threshold,
+      def,
+      earnedAt: (streak) => streak >= threshold,
+    });
+  }
+  for (const [threshold, def] of tables.killstreakMoreThan) {
+    killstreakRungs.push({
+      latch: `>${threshold}`,
+      rank: threshold + 0.5,
+      def,
+      earnedAt: (streak) => streak > threshold,
+    });
+  }
+  killstreakRungs.sort((a, b) => b.rank - a.rank);
+
+  return { tables, byRef, killstreakRungs };
 }
 
 export class MedalTracker {
@@ -64,16 +89,10 @@ export class MedalTracker {
    */
   killstreaksFor(streak) {
     const earned = [];
-    for (const threshold of this.defs.tables.killstreak.keys()) {
-      if (streak >= threshold && !this.awardedStreaks.has(threshold)) {
-        this.awardedStreaks.add(threshold);
-        earned.push(this.defs.tables.killstreak.get(threshold));
-      }
-    }
-    for (const [threshold, def] of this.defs.tables.killstreakMoreThan) {
-      if (streak > threshold && !this.awardedStreaks.has(`>${threshold}`)) {
-        this.awardedStreaks.add(`>${threshold}`);
-        earned.push(def);
+    for (const rung of this.defs.killstreakRungs) {
+      if (rung.earnedAt(streak) && !this.awardedStreaks.has(rung.latch)) {
+        this.awardedStreaks.add(rung.latch);
+        earned.push(rung.def);
       }
     }
     return earned;
