@@ -24,6 +24,12 @@
 !/.tools/perf_probe.mjs
 !/.tools/xanim_to_json.mjs
 !/.tools/extract_t6_sab_audio.mjs
+!/.tools/dump_soundbanks.mjs
+!/.tools/weapon_audio_manifest.mjs
+!/.tools/extract_weapon_audio.mjs
+!/.tools/generate_weapon_definitions.py
+!/.tools/measure_sights.mjs
+!/.tools/pack_web_textures.mjs
 !/.tools/ai-game.mjs
 !/export/
 !/export/web/

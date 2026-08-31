@@ -24,6 +24,33 @@ const REAR_TOP = [0.447, 0, 5.168];
 // with — the post grazes it and stays hidden behind the sight body.
 const NOTCH_FLOOR = [0.319, 0, 5.002];
 
+const RIFLE_SIGHT_CONFIGS = [
+  { id: 'an94', sightTag: 'tag_sights', insert: true },
+  { id: 'hk416', sightTag: 'tag_sights', insert: true },
+  { id: 'sa58', sightTag: 'tag_sights', insert: true },
+  {
+    id: 'saritch',
+    sightTag: 'tag_sights_on',
+    insert: false,
+    adsSightAnchors: { front: FRONT_TIP, rear: REAR_TOP },
+  },
+  {
+    id: 'scar',
+    sightTag: 'tag_sights_on',
+    insert: false,
+    adsSightAnchors: { front: FRONT_TIP, rear: REAR_TOP },
+  },
+  {
+    id: 'sig556',
+    sightTag: 'tag_sights_on',
+    insert: false,
+    adsSightAnchors: { front: FRONT_TIP, rear: REAR_TOP },
+  },
+  { id: 'tar21', sightTag: 'tag_sights_on', insert: true },
+  { id: 'type95', sightTag: 'tag_sights_on', insert: true },
+  { id: 'xm8', sightTag: 'tag_sights_on', insert: true },
+];
+
 function quad(vertices) {
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
@@ -32,8 +59,14 @@ function quad(vertices) {
 }
 
 // The hip pose is off-square so the alignment has a real rotation to solve.
-function buildRig({ insert = true, rear = true, tilt = new THREE.Euler(0.09, -0.14, 0.06, 'YXZ') } = {}) {
-  const viewmodel = new Viewmodel();
+function buildRig({
+  insert = true,
+  rear = true,
+  sightTag = 'tag_sights',
+  adsSightAnchors = null,
+  tilt = new THREE.Euler(0.09, -0.14, 0.06, 'YXZ'),
+} = {}) {
+  const viewmodel = new Viewmodel({ adsSightAnchors });
   const jGun = new THREE.Object3D();
   jGun.name = 'j_gun';
   jGun.quaternion
@@ -41,7 +74,7 @@ function buildRig({ insert = true, rear = true, tilt = new THREE.Euler(0.09, -0.
     .premultiply(new THREE.Quaternion().setFromEuler(tilt));
 
   const tagSights = new THREE.Object3D();
-  tagSights.name = 'tag_sights';
+  tagSights.name = sightTag;
   tagSights.position.set(...TAG_SIGHTS);
   jGun.add(tagSights);
 
@@ -207,3 +240,73 @@ test('rigs without a sight insert still align on tag_sights alone', () => {
   assert.ok(Math.hypot(sight.x, sight.y) < 1e-6, `fallback should centre the tag, got ${sight.x}, ${sight.y}`);
   assert.ok(Math.abs(sight.z + viewmodel.adsDistance) < 1e-6);
 });
+
+test('tag_sights_on is the fallback eye anchor when tag_sights is absent', () => {
+  const { viewmodel, tagSights } = buildRig({
+    insert: false,
+    rear: false,
+    sightTag: 'tag_sights_on',
+  });
+  viewmodel.computeAdsAlignment();
+
+  const sight = tagSights.getWorldPosition(new THREE.Vector3()).applyMatrix4(viewmodel.adsMatrix);
+  assert.ok(Math.hypot(sight.x, sight.y) < 1e-6, `fallback should centre tag_sights_on, got ${sight.x}, ${sight.y}`);
+  assert.ok(Math.abs(sight.z + viewmodel.adsDistance) < 1e-6);
+});
+
+// The override exists for rigs with no insert material, which are exactly the
+// rigs findSightTip cannot measure. Hanging the rear anchor off a resolved front
+// point therefore discarded it on every gun the option was added for.
+test('a front anchor alone still drives the two-point solve on an insertless rig', () => {
+  const { viewmodel, jGun } = buildRig({
+    insert: false,
+    sightTag: 'tag_sights_on',
+    adsSightAnchors: { front: FRONT_TIP },
+  });
+  viewmodel.computeAdsAlignment();
+  const { front, rear } = aimedSights(viewmodel, jGun);
+
+  // The rear sight still comes from the geometry: findRearSight measures off the
+  // post tip, and the anchor supplies exactly that.
+  assert.ok(Math.hypot(front.x, front.y) < 1e-6, `front post off axis: ${front.x}, ${front.y}`);
+  assert.ok(Math.hypot(rear.x, rear.y) < 1e-6, `rear sight off axis: ${rear.x}, ${rear.y}`);
+  assert.ok(Math.abs(rear.z + viewmodel.adsEyeRelief) < 1e-6, `eye relief: ${rear.z}`);
+});
+
+test('a rear anchor with no front point is reported rather than dropped', () => {
+  const warnings = [];
+  const warn = console.warn;
+  console.warn = (message) => warnings.push(String(message));
+  try {
+    const { viewmodel } = buildRig({
+      insert: false,
+      rear: false,
+      sightTag: 'tag_sights_on',
+      adsSightAnchors: { rear: REAR_TOP },
+    });
+    viewmodel.computeAdsAlignment();
+    // Nothing can supply the front point here, so the sight line is unsolvable
+    // and the fallback runs. That is the picture this solve replaced, so the
+    // mis-authored definition has to be audible rather than silent.
+    assert.equal(warnings.length, 1, `expected one warning, got ${warnings.length}`);
+    assert.match(warnings[0], /adsSightAnchors\.rear/);
+  } finally {
+    console.warn = warn;
+  }
+});
+
+for (const { id, sightTag, insert, adsSightAnchors } of RIFLE_SIGHT_CONFIGS) {
+  test(`${id} produces a finite, non-identity ADS alignment`, () => {
+    const { viewmodel, jGun } = buildRig({ sightTag, insert, adsSightAnchors });
+    viewmodel.computeAdsAlignment();
+
+    assert.ok(viewmodel.adsMatrix.elements.every(Number.isFinite), `${id} ADS matrix is not finite`);
+    assert.ok(!viewmodel.adsMatrix.equals(new THREE.Matrix4()), `${id} ADS matrix is still identity`);
+
+    if (adsSightAnchors) {
+      const { front, rear } = aimedSights(viewmodel, jGun);
+      assert.ok(Math.hypot(front.x, front.y) < 1e-6, `${id} override front off axis`);
+      assert.ok(Math.hypot(rear.x, rear.y) < 1e-6, `${id} override rear off axis`);
+    }
+  });
+}

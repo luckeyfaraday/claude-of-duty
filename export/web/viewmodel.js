@@ -15,8 +15,8 @@ const VIEW_TO_CAMERA = new THREE.Matrix4().makeBasis(
 const { clamp, damp } = THREE.MathUtils;
 
 const CUSTOM_CAMOS = Object.freeze({
-  openai: './images/openai-camo.png',
-  claude: './images/claude-camo.png',
+  openai: './images/openai-camo.webp',
+  claude: './images/claude-camo.webp',
 });
 const CAMO_MATERIAL_PATTERN = /_camo\d*$/i;
 // The red tritium insert capping the front post is the element the eye lines up
@@ -69,18 +69,29 @@ export class Viewmodel {
   // adsEyeRelief is the gap the aiming eye keeps behind the *rear* sight, which
   // is what decides whether the rear sight is in front of the camera at all.
   // adsDistance only applies to rigs with no rear sight to find, where it keeps
-  // its old meaning: the distance from the eye to tag_sights.
+  // its old meaning: the distance from the eye to tag_sights/tag_sights_on.
+  // A weapon may provide measured ADS anchors as the plain serializable
+  // `adsSightAnchors: { front: [x, y, z], rear: [x, y, z] }` option, in j_gun
+  // local space. This is for exported rigs whose front sight has no identifiable
+  // insert material for findSightTip to measure — saritch, scar and sig556 ship
+  // no tritium at all, so the geometry search has nothing to key on.
+  // `front` alone is enough: findRearSight works off the post tip, so supplying
+  // the front point lets the rear one still come from the geometry. `rear` alone
+  // is not — there is no line without a front point, and on these rigs nothing
+  // can supply one — so it warns and takes the single-point fallback.
   constructor({
     fov = 75,
     adsFov = 55,
     adsDistance = 7,
     adsEyeRelief = 3.5,
+    adsSightAnchors = null,
     camo = 'openai',
   } = {}) {
     this.baseFov = fov;
     this.adsFov = adsFov;
     this.adsDistance = adsDistance;
     this.adsEyeRelief = adsEyeRelief;
+    this.adsSightAnchors = adsSightAnchors;
 
     this.camera = new THREE.PerspectiveCamera(fov, 1, 0.5, 500);
     this.scene = new THREE.Scene();
@@ -139,6 +150,8 @@ export class Viewmodel {
     this.reloadEmptyAction = null;
     this.fireAction = null;
     this.adsFireAction = null;
+    this.introFireAction = null;
+    this.introAdsFireAction = null;
     this.reloading = false;
     this.weaponRoot = null;
     this.camo = Object.hasOwn(CUSTOM_CAMOS, camo) ? camo : 'openai';
@@ -168,11 +181,17 @@ export class Viewmodel {
     return this.camo;
   }
 
-  async load(handsUrl, weaponUrl, magazineUrl, onProgress) {
-    // The exported GLBs reference sibling textures as .dds; the web export
-    // ships texconv PNG copies instead, so remap the suffix at load time.
+  async load(handsUrl, weaponUrl, magazineUrl, onProgress, {
+    magazineOffset = null,
+    magazineRotation = null,
+  } = {}) {
+    // The exported GLBs reference sibling textures as .dds; the web export ships
+    // WebP copies instead, so remap the suffix at load time. They were PNG until
+    // the nine-rifle roster took this folder to 28 MB on a load that fetches every
+    // weapon slot before the player can move; re-encoding cut it to 10 MB with the
+    // normal maps kept lossless. See .tools/pack_web_textures.mjs.
     const manager = new THREE.LoadingManager();
-    manager.setURLModifier((url) => (url.endsWith('.dds') ? `${url.slice(0, -4)}.png` : url));
+    manager.setURLModifier((url) => (url.endsWith('.dds') ? `${url.slice(0, -4)}.webp` : url));
     const loader = new GLTFLoader(manager);
     const textureLoader = new THREE.TextureLoader(manager);
     const load = (url, label) => loader.loadAsync(url, (event) => onProgress?.(label, event));
@@ -198,9 +217,13 @@ export class Viewmodel {
     this.root.add(hands.scene, weapon.scene);
     // T6 ships the magazine as its own attachment xmodel rather than welding it
     // into the receiver, because the reload xanim animates it out of the well
-    // and back in on a `tag_clip` track. Parenting it into the weapon's own
-    // space lands it in the magwell and lets that authored track bind by name.
-    if (magazine) weapon.scene.add(magazine.scene);
+    // and back in on a `tag_clip` track. Attachment offsets are authored in the
+    // weapon model's root space, before its j_gun-to-tag_weapon weld.
+    if (magazine) {
+      if (Array.isArray(magazineOffset)) magazine.scene.position.fromArray(magazineOffset);
+      if (Array.isArray(magazineRotation)) magazine.scene.rotation.set(...magazineRotation);
+      weapon.scene.add(magazine.scene);
+    }
     this.root.updateMatrixWorld(true);
 
     // T6 mount convention: the weapon's j_gun joint lands exactly on the
@@ -213,6 +236,7 @@ export class Viewmodel {
     if (!tagWeapon || !jGun || !tagView) {
       throw new Error('viewmodel joints not found in exported rigs');
     }
+
     weapon.scene.matrixAutoUpdate = false;
     weapon.scene.matrix.copy(jGun.matrixWorld).invert();
     tagWeapon.add(weapon.scene);
@@ -274,20 +298,37 @@ export class Viewmodel {
   // drawn, so only the front post was ever visible down the sight.
   computeAdsAlignment() {
     const jGun = findNode(this.root, 'j_gun');
-    const tagSights = findNode(this.root, 'tag_sights');
+    const tagSights = findNode(this.root, 'tag_sights')
+      ?? findNode(this.root, 'tag_sights_on');
     if (!tagSights || !jGun) return;
     const gunQuat = jGun.getWorldQuaternion(new THREE.Quaternion());
     const gunUp = new THREE.Vector3(0, 0, 1).applyQuaternion(gunQuat).normalize();
 
-    const front = this.findSightTip(jGun);
-    const rear = front && this.findRearSight(jGun, front);
+    // Each end of the sight line resolves from its override first and from the
+    // geometry second, and the two stay independent: hanging the rear on the
+    // front discarded a supplied rear anchor whenever findSightTip came up empty
+    // — which is every rig the override exists for, since those are the ones
+    // with no insert material to key on. The pair then fell through to the
+    // single-point fallback, putting the rear sight back behind the camera.
+    const front = this.getSightAnchor(jGun, 'front') ?? this.findSightTip(jGun);
+    const rear = this.getSightAnchor(jGun, 'rear')
+      ?? (front ? this.findRearSight(jGun, front) : null);
+    // A rear anchor alone cannot be solved: without a front point there is no
+    // line, and on these rigs the geometry cannot supply one either. That is a
+    // mis-authored definition rather than a rig the fallback handles, and the
+    // fallback's sight picture is the bug this whole solve replaced, so say so.
+    if (rear && !front) {
+      console.warn('viewmodel: adsSightAnchors.rear needs a matching front anchor on a rig with no sight insert; falling back to tag_sights');
+    }
 
     // With both sights the sight line itself is the aim axis and the rear sight
     // anchors the eye relief. With only one there is no line to solve, so the
-    // barrel stands in for it and tag_sights anchors the eye, as before.
-    const anchor = rear ?? tagSights.getWorldPosition(new THREE.Vector3());
-    const relief = rear ? this.adsEyeRelief : this.adsDistance;
-    const back = rear
+    // barrel stands in for it and tag_sights/tag_sights_on anchors the eye, as
+    // before.
+    const sightLine = Boolean(front && rear);
+    const anchor = sightLine ? rear : tagSights.getWorldPosition(new THREE.Vector3());
+    const relief = sightLine ? this.adsEyeRelief : this.adsDistance;
+    const back = sightLine
       ? rear.clone().sub(front).normalize()
       : new THREE.Vector3(-1, 0, 0).applyQuaternion(gunQuat).normalize();
 
@@ -311,7 +352,7 @@ export class Viewmodel {
     // it; the depth term is left alone so the tag still sets the eye relief.
     // With a rear sight the two-point solve already puts both points on the
     // axis, so there is nothing left to correct.
-    if (front && !rear) {
+    if (front && !sightLine) {
       const tip = front.clone().applyMatrix4(this.adsMatrix);
       this.adsMatrix.premultiply(new THREE.Matrix4().makeTranslation(-tip.x, -tip.y, 0));
     }
@@ -362,7 +403,7 @@ export class Viewmodel {
   // ray is made to pass through. It is authored level with the floor of the rear
   // notch, which is why the notch floor is the one point that must *not* be used
   // to aim: see findRearSight. Rigs that ship no such element fall back to
-  // tag_sights alone.
+  // tag_sights/tag_sights_on alone.
   findSightTip(jGun) {
     const box = new THREE.Box3();
     const vertex = new THREE.Vector3();
@@ -391,6 +432,14 @@ export class Viewmodel {
     return jGun.localToWorld(tip);
   }
 
+  getSightAnchor(jGun, key) {
+    const point = this.adsSightAnchors?.[key];
+    if (!Array.isArray(point) || point.length !== 3 || !point.every(Number.isFinite)) {
+      return null;
+    }
+    return jGun.localToWorld(new THREE.Vector3().fromArray(point));
+  }
+
   // Loads xanim-derived JSON clips (see .tools/xanim_to_json.mjs) and turns
   // them into AnimationClips bound to the rig by bone name. The idle clip is
   // the authored hip-fire pose, so it becomes the always-on base layer the
@@ -414,17 +463,21 @@ export class Viewmodel {
         if (bone.rot?.values?.length) {
           const times = bone.rot.frames.map((frame) => frame / data.fps);
           const values = bone.rot.values.slice();
-          // tag_clip's rotation is authored in the source animation scene just
-          // like its position: the track opens on identity while the magazine
-          // binds at -90 degrees about X, so playing it raw rolls the magazine
-          // onto its side. Re-anchor the channel on the bind orientation and
-          // keep the motion the clip actually describes.
+          // tag_clip's rotation is authored relative to the animation's first
+          // pose, while the converted attachment binds at -90 degrees about X.
+          // Apply the authored delta before that bind transform. Multiplying it
+          // after the bind rotates around the converted axes and turns the
+          // magazine upside-down as it leaves the well.
           if (bone.name === 'tag_clip') {
-            const correction = node.quaternion.clone()
-              .multiply(new THREE.Quaternion(values[0], values[1], values[2], values[3]).invert());
+            const sourceBindInverse = new THREE.Quaternion(
+              values[0], values[1], values[2], values[3],
+            ).invert();
+            const targetBind = node.quaternion.clone();
             const key = new THREE.Quaternion();
             for (let i = 0; i < values.length; i += 4) {
-              key.set(values[i], values[i + 1], values[i + 2], values[i + 3]).premultiply(correction);
+              key.set(values[i], values[i + 1], values[i + 2], values[i + 3])
+                .multiply(sourceBindInverse)
+                .multiply(targetBind);
               values[i] = key.x;
               values[i + 1] = key.y;
               values[i + 2] = key.z;
@@ -489,6 +542,14 @@ export class Viewmodel {
       this.adsFireAction = this.mixer.clipAction(this.clips.get('adsFire'));
       this.adsFireAction.setLoop(THREE.LoopOnce, 1);
     }
+    if (this.clips.has('introFire') && this.idleAction) {
+      this.introFireAction = this.mixer.clipAction(this.clips.get('introFire'));
+      this.introFireAction.setLoop(THREE.LoopOnce, 1);
+    }
+    if (this.clips.has('introAdsFire') && this.idleAction) {
+      this.introAdsFireAction = this.mixer.clipAction(this.clips.get('introAdsFire'));
+      this.introAdsFireAction.setLoop(THREE.LoopOnce, 1);
+    }
   }
 
   onClipFinished(event) {
@@ -499,7 +560,8 @@ export class Viewmodel {
       event.action.fadeOut(0.12);
       return;
     }
-    if (event.action === this.fireAction || event.action === this.adsFireAction) {
+    if ([this.fireAction, this.adsFireAction, this.introFireAction, this.introAdsFireAction]
+      .includes(event.action)) {
       event.action.stop();
       if (!this.reloading) this.idleAction.reset().fadeIn(0.06).play();
     }
@@ -511,9 +573,21 @@ export class Viewmodel {
     this.reloading = true;
     this.fireAction?.stop();
     this.adsFireAction?.stop();
+    this.introFireAction?.stop();
+    this.introAdsFireAction?.stop();
     action.reset().fadeIn(0.12).play();
     this.idleAction.fadeOut(0.12);
     this.startNotetracks(empty && this.reloadEmptyAction ? 'reloadEmpty' : 'reload', action);
+    return true;
+  }
+
+  cancelReload() {
+    if (!this.reloading) return false;
+    this.reloadAction?.stop();
+    this.reloadEmptyAction?.stop();
+    this.stopNotetracks();
+    this.reloading = false;
+    this.idleAction?.reset().fadeIn(0.08).play();
     return true;
   }
 
@@ -528,12 +602,21 @@ export class Viewmodel {
     this.notetrackAction = null;
   }
 
-  fire() {
+  fire({ intro = false } = {}) {
     if (!this.ready || this.reloading) return false;
-    const action = this.aimBlend > 0.5 && this.adsFireAction ? this.adsFireAction : this.fireAction;
+    const aiming = this.aimBlend > 0.5;
+    const action = intro
+      ? (aiming && this.introAdsFireAction ? this.introAdsFireAction : this.introFireAction)
+      : (aiming && this.adsFireAction ? this.adsFireAction : this.fireAction);
     if (action) {
-      const other = action === this.fireAction ? this.adsFireAction : this.fireAction;
-      other?.stop();
+      for (const other of [
+        this.fireAction,
+        this.adsFireAction,
+        this.introFireAction,
+        this.introAdsFireAction,
+      ]) {
+        if (other !== action) other?.stop();
+      }
       this.idleAction?.fadeOut(0.02);
       action.reset().setEffectiveWeight(1).fadeIn(0.005).play();
     }

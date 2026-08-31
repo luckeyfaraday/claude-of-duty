@@ -1,6 +1,43 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { Frontend } from '../export/web/frontend.js';
+import { Frontend, SCREENS } from '../export/web/frontend.js';
+
+test('frontend exposes the class screen and keeps its selected rifle across routes', () => {
+  const selected = [];
+  const frontend = new Frontend({
+    onSelectWeapon: (id) => {
+      selected.push(id);
+      return id;
+    },
+  });
+  assert.ok(SCREENS.includes('class'));
+  frontend.setWeapons([
+    { id: 'm27', name: 'M27', ready: true },
+    { id: 'sa58', name: 'FAL OSW', ready: true },
+    { id: 'xm8', name: 'M8A1', ready: false },
+  ], 'm27');
+  frontend.setReady();
+
+  assert.equal(frontend.getState().selectedWeapon, 'm27');
+  assert.equal(frontend.openClass(), true);
+  assert.equal(frontend.screen, 'class');
+  assert.equal(frontend.visible, true);
+  assert.equal(frontend.ready, false, 'the class picker should not start the game by itself');
+  assert.equal(frontend.chooseWeapon('xm8'), false, 'an unloaded card cannot be equipped');
+  assert.equal(frontend.chooseWeapon('sa58'), 'sa58');
+  assert.equal(frontend.getState().selectedWeapon, 'sa58');
+  assert.equal(frontend.confirmClass(), 'sa58');
+  assert.deepEqual(selected, ['sa58']);
+  assert.equal(frontend.screen, 'title', 'confirming from title returns to title');
+
+  frontend.enter();
+  frontend.suspend();
+  assert.equal(frontend.screen, 'pause');
+  assert.equal(frontend.action('class'), true);
+  assert.equal(frontend.screen, 'class');
+  assert.equal(frontend.action('class-back'), 'pause');
+  assert.equal(frontend.screen, 'pause');
+});
 
 test('frontend aggregates load progress and names the heaviest source', () => {
   const frontend = new Frontend();

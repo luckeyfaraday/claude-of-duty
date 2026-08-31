@@ -118,9 +118,10 @@ overrides the Netlify UI's settings.
 
 ## First-person viewmodel
 
-The viewer renders a weapon viewmodel (FBI shortsleeve viewhands holding the
-M27/HK416) in a dedicated depth-cleared pass so it never clips into walls. The
-rigs come from the game export (`export_chars/model_export/`,
+The viewer renders selectable M27/HK416 and AN-94 weapon viewmodels with FBI
+shortsleeve viewhands in a dedicated depth-cleared pass so they never clip into
+walls. Press `1` for the M27 or `2` for the AN-94. The rigs come from the game
+export (`export_chars/model_export/`,
 `export_common/model_export/`, see `EXPORTING_ASSETS.md`); the copies served to
 the browser live in `export/web/viewmodel/`. The weapon is mounted by aligning
 its `j_gun` joint to the hands' `tag_weapon` joint, and the whole rig is
@@ -129,12 +130,13 @@ the camera. It includes look sway, walk bob, a sprint pose, and hold-right-
 mouse ADS, which rotates the gun square to the view axis and seats the eye
 7 units behind `tag_sights` for a proper iron-sight picture.
 
-The M27 fires automatic camera-centered hitscan rounds against the collision
-scene. Shots use the authored hip/ADS fire animations and include view recoil,
-a `tag_flash` muzzle flash, the extracted M27 player-shot/decay/LFE audio layers,
-tracers, persistent
-impact marks, a 30-round magazine, and eight reserve magazines. Every respawn
-restores the full `30/240` life loadout.
+Both rifles fire automatic camera-centered hitscan rounds against the collision
+scene. The AN-94 uses its native 40 damage, 625 RPM sustained cadence, and
+937.5 RPM two-round hyperburst. Shots use each rifle's authored hip/ADS fire
+animations and include view recoil, a `tag_flash` muzzle flash, each rifle's own
+player-shot sample over the shared decay/LFE layers, tracers, persistent impact
+marks, a 30-round magazine, and eight reserve magazines. Every respawn restores the full
+`30/240` life loadout.
 
 Rounds that connect raise a hitmarker on the crosshair: white for a body hit,
 gold for a head hit, and a longer-lived red marker for a kill. Each is paired
@@ -269,5 +271,6 @@ Chrome/Edge executable.
 
 At runtime, `globalThis.hijacked.debug` provides a stable automation surface:
 `getState`, `setActive`, `pause`, `resume`, `teleportPlayer`, `lookAt`, overlay
-toggles, damage/respawn controls, and enemy reset. Keep this surface stable when
-changing runtime internals because tests and coding agents depend on it.
+toggles, `selectWeapon`, damage/respawn controls, and enemy reset. Keep this
+surface stable when changing runtime internals because tests and coding agents
+depend on it.

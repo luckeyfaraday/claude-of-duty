@@ -10,6 +10,7 @@ const artifactRoot = path.resolve(root, process.env.AI_GAME_ARTIFACT_DIR ?? 'art
 const viewport = { width: 1280, height: 720 };
 const command = process.argv[2] ?? 'help';
 const commandArgument = process.argv[3];
+const commandOption = process.argv[4];
 
 const mimeTypes = new Map([
   ['.bin', 'application/octet-stream'],
@@ -28,11 +29,11 @@ function usage() {
 
 Usage:
   npm run ai:game -- state
-  npm run ai:game -- screenshot [camo]
+  npm run ai:game -- screenshot [weapon|camo]
   npm run ai:game -- test
   npm run ai:game -- enemy-test
   npm run ai:game -- life-test
-  npm run ai:game -- record [seconds]
+  npm run ai:game -- record [seconds] [weapon]
 
 Environment:
   AI_GAME_HEADED=1             Show the controlled browser window
@@ -57,6 +58,18 @@ async function staticServer() {
   const server = http.createServer(async (request, response) => {
     try {
       const requestUrl = new URL(request.url ?? '/', 'http://127.0.0.1');
+      // The production host serves this through a Netlify function. Keep the
+      // local observer quiet and deterministic instead of letting its optional
+      // title-screen counter create a console 404 on every otherwise-clean run.
+      if (requestUrl.pathname === '/api/plays') {
+        const body = JSON.stringify({ players: 1, plays: 1 });
+        response.writeHead(200, {
+          'Content-Type': 'application/json; charset=utf-8',
+          'Content-Length': Buffer.byteLength(body),
+          'Cache-Control': 'no-store',
+        }).end(body);
+        return;
+      }
       const relative = decodeURIComponent(requestUrl.pathname === '/' ? '/index.html' : requestUrl.pathname);
       const filename = path.resolve(webRoot, `.${relative}`);
       if (filename !== webRoot && !filename.startsWith(`${webRoot}${path.sep}`)) {
@@ -188,17 +201,27 @@ async function run() {
     await page.screenshot({ path: path.join(artifactRoot, 'before.png') });
 
     if (command === 'screenshot' && commandArgument) {
-      const camos = await page.evaluate(() => globalThis.hijacked.debug.getState().weapon.availableCamos);
-      if (!camos.includes(commandArgument)) throw new Error(`Unknown weapon camo: ${commandArgument}`);
-      await page.evaluate((name) => globalThis.hijacked.debug.setWeaponCamo(name), camos[0]);
-      for (let i = 0; i < camos.length; i += 1) {
+      const options = await page.evaluate(() => globalThis.hijacked.debug.getState().weapon);
+      if (options.availableWeapons.includes(commandArgument)) {
+        const selected = await page.evaluate(
+          (name) => globalThis.hijacked.debug.selectWeapon(name),
+          commandArgument,
+        );
+        if (selected !== commandArgument) throw new Error(`Could not select weapon: ${commandArgument}`);
+        inputProbe = { weapon: selected, input: 'debug' };
+      } else {
+        const camos = options.availableCamos;
+        if (!camos.includes(commandArgument)) throw new Error(`Unknown weapon or camo: ${commandArgument}`);
+        await page.evaluate((name) => globalThis.hijacked.debug.setWeaponCamo(name), camos[0]);
+        for (let i = 0; i < camos.length; i += 1) {
+          const selected = await page.evaluate(() => globalThis.hijacked.debug.getState().weapon.camo);
+          if (selected === commandArgument) break;
+          await page.keyboard.press('k');
+        }
         const selected = await page.evaluate(() => globalThis.hijacked.debug.getState().weapon.camo);
-        if (selected === commandArgument) break;
-        await page.keyboard.press('k');
+        if (selected !== commandArgument) throw new Error(`Could not select weapon camo: ${commandArgument}`);
+        inputProbe = { camo: selected, input: 'keyboard' };
       }
-      const selected = await page.evaluate(() => globalThis.hijacked.debug.getState().weapon.camo);
-      if (selected !== commandArgument) throw new Error(`Could not select weapon camo: ${commandArgument}`);
-      inputProbe = { camo: selected, input: 'keyboard' };
     } else if (command === 'test') {
       await page.evaluate(() => globalThis.hijacked.debug.resume());
       await page.keyboard.down('w');
@@ -266,9 +289,24 @@ async function run() {
       );
       await page.evaluate(() => globalThis.hijacked.debug.pause());
     } else if (command === 'record') {
+      if (commandOption) {
+        const selected = await page.evaluate(
+          (name) => globalThis.hijacked.debug.selectWeapon(name),
+          commandOption,
+        );
+        if (selected !== commandOption) throw new Error(`Could not select weapon: ${commandOption}`);
+      }
       await page.evaluate(() => globalThis.hijacked.debug.resume());
       await page.keyboard.down('w');
-      await page.waitForTimeout(recordSeconds * 1000);
+      let fireMilliseconds = 0;
+      if (commandOption) {
+        fireMilliseconds = Math.min(750, recordSeconds * 500);
+        await page.mouse.down({ button: 'left' });
+        await page.waitForTimeout(fireMilliseconds);
+        await page.mouse.up({ button: 'left' });
+        await page.keyboard.press('r');
+      }
+      await page.waitForTimeout(Math.max(0, recordSeconds * 1000 - fireMilliseconds));
       await page.keyboard.up('w');
       await page.evaluate(() => globalThis.hijacked.debug.pause());
     }

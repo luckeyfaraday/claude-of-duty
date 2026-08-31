@@ -74,16 +74,31 @@ test('the exported reload clips carry the authored M27 audio cues', () => {
 });
 
 test('every cue the reload clips fire has a shipped audio file', async () => {
-  const { FOLEY_URLS } = await import('../export/web/weapon-effects.js');
+  const { FOLEY_ALIASES, FOLEY_URLS, SILENT_CUES } = await import('../export/web/weapon-effects.js');
   const cues = new Set();
-  for (const name of ['viewmodel_hk416_reload', 'viewmodel_hk416_reload_empty']) {
+  for (const name of [
+    'viewmodel_hk416_reload',
+    'viewmodel_hk416_reload_empty',
+    'viewmodel_an94_reload',
+    'viewmodel_an94_reload_empty',
+  ]) {
     const data = JSON.parse(fs.readFileSync(`export/web/viewmodel/anims/${name}.json`, 'utf8'));
     for (const cue of parseNotetracks(data.notifies)) if (cue.type === 'sound') cues.add(cue.name);
   }
   for (const cue of cues) {
-    assert.ok(FOLEY_URLS[cue], `cue ${cue} has no mapped audio file`);
-    const file = `export/web/${FOLEY_URLS[cue].replace(/^\.\//, '')}`;
-    assert.ok(fs.existsSync(file), `${file} is missing`);
-    assert.equal(fs.readFileSync(file).subarray(0, 4).toString('ascii'), 'RIFF', `${file} is not a WAV`);
+    // No soundbank maps `fly_<gun>_futz`, so it is silent in T6 too and must
+    // not acquire an invented sample here.
+    if (SILENT_CUES.has(cue)) {
+      assert.equal(FOLEY_URLS[cue], undefined, `${cue} is unmapped in the game and should ship no sample`);
+      continue;
+    }
+    const resolved = FOLEY_ALIASES[cue] ?? cue;
+    assert.ok(FOLEY_URLS[resolved], `cue ${cue} has no mapped audio file`);
+    // Randomized cues carry a variant list; every variant must be a real WAV.
+    for (const url of [FOLEY_URLS[resolved]].flat()) {
+      const file = `export/web/${url.replace(/^\.\//, '')}`;
+      assert.ok(fs.existsSync(file), `${file} is missing`);
+      assert.equal(fs.readFileSync(file).subarray(0, 4).toString('ascii'), 'RIFF', `${file} is not a WAV`);
+    }
   }
 });

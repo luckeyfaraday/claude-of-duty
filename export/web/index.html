@@ -35,7 +35,7 @@
   html, body { margin: 0; height: 100%; overflow: hidden; background: #05090d; }
   canvas { display: block; }
 
-  /* ---------- frontend shell (loading / title / pause) ---------- */
+  /* ---------- frontend shell (loading / title / pause / class) ---------- */
   #blocker {
     position: fixed; inset: 0; z-index: 3; display: flex; align-items: center;
     justify-content: center; padding: 24px; overflow: hidden;
@@ -188,6 +188,82 @@
   }
   .fe-btn[data-on="true"]::before { background: rgba(127, 255, 196, .42); }
 
+  .fe-class {
+    width: min(1120px, 94vw); max-height: calc(100vh - 34px);
+    display: flex; flex-direction: column; gap: 12px; text-align: left;
+  }
+  .fe-class-head {
+    display: flex; align-items: end; justify-content: space-between; gap: 24px;
+    padding: 0 8px;
+  }
+  .fe-class-head .fe-heading { font-size: clamp(18px, 2.2vw, 27px); }
+  .fe-class-sub {
+    margin: 6px 0 0; color: rgba(206, 224, 240, .6); font-size: 11px;
+    letter-spacing: .2em; text-transform: uppercase;
+  }
+  .fe-class-selection {
+    margin: 0; color: var(--fe-accent); font-size: 11px; letter-spacing: .2em;
+    text-transform: uppercase; white-space: nowrap;
+  }
+  .fe-class-grid {
+    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px; min-height: 0;
+  }
+  .fe-class-card {
+    position: relative; min-width: 0; min-height: 116px; padding: 7px;
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(116px, .86fr);
+    align-items: center; gap: 8px; appearance: none; border: 0;
+    color: #e6f2ff; background: rgba(7, 18, 26, .72); cursor: pointer;
+    font: inherit; text-align: left; overflow: hidden;
+  }
+  .fe-class-card::before, .fe-class-card::after {
+    content: ''; position: absolute; inset: 0; pointer-events: none;
+    -webkit-mask: url('ui/menu_mp_lobby_frame_outer.png') center/100% 100% no-repeat;
+    mask: url('ui/menu_mp_lobby_frame_outer.png') center/100% 100% no-repeat;
+  }
+  .fe-class-card::before { background: rgba(139, 173, 198, .22); }
+  .fe-class-card::after {
+    -webkit-mask-image: url('ui/menu_select_highlight.png');
+    mask-image: url('ui/menu_select_highlight.png');
+    background: var(--fe-accent); opacity: 0; transition: opacity .12s ease-out;
+  }
+  .fe-class-card:hover, .fe-class-card:focus-visible { outline: none; }
+  .fe-class-card:hover::before, .fe-class-card:focus-visible::before { background: rgba(127, 255, 196, .34); }
+  .fe-class-card[data-selected="true"]::after { opacity: .7; }
+  .fe-class-card[data-ready="false"] { cursor: wait; filter: grayscale(.75); opacity: .58; }
+  .fe-class-card:disabled { color: #e6f2ff; }
+  .fe-class-art {
+    display: flex; align-items: center; justify-content: center; min-width: 0;
+    height: 94px; padding: 2px;
+  }
+  .fe-class-art img { display: block; width: 100%; height: 100%; object-fit: contain; }
+  .fe-class-info { position: relative; z-index: 1; min-width: 0; }
+  .fe-class-name {
+    display: block; overflow: hidden; color: #f1f7ff; font-size: 16px; font-weight: 600;
+    letter-spacing: .12em; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap;
+  }
+  .fe-class-role {
+    display: block; margin-top: 3px; color: rgba(206, 224, 240, .54); font-size: 9px;
+    letter-spacing: .2em; text-transform: uppercase;
+  }
+  .fe-class-stats {
+    display: flex; flex-wrap: wrap; gap: 5px 10px; margin-top: 10px;
+    color: rgba(230, 242, 255, .82); font-size: 10px; letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+  .fe-class-stat { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+  .fe-class-stat b { color: var(--fe-accent); font-weight: 600; }
+  .fe-class-fire { width: 17px; height: 17px; object-fit: contain; opacity: .86; }
+  .fe-class-state {
+    display: block; margin-top: 7px; color: rgba(206, 224, 240, .5); font-size: 9px;
+    letter-spacing: .2em; text-transform: uppercase;
+  }
+  .fe-class-card[data-selected="true"] .fe-class-state { color: var(--fe-accent); }
+  .fe-class-actions { display: flex; justify-content: center; gap: 8px; margin-top: 1px; }
+  .fe-class-actions .fe-btn { width: 180px; }
+  .fe-class-actions .fe-btn:disabled { cursor: wait; color: rgba(206, 224, 240, .4); }
+  .fe-class-actions .fe-btn:disabled::before { background: rgba(139, 173, 198, .12); }
+
   .fe-controls {
     margin: 0; font: 12px/1.75 ui-monospace, SFMono-Regular, Consolas, monospace;
     color: rgba(205, 224, 240, .72); white-space: pre-line;
@@ -196,18 +272,33 @@
   .fe-message { margin: 0; max-width: 46ch; color: #ff9b90; white-space: pre-line; }
 
   /* One screen at a time; `render()` sets data-screen on the root. */
-  .fe-load, .fe-start, .fe-pause, .fe-controls, .fe-message { display: none; }
+  .fe-load, .fe-start, .fe-pause, .fe-class, .fe-controls, .fe-message { display: none; }
   #blocker[data-screen="loading"] .fe-load { display: block; }
   #blocker[data-screen="title"] .fe-start,
   #blocker[data-screen="pause"] .fe-pause { display: flex; flex-direction: column; align-items: center; gap: 22px; }
   #blocker[data-screen="title"] .fe-controls,
   #blocker[data-screen="pause"] .fe-controls { display: block; }
+  #blocker[data-screen="class"] .fe-class { display: flex; }
+  #blocker[data-screen="class"] .fe-content { width: min(1120px, 94vw); gap: 12px; }
+  #blocker[data-screen="class"] .fe-wordmark { font-size: clamp(20px, 3vw, 30px); }
+  #blocker[data-screen="class"] .fe-wordmark::after { margin-top: 14px; }
+  #blocker[data-screen="class"] .fe-sub { display: none; }
   #blocker[data-screen="error"] .fe-message { display: block; }
   #blocker[data-screen="error"] .fe-wordmark::after { background: #ff6a5c; }
 
   @media (prefers-reduced-motion: reduce) {
     .fe-backdrop, .fe-fog, .fe-prompt { animation: none; }
     .fe-bar { transition: none; }
+  }
+  @media (max-width: 860px) {
+    .fe-class-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 560px) {
+    .fe-class-head { align-items: start; flex-direction: column; gap: 4px; }
+    .fe-class-selection { white-space: normal; }
+    .fe-class-grid { grid-template-columns: 1fr; overflow-y: auto; }
+    .fe-class-card { min-height: 104px; }
+    .fe-class-art { height: 80px; }
   }
   /* Kept as the automation-visible text snapshot (getState().hud) but hidden;
      the visible HUD below is drawn with the game's own art. */
@@ -352,6 +443,7 @@
       </figure>
       <div class="fe-start-foot">
         <p class="fe-prompt">Click to play</p>
+        <button type="button" class="fe-btn" data-action="class">Create a class</button>
         <p class="fe-count" id="fe-count" hidden></p>
       </div>
     </div>
@@ -359,11 +451,63 @@
       <h2 class="fe-heading">Paused</h2>
       <div class="fe-buttons">
         <button type="button" class="fe-btn" data-action="resume">Resume</button>
+        <button type="button" class="fe-btn" data-action="class">Create a class</button>
         <button type="button" class="fe-btn" data-action="respawn">Respawn</button>
         <button type="button" class="fe-btn" data-action="navmesh">Navmesh overlay</button>
         <button type="button" class="fe-btn" data-action="collision">Collision overlay</button>
       </div>
     </div>
+    <section class="fe-class" aria-label="Create a class">
+      <div class="fe-class-head">
+        <div>
+          <h2 class="fe-heading">Create a class</h2>
+          <p class="fe-class-sub">Choose your primary assault rifle</p>
+        </div>
+        <p class="fe-class-selection" id="fe-class-selection">Select a rifle</p>
+      </div>
+      <div class="fe-class-grid">
+        <button type="button" class="fe-class-card" data-weapon-id="m27">
+          <span class="fe-class-art"><img data-card-art src="ui/menu_mp_weapons_hk416_big.png" alt="M27"></span>
+          <span class="fe-class-info"><strong class="fe-class-name" data-card-name></strong><span class="fe-class-role">Assault rifle</span><span class="fe-class-stats"><span class="fe-class-stat"><img class="fe-class-fire" data-card-fire-type src="ui/hud/hud_mp_firerate_auto.png" alt="Automatic"><b data-card-rpm></b> RPM</span><span class="fe-class-stat"><b data-card-mag></b> MAG</span><span class="fe-class-stat"><b data-card-damage></b> DMG</span></span><span class="fe-class-state" data-card-state>loading</span></span>
+        </button>
+        <button type="button" class="fe-class-card" data-weapon-id="an94">
+          <span class="fe-class-art"><img data-card-art src="ui/menu_mp_weapons_an94_big.png" alt="AN-94"></span>
+          <span class="fe-class-info"><strong class="fe-class-name" data-card-name></strong><span class="fe-class-role">Assault rifle</span><span class="fe-class-stats"><span class="fe-class-stat"><img class="fe-class-fire" data-card-fire-type src="ui/hud/hud_mp_firerate_auto.png" alt="Automatic"><b data-card-rpm></b> RPM</span><span class="fe-class-stat"><b data-card-mag></b> MAG</span><span class="fe-class-stat"><b data-card-damage></b> DMG</span></span><span class="fe-class-state" data-card-state>loading</span></span>
+        </button>
+        <button type="button" class="fe-class-card" data-weapon-id="sa58">
+          <span class="fe-class-art"><img data-card-art src="ui/menu_mp_weapons_sa58_big.png" alt="FAL OSW"></span>
+          <span class="fe-class-info"><strong class="fe-class-name" data-card-name></strong><span class="fe-class-role">Assault rifle</span><span class="fe-class-stats"><span class="fe-class-stat"><img class="fe-class-fire" data-card-fire-type src="ui/hud/hud_mp_firerate_single.png" alt="Single"><b data-card-rpm></b> RPM</span><span class="fe-class-stat"><b data-card-mag></b> MAG</span><span class="fe-class-stat"><b data-card-damage></b> DMG</span></span><span class="fe-class-state" data-card-state>loading</span></span>
+        </button>
+        <button type="button" class="fe-class-card" data-weapon-id="saritch">
+          <span class="fe-class-art"><img data-card-art src="ui/menu_mp_weapons_saritch_big.png" alt="SMR"></span>
+          <span class="fe-class-info"><strong class="fe-class-name" data-card-name></strong><span class="fe-class-role">Assault rifle</span><span class="fe-class-stats"><span class="fe-class-stat"><img class="fe-class-fire" data-card-fire-type src="ui/hud/hud_mp_firerate_single.png" alt="Single"><b data-card-rpm></b> RPM</span><span class="fe-class-stat"><b data-card-mag></b> MAG</span><span class="fe-class-stat"><b data-card-damage></b> DMG</span></span><span class="fe-class-state" data-card-state>loading</span></span>
+        </button>
+        <button type="button" class="fe-class-card" data-weapon-id="scar">
+          <span class="fe-class-art"><img data-card-art src="ui/menu_mp_weapons_scar_big.png" alt="SCAR-H"></span>
+          <span class="fe-class-info"><strong class="fe-class-name" data-card-name></strong><span class="fe-class-role">Assault rifle</span><span class="fe-class-stats"><span class="fe-class-stat"><img class="fe-class-fire" data-card-fire-type src="ui/hud/hud_mp_firerate_auto.png" alt="Automatic"><b data-card-rpm></b> RPM</span><span class="fe-class-stat"><b data-card-mag></b> MAG</span><span class="fe-class-stat"><b data-card-damage></b> DMG</span></span><span class="fe-class-state" data-card-state>loading</span></span>
+        </button>
+        <button type="button" class="fe-class-card" data-weapon-id="sig556">
+          <span class="fe-class-art"><img data-card-art src="ui/menu_mp_weapons_sig556_big.png" alt="SWAT-556"></span>
+          <span class="fe-class-info"><strong class="fe-class-name" data-card-name></strong><span class="fe-class-role">Assault rifle</span><span class="fe-class-stats"><span class="fe-class-stat"><img class="fe-class-fire" data-card-fire-type src="ui/hud/hud_mp_firerate_burst.png" alt="Burst"><b data-card-rpm></b> RPM</span><span class="fe-class-stat"><b data-card-mag></b> MAG</span><span class="fe-class-stat"><b data-card-damage></b> DMG</span></span><span class="fe-class-state" data-card-state>loading</span></span>
+        </button>
+        <button type="button" class="fe-class-card" data-weapon-id="tar21">
+          <span class="fe-class-art"><img data-card-art src="ui/menu_mp_weapons_tar21_big.png" alt="MTAR"></span>
+          <span class="fe-class-info"><strong class="fe-class-name" data-card-name></strong><span class="fe-class-role">Assault rifle</span><span class="fe-class-stats"><span class="fe-class-stat"><img class="fe-class-fire" data-card-fire-type src="ui/hud/hud_mp_firerate_auto.png" alt="Automatic"><b data-card-rpm></b> RPM</span><span class="fe-class-stat"><b data-card-mag></b> MAG</span><span class="fe-class-stat"><b data-card-damage></b> DMG</span></span><span class="fe-class-state" data-card-state>loading</span></span>
+        </button>
+        <button type="button" class="fe-class-card" data-weapon-id="type95">
+          <span class="fe-class-art"><img data-card-art src="ui/menu_mp_weapons_type95_big.png" alt="Type 25"></span>
+          <span class="fe-class-info"><strong class="fe-class-name" data-card-name></strong><span class="fe-class-role">Assault rifle</span><span class="fe-class-stats"><span class="fe-class-stat"><img class="fe-class-fire" data-card-fire-type src="ui/hud/hud_mp_firerate_auto.png" alt="Automatic"><b data-card-rpm></b> RPM</span><span class="fe-class-stat"><b data-card-mag></b> MAG</span><span class="fe-class-stat"><b data-card-damage></b> DMG</span></span><span class="fe-class-state" data-card-state>loading</span></span>
+        </button>
+        <button type="button" class="fe-class-card" data-weapon-id="xm8">
+          <span class="fe-class-art"><img data-card-art src="ui/menu_mp_weapons_xm8_big.png" alt="M8A1"></span>
+          <span class="fe-class-info"><strong class="fe-class-name" data-card-name></strong><span class="fe-class-role">Assault rifle</span><span class="fe-class-stats"><span class="fe-class-stat"><img class="fe-class-fire" data-card-fire-type src="ui/hud/hud_mp_firerate_burst.png" alt="Burst"><b data-card-rpm></b> RPM</span><span class="fe-class-stat"><b data-card-mag></b> MAG</span><span class="fe-class-stat"><b data-card-damage></b> DMG</span></span><span class="fe-class-state" data-card-state>loading</span></span>
+        </button>
+      </div>
+      <div class="fe-class-actions">
+        <button type="button" class="fe-btn" data-action="class-confirm">Equip rifle</button>
+        <button type="button" class="fe-btn" data-action="class-back">Back</button>
+      </div>
+    </section>
     <pre class="fe-controls" id="fe-controls"></pre>
     <p class="fe-message" id="fe-message"></p>
   </div>
@@ -438,8 +582,250 @@ renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.autoClear = false;
 document.body.appendChild(renderer.domElement);
 
-const viewmodel = new Viewmodel();
-viewmodel.setSize(innerWidth, innerHeight);
+const VIEWMODEL_HANDS = 'viewmodel/c_usa_mp_fbi_shortsleeve_viewhands_lod0.glb';
+const WEAPON_DEFINITIONS = Object.freeze({
+  m27: Object.freeze({
+    id: 'm27',
+    name: 'M27',
+    slot: 1,
+    magazineSize: 30,
+    reserveAmmo: 240,
+    roundsPerMinute: 750,
+    damage: 33,
+    fireTypeIcon: 'hud_mp_firerate_auto',
+    viewmodelUrl: 'viewmodel/t6_wpn_ar_hk416_view_lod0.glb',
+    magazineUrl: 'viewmodel/t6_attach_mag_hk416_view_lod0.glb',
+    // Authored attachment offset from the shipped hk416_mp weapon file.
+    magazineOffset: Object.freeze([3.389, 0, -0.383]),    clips: Object.freeze({
+      idle: 'viewmodel/anims/viewmodel_hk416_idle.json',
+      fire: 'viewmodel/anims/viewmodel_hk416_fire.json',
+      adsFire: 'viewmodel/anims/viewmodel_hk416_ads_fire.json',
+      reload: 'viewmodel/anims/viewmodel_hk416_reload.json',
+      reloadEmpty: 'viewmodel/anims/viewmodel_hk416_reload_empty.json',
+    }),
+  }),
+  an94: Object.freeze({
+    id: 'an94',
+    name: 'AN-94',
+    slot: 2,
+    magazineSize: 30,
+    reserveAmmo: 240,
+    roundsPerMinute: 625,
+    initialRoundsPerMinute: 937.5,
+    initialShotCount: 2,
+    damage: 40,
+    fireTypeIcon: 'hud_mp_firerate_auto',
+    adsFov: 50,
+    viewmodelUrl: 'viewmodel/t6_wpn_ar_an94_view_lod0.glb',
+    magazineUrl: 'viewmodel/t6_attach_mag_an94_view_lod0.glb',
+    // Authored attachment offsets from the shipped an94_mp weapon file.
+    magazineOffset: Object.freeze([4.473, -1.085, -1.5]),
+    // T6's roll is around the weapon's forward X axis. The GLB weld applies
+    // the engine-to-view transform after this attachment transform.
+    magazineRotation: Object.freeze([THREE.MathUtils.degToRad(-15), 0, 0]),    clips: Object.freeze({
+      idle: 'viewmodel/anims/viewmodel_an94_idle.json',
+      introFire: 'viewmodel/anims/viewmodel_an94_intro_fire.json',
+      fire: 'viewmodel/anims/viewmodel_an94_fire.json',
+      introAdsFire: 'viewmodel/anims/viewmodel_an94_intro_ads_fire.json',
+      adsFire: 'viewmodel/anims/viewmodel_an94_ads_fire.json',
+      reload: 'viewmodel/anims/viewmodel_an94_reload.json',
+      reloadEmpty: 'viewmodel/anims/viewmodel_an94_reload_empty.json',
+    }),
+  }),
+  sa58: Object.freeze({
+    id: "sa58",
+    name: "FAL OSW",
+    slot: 3,
+    magazineSize: 25,
+    reserveAmmo: 240,
+    roundsPerMinute: 625,
+    damage: 55,
+    fireTypeIcon: "hud_mp_firerate_single",
+    viewmodelUrl: 'viewmodel/t6_wpn_ar_sa58_view_lod0.glb',
+    magazineUrl: 'viewmodel/t6_attach_mag_sa58_view_lod0.glb',
+    // Authored attachment offset from the shipped sa58_mp weapon file.
+    magazineOffset: Object.freeze([4.006, 0.015, 1.821]),
+    magazineRotation: Object.freeze([THREE.MathUtils.degToRad(0), 0, 0]),    clips: Object.freeze({
+      idle: 'viewmodel/anims/viewmodel_sa58_idle.json',
+      fire: 'viewmodel/anims/viewmodel_sa58_fire.json',
+      adsFire: 'viewmodel/anims/viewmodel_sa58_ads_fire.json',
+      reload: 'viewmodel/anims/viewmodel_sa58_reload.json',
+      reloadEmpty: 'viewmodel/anims/viewmodel_sa58_reload_empty.json',
+    }),
+  }),
+  saritch: Object.freeze({
+    id: "saritch",
+    name: "SMR",
+    slot: 4,
+    magazineSize: 20,
+    reserveAmmo: 240,
+    roundsPerMinute: 536,
+    damage: 50,
+    fireTypeIcon: "hud_mp_firerate_single",
+    viewmodelUrl: 'viewmodel/t6_wpn_ar_saritch_view_lod0.glb',
+    magazineUrl: 'viewmodel/t6_attach_mag_saritch_view_lod0.glb',
+    // Authored attachment offset from the shipped saritch_mp weapon file.
+    magazineOffset: Object.freeze([-8.907, 0, -2.646]),
+    magazineRotation: Object.freeze([THREE.MathUtils.degToRad(0), 0, 0]),
+    // This rig ships no tritium insert, so findSightTip has nothing to measure
+    // and the sight line has to be given to it. Measured off the shipped model
+    // with `node .tools/measure_sights.mjs saritch`; points are in j_gun space.
+    // The tool reads the top of each sight, which is right for the post-and-notch
+    // irons it was calibrated on but sits above the aperture on this gun's ring
+    // sights, so the picture rendered 60px low. Both points are dropped by the
+    // same 0.281 to recentre it: an equal shift translates the sight picture
+    // without turning the sight line, so the slope the tool checks is unchanged.
+    adsSightAnchors: Object.freeze({
+      front: Object.freeze([12.672, 0, 3.643]),
+      rear: Object.freeze([-2.547, 0, 3.958]),
+    }),
+    clips: Object.freeze({
+      idle: 'viewmodel/anims/viewmodel_saritch_idle.json',
+      fire: 'viewmodel/anims/viewmodel_saritch_fire.json',
+      adsFire: 'viewmodel/anims/viewmodel_saritch_ads_fire.json',
+      reload: 'viewmodel/anims/viewmodel_saritch_reload.json',
+      reloadEmpty: 'viewmodel/anims/viewmodel_saritch_reload_empty.json',
+    }),
+  }),
+  scar: Object.freeze({
+    id: "scar",
+    name: "SCAR-H",
+    slot: 5,
+    magazineSize: 30,
+    reserveAmmo: 240,
+    roundsPerMinute: 625,
+    damage: 40,
+    fireTypeIcon: "hud_mp_firerate_auto",
+    viewmodelUrl: 'viewmodel/t6_wpn_ar_scarh_view_lod0.glb',
+    magazineUrl: 'viewmodel/t6_attach_mag_scar_view_lod0.glb',
+    // Authored attachment offset from the shipped scar_mp weapon file.
+    magazineOffset: Object.freeze([3.716, 0, -0.345]),
+    magazineRotation: Object.freeze([THREE.MathUtils.degToRad(0), 0, 0]),
+    // No tritium insert, and this rig is the awkward one: its sight hood reaches
+    // the centreline and stands 0.54 above the post, so the obvious reading of
+    // the geometry measures the hood and tilts the sight line up toward the
+    // muzzle. measure_sights.mjs falls back to a narrow-blade search here.
+    adsSightAnchors: Object.freeze({
+      front: Object.freeze([13.515, 0, 4.846]),
+      rear: Object.freeze([-2.237, 0, 4.894]),
+    }),
+    clips: Object.freeze({
+      idle: 'viewmodel/anims/viewmodel_scar_h_idle.json',
+      fire: 'viewmodel/anims/viewmodel_scar_h_fire.json',
+      adsFire: 'viewmodel/anims/viewmodel_scar_h_ads_fire.json',
+      reload: 'viewmodel/anims/viewmodel_scar_h_reload.json',
+      reloadEmpty: 'viewmodel/anims/viewmodel_scar_h_reload_empty.json',
+    }),
+  }),
+  sig556: Object.freeze({
+    id: "sig556",
+    name: "SWAT-556",
+    slot: 6,
+    magazineSize: 30,
+    reserveAmmo: 240,
+    roundsPerMinute: 938,
+    damage: 40,
+    fireTypeIcon: "hud_mp_firerate_burst",
+    viewmodelUrl: 'viewmodel/t6_wpn_ar_sig556_view_lod0.glb',
+    magazineUrl: 'viewmodel/t6_attach_mag_sig556_view_lod0.glb',
+    // Authored attachment offset from the shipped sig556_mp weapon file.
+    magazineOffset: Object.freeze([5.663, -0.008, -0.815]),
+    magazineRotation: Object.freeze([THREE.MathUtils.degToRad(0), 0, 0]),
+    // No tritium insert on this rig either, and ring sights again, so the same
+    // 50px recentring applies: both points dropped by 0.234 off what
+    // `node .tools/measure_sights.mjs sig556` reads. See the SMR above.
+    adsSightAnchors: Object.freeze({
+      front: Object.freeze([19.739, 0, 4.921]),
+      rear: Object.freeze([1.044, 0, 5.239]),
+    }),
+    clips: Object.freeze({
+      idle: 'viewmodel/anims/viewmodel_sig556_idle.json',
+      fire: 'viewmodel/anims/viewmodel_sig556_fire.json',
+      adsFire: 'viewmodel/anims/viewmodel_sig556_ads_fire.json',
+      introFire: 'viewmodel/anims/viewmodel_sig556_fire.json',
+      reload: 'viewmodel/anims/viewmodel_sig556_reload.json',
+      reloadEmpty: 'viewmodel/anims/viewmodel_sig556_reload_empty.json',
+    }),
+  }),
+  tar21: Object.freeze({
+    id: "tar21",
+    name: "MTAR",
+    slot: 7,
+    magazineSize: 30,
+    reserveAmmo: 240,
+    roundsPerMinute: 750,
+    damage: 40,
+    fireTypeIcon: "hud_mp_firerate_auto",
+    viewmodelUrl: 'viewmodel/t6_wpn_ar_x95l_view_lod0.glb',
+    magazineUrl: 'viewmodel/t6_attach_mag_x95l_view_lod0.glb',
+    // Authored attachment offset from the shipped tar21_mp weapon file.
+    magazineOffset: Object.freeze([-9.754, 0, -0.04]),
+    magazineRotation: Object.freeze([THREE.MathUtils.degToRad(0), 0, 0]),    clips: Object.freeze({
+      idle: 'viewmodel/anims/viewmodel_tavor_idle.json',
+      fire: 'viewmodel/anims/viewmodel_tavor_fire.json',
+      adsFire: 'viewmodel/anims/viewmodel_tavor_ads_fire.json',
+      reload: 'viewmodel/anims/viewmodel_tavor_reload.json',
+      reloadEmpty: 'viewmodel/anims/viewmodel_tavor_reload_empty.json',
+    }),
+  }),
+  type95: Object.freeze({
+    id: "type95",
+    name: "Type 25",
+    slot: 8,
+    magazineSize: 30,
+    reserveAmmo: 240,
+    roundsPerMinute: 938,
+    damage: 33,
+    fireTypeIcon: "hud_mp_firerate_auto",
+    viewmodelUrl: 'viewmodel/t6_wpn_ar_type95_view_lod0.glb',
+    magazineUrl: 'viewmodel/t6_attach_mag_type95_view_lod0.glb',
+    // Authored attachment offset from the shipped type95_mp weapon file.
+    magazineOffset: Object.freeze([-8.38, 0, -0.678]),
+    magazineRotation: Object.freeze([THREE.MathUtils.degToRad(0), 0, 0]),    clips: Object.freeze({
+      idle: 'viewmodel/anims/viewmodel_type95_ar_idle.json',
+      fire: 'viewmodel/anims/viewmodel_type95_ar_fire.json',
+      adsFire: 'viewmodel/anims/viewmodel_type95_ar_ads_fire.json',
+      introFire: 'viewmodel/anims/viewmodel_type95_ar_fire.json',
+      reload: 'viewmodel/anims/viewmodel_type95_ar_reload.json',
+      reloadEmpty: 'viewmodel/anims/viewmodel_type95_ar_reload_empty.json',
+    }),
+  }),
+  xm8: Object.freeze({
+    id: "xm8",
+    name: "M8A1",
+    slot: 9,
+    magazineSize: 36,
+    reserveAmmo: 240,
+    roundsPerMinute: 1250,
+    damage: 35,
+    fireTypeIcon: "hud_mp_firerate_burst",
+    viewmodelUrl: 'viewmodel/t6_wpn_ar_xm8_view_lod0.glb',
+    magazineUrl: 'viewmodel/t6_attach_mag_xm8_view_lod0.glb',
+    // Authored attachment offset from the shipped xm8_mp weapon file.
+    magazineOffset: Object.freeze([4.212, 0, 0.279]),
+    magazineRotation: Object.freeze([THREE.MathUtils.degToRad(0), 0, 0]),    clips: Object.freeze({
+      idle: 'viewmodel/anims/viewmodel_xm8_idle.json',
+      fire: 'viewmodel/anims/viewmodel_xm8_fire.json',
+      adsFire: 'viewmodel/anims/viewmodel_xm8_ads_fire.json',
+      introFire: 'viewmodel/anims/viewmodel_xm8_fire.json',
+      reload: 'viewmodel/anims/viewmodel_xm8_reload.json',
+      reloadEmpty: 'viewmodel/anims/viewmodel_xm8_reload_empty.json',
+    }),
+  }),
+});
+const weaponSlots = new Map(Object.values(WEAPON_DEFINITIONS).map((definition) => {
+  const slotViewmodel = new Viewmodel({
+    adsFov: definition.adsFov ?? 55,
+    adsSightAnchors: definition.adsSightAnchors ?? null,
+  });
+  slotViewmodel.setSize(innerWidth, innerHeight);
+  return [definition.id, { definition, viewmodel: slotViewmodel, controller: null }];
+}));
+let activeWeaponId = 'm27';
+let activeWeaponSlot = weaponSlots.get(activeWeaponId);
+let viewmodel = activeWeaponSlot.viewmodel;
+let weapon = null;
+const WEAPON_ALIASES = Object.freeze({ hk416: 'm27' });
 
 // The prefiltered reflection probe supplies ambient and specular, so the
 // analytic lights only need to carve out direction. Both are turned down from
@@ -468,7 +854,7 @@ loadProbeVolume()
   .then((volume) => {
     probeVolume = volume;
     hemi.intensity = 0;
-    viewmodel.hemi.intensity = 0;
+    for (const slot of weaponSlots.values()) slot.viewmodel.hemi.intensity = 0;
     console.info('probe volume:', volume.layout.dims.join('x'), 'cells');
   })
   .catch((error) => console.warn('probe volume unavailable:', error));
@@ -573,13 +959,15 @@ const environmentReady = applyEnvironmentLighting(renderer, scene)
       if (gradeMaterial) applyVisionTone(gradeMaterial, visionTone);
     }
     if (applied.environmentTexture) {
-      viewmodel.setEnvironment(applied.environmentTexture);
+      for (const slot of weaponSlots.values()) slot.viewmodel.setEnvironment(applied.environmentTexture);
     } else {
       // No probe/sky: restore the standalone lighting levels.
       hemi.intensity = 1.1;
       sun.intensity = 1.6;
-      viewmodel.hemi.intensity = 1.3;
-      viewmodel.lamp.intensity = 1.7;
+      for (const slot of weaponSlots.values()) {
+        slot.viewmodel.hemi.intensity = 1.3;
+        slot.viewmodel.lamp.intensity = 1.7;
+      }
     }
     console.info('environment lighting:', applied);
     return applied;
@@ -593,6 +981,18 @@ const environmentReady = applyEnvironmentLighting(renderer, scene)
 
 const blocker = document.getElementById('blocker');
 const menuButtons = [...blocker.querySelectorAll('.fe-btn')];
+const classCards = [...blocker.querySelectorAll('.fe-class-card')];
+const WEAPON_CARD_ART = Object.freeze({
+  m27: 'hk416',
+  an94: 'an94',
+  sa58: 'sa58',
+  saritch: 'saritch',
+  scar: 'scar',
+  sig556: 'sig556',
+  tar21: 'tar21',
+  type95: 'type95',
+  xm8: 'xm8',
+});
 const frontend = new Frontend({
   elements: {
     root: blocker,
@@ -602,11 +1002,43 @@ const frontend = new Frontend({
     message: document.getElementById('fe-message'),
     controls: document.getElementById('fe-controls'),
     buttons: menuButtons,
+    classCards,
+    classSelection: document.getElementById('fe-class-selection'),
+    classConfirm: blocker.querySelector('[data-action="class-confirm"]'),
     onAction: (name) => menuAction(name),
   },
   onPlay: () => renderer.domElement.requestPointerLock(),
   onResume: () => renderer.domElement.requestPointerLock(),
+  onSelectWeapon: (id) => selectWeapon(id),
 });
+frontend.setWeapons(Object.values(WEAPON_DEFINITIONS).map((definition) => ({
+  id: definition.id,
+  name: definition.name,
+  ready: false,
+})), activeWeaponId);
+for (const card of classCards) {
+  const definition = WEAPON_DEFINITIONS[card.dataset.weaponId];
+  if (!definition) continue;
+  const artId = WEAPON_CARD_ART[definition.id] ?? definition.id;
+  const art = card.querySelector('[data-card-art]');
+  const fireType = card.querySelector('[data-card-fire-type]');
+  const name = card.querySelector('[data-card-name]');
+  const rpm = card.querySelector('[data-card-rpm]');
+  const magazine = card.querySelector('[data-card-mag]');
+  const damage = card.querySelector('[data-card-damage]');
+  if (art) {
+    art.src = `ui/menu_mp_weapons_${artId}_big.png`;
+    art.alt = definition.name;
+  }
+  if (fireType) {
+    fireType.src = `ui/hud/${definition.fireTypeIcon}.png`;
+    fireType.alt = definition.fireTypeIcon.replace('hud_mp_firerate_', '');
+  }
+  if (name) name.textContent = definition.name;
+  if (rpm) rpm.textContent = definition.roundsPerMinute;
+  if (magazine) magazine.textContent = definition.magazineSize;
+  if (damage) damage.textContent = definition.damage;
+}
 
 // The title-screen play counter. It fetches on its own and is never awaited by
 // the load, so a blocked request or an endpoint that is not there leaves the
@@ -694,16 +1126,56 @@ match.register('player', 'YOU', { human: true });
 const weaponEffects = new WeaponEffects(scene);
 // Reload audio is authored into the clip as notetracks, so the cues play from
 // the animation's own timing rather than a hand-written schedule.
-viewmodel.onNotetrack = (cue) => {
-  if (cue.type === 'sound') weaponEffects.playFoley(cue.name);
-};
-const weapon = new WeaponController({
-  magazineSize: 30,
-  reserveAmmo: 240,
-  roundsPerMinute: 750,
-  onFire: () => fireShot(),
-  onEmpty: () => reloadWeapon(),
-});
+for (const slot of weaponSlots.values()) {
+  const { definition, viewmodel: slotViewmodel } = slot;
+  slotViewmodel.onNotetrack = (cue) => {
+    if (cue.type === 'sound') weaponEffects.playFoley(cue.name);
+  };
+  slot.controller = new WeaponController({
+    magazineSize: definition.magazineSize,
+    reserveAmmo: definition.reserveAmmo,
+    roundsPerMinute: definition.roundsPerMinute,
+    initialRoundsPerMinute: definition.initialRoundsPerMinute,
+    initialShotCount: definition.initialShotCount,
+    onFire: (shot) => {
+      if (activeWeaponId === definition.id) fireShot(shot);
+    },
+    onEmpty: () => {
+      if (activeWeaponId === definition.id) reloadWeapon();
+    },
+  });
+}
+weapon = activeWeaponSlot.controller;
+
+function selectWeapon(id) {
+  const requested = String(id).toLowerCase();
+  const next = weaponSlots.get(WEAPON_ALIASES[requested] ?? requested);
+  if (!next?.controller || !next.viewmodel.ready) return false;
+  if (next === activeWeaponSlot) return activeWeaponId;
+
+  weapon.setTrigger(false);
+  weapon.cancelReload();
+  viewmodel.cancelReload();
+  viewmodel.setAiming(false);
+  viewmodel.scene.visible = false;
+
+  activeWeaponSlot = next;
+  activeWeaponId = next.definition.id;
+  weapon = next.controller;
+  viewmodel = next.viewmodel;
+  viewmodelProbe.removeFromParent();
+  viewmodel.scene.add(viewmodelProbe);
+  viewmodel.scene.visible = !playerHealth?.dead;
+  viewmodel.setAiming(false);
+  crosshair.classList.remove('ads');
+  lastAdsState = false;
+
+  if (globalThis.hijacked) {
+    globalThis.hijacked.weapon = weapon;
+    globalThis.hijacked.viewmodel = viewmodel;
+  }
+  return activeWeaponId;
+}
 
 const pathGeometry = new THREE.BufferGeometry();
 const pathLine = new THREE.Line(
@@ -730,7 +1202,11 @@ function resetPlayerLife() {
   }
   player.respawn();
   player.setEnabled(true);
-  weapon.resetLoadout();
+  for (const slot of weaponSlots.values()) {
+    slot.controller.resetLoadout();
+    slot.viewmodel.cancelReload();
+    slot.viewmodel.scene.visible = false;
+  }
   viewmodel.scene.visible = true;
   viewmodel.setAiming(false);
   deathSource = null;
@@ -866,13 +1342,15 @@ function showHitmarker(kind) {
   hitmarkerLife = hitmarkerMaxLife;
 }
 
-function fireShot() {
-  if (!viewmodel.fire()) return;
+function fireShot({ triggerShotCount = 0 } = {}) {
+  const intro = activeWeaponSlot.definition.initialShotCount > 0 && triggerShotCount === 1;
+  if (!viewmodel.fire({ intro })) return;
   if (playerHealth?.protectionTimer > 0) playerHealth.protectionTimer = 0;
   const hit = weaponEffects.fire(camera, collisionRoot, viewmodel.muzzlePosition(), {
     targets: enemies?.hitTargets ?? [],
+    weapon: activeWeaponId,
   });
-  const damaged = enemies?.handlePlayerHit(hit, 34);
+  const damaged = enemies?.handlePlayerHit(hit, activeWeaponSlot.definition.damage);
   if (damaged) {
     showHitmarker(damaged.killed ? 'kill' : damaged.region === 'head' ? 'head' : 'torso');
     weaponEffects.playHitmarker(damaged);
@@ -966,6 +1444,12 @@ function getDebugState() {
       protected: (playerHealth?.protectionTimer ?? 0) > 0,
     } : null,
     weapon: {
+      id: activeWeaponId,
+      name: activeWeaponSlot.definition.name,
+      ready: viewmodel.ready,
+      availableWeapons: [...weaponSlots.values()]
+        .filter((slot) => slot.viewmodel.ready)
+        .map((slot) => slot.definition.id),
       magazine: weapon.magazine,
       magazineSize: weapon.magazineSize,
       reserveAmmo: weapon.reserveAmmo,
@@ -1091,6 +1575,9 @@ function createDebugApi() {
       weapon.reserveAmmo = Math.max(0, Math.trunc(Number(reserveAmmo) || 0));
       return { magazine: weapon.magazine, reserveAmmo: weapon.reserveAmmo };
     },
+    selectWeapon(id) {
+      return selectWeapon(id);
+    },
     setWeaponCamo(name) {
       return viewmodel.setCamo(String(name)) ? viewmodel.camo : false;
     },
@@ -1174,10 +1661,15 @@ document.addEventListener('keydown', (event) => {
   // Any key but Esc starts or resumes from the shell — Esc is what released
   // the pointer lock to get here, and the browser owns it for a moment after.
   if (frontend.visible) {
-    if (event.code !== 'Escape') frontend.play();
+    if (frontend.screen === 'class') {
+      if (event.code === 'Escape' || event.code === 'Backspace') frontend.closeClass();
+      if (event.code === 'Enter') frontend.confirmClass();
+    } else if (event.code !== 'Escape') frontend.play();
     return;
   }
   if (event.code === 'KeyR' && locked) reloadWeapon();
+  if (event.code === 'Digit1' && locked) selectWeapon('m27');
+  if (event.code === 'Digit2' && locked) selectWeapon('an94');
   if (event.code === 'KeyB' && locked) {
     if (playerHealth) playerHealth.respawn();
     else player?.respawn();
@@ -1216,25 +1708,26 @@ async function start() {
       console.error('Navigation unavailable:', error);
       return null;
     }).finally(() => frontend.stage('navigation'));
-    const viewmodelPromise = viewmodel
-      .load(
-        'viewmodel/c_usa_mp_fbi_shortsleeve_viewhands_lod0.glb',
-        'viewmodel/t6_wpn_ar_hk416_view_lod0.glb',
-        'viewmodel/t6_attach_mag_hk416_view_lod0.glb',
-        (label, event) => progress(label, event),
-      )
-      .then(() =>
-         viewmodel.loadClips({
-           idle: 'viewmodel/anims/viewmodel_hk416_idle.json',
-           fire: 'viewmodel/anims/viewmodel_hk416_fire.json',
-           adsFire: 'viewmodel/anims/viewmodel_hk416_ads_fire.json',
-           reload: 'viewmodel/anims/viewmodel_hk416_reload.json',
-           reloadEmpty: 'viewmodel/anims/viewmodel_hk416_reload_empty.json',
-         }),
-      )
-      .catch((error) => {
-        console.warn('Viewmodel unavailable:', error);
-      })
+    const viewmodelPromise = Promise.all([...weaponSlots.values()].map(async (slot) => {
+      const { definition, viewmodel: slotViewmodel } = slot;
+      try {
+        await slotViewmodel.load(
+          VIEWMODEL_HANDS,
+          definition.viewmodelUrl,
+          definition.magazineUrl,
+          (label, event) => progress(label, event),
+          {
+            magazineOffset: definition.magazineOffset,
+            magazineRotation: definition.magazineRotation,
+          },
+        );
+        await slotViewmodel.loadClips(definition.clips);
+        frontend.setWeaponReady(definition.id, true);
+      } catch (error) {
+        frontend.setWeaponReady(definition.id, false);
+        console.warn(`${definition.name} viewmodel unavailable:`, error);
+      }
+    }))
       .finally(() => frontend.stage('viewmodel'));
     const [renderGltf, loadedCollisionWorld, hints, ladders] = await Promise.all([
       loadGltf('hijacked_optimized.glb', 'map').then((gltf) => {
@@ -1385,7 +1878,7 @@ async function start() {
     // Small read/debug surface for automated smoke tests and map tooling.
     globalThis.hijacked = {
       scene, camera, renderer, player, navigation, collisionRoot, collisionWorld, hints, viewmodel,
-      weapon, weaponEffects, playerHealth, enemies, reloadWeapon, frontend,
+      weapon, weaponEffects, playerHealth, enemies, reloadWeapon, selectWeapon, frontend,
       lighting: {
         lightProbe, viewmodelProbe, enemyProbes, sceneSH,
         get probeVolume() { return probeVolume; },
@@ -1401,6 +1894,7 @@ async function start() {
     frontend.setReady([
       'WASD move · Shift sprint · Space jump · C/Ctrl crouch',
       'Left mouse fire · Right mouse aim · R reload · B respawn',
+      '1 M27 · 2 AN-94 · Create a class from the menu',
       'K cycle camo · N navmesh · V collision · P path · Esc pause',
       navigation ? '' : 'Navigation failed to load; collision and walking are still available.',
     ]);
@@ -1480,6 +1974,7 @@ function tick() {
         dead: enemy.dead,
       })) ?? [],
       weapon: {
+        name: activeWeaponSlot.definition.name,
         magazine: weapon.magazine,
         reserveAmmo: weapon.reserveAmmo,
         ready: viewmodel.ready,
@@ -1498,7 +1993,7 @@ function tick() {
         `health ${Math.ceil(playerHealth?.health ?? 100)}${playerHealth?.dead ? '  respawning' :
           playerHealth?.protectionTimer > 0 ? '  protected' : ''}  ` +
         `enemies ${enemies?.aliveCount ?? 0}/${enemies?.enemies.length ?? 0}\n` +
-        `weapon ${viewmodel.ready ? 'm27' : 'none'}${viewmodel.reloading ? ' reloading' : ''}  ` +
+        `weapon ${viewmodel.ready ? activeWeaponId : 'none'}${viewmodel.reloading ? ' reloading' : ''}  ` +
         `ammo ${weapon.magazine}/${weapon.reserveAmmo}\n` +
         `nav ${navigation ? (navigationVisible ? 'shown' : 'ready') : 'unavailable'}  ` +
         `collision ${collisionVisible ? 'shown' : 'ready'}  path ${pathPoints}`;
@@ -1567,7 +2062,7 @@ tick();
 addEventListener('resize', () => {
   camera.aspect = innerWidth / innerHeight;
   camera.updateProjectionMatrix();
-  viewmodel.setSize(innerWidth, innerHeight);
+  for (const slot of weaponSlots.values()) slot.viewmodel.setSize(innerWidth, innerHeight);
   renderer.setPixelRatio(renderPixelRatio());
   renderer.setSize(innerWidth, innerHeight);
   sizeGradeTarget();
