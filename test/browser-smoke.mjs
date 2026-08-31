@@ -244,6 +244,7 @@ test('Hijacked viewer loads collision, navigation, and walking controls', { time
           ready: api.viewmodel.ready,
           clips: api.viewmodel.clips.size,
           hasMagazine: Boolean(api.viewmodel.root.getObjectByName('tag_clip')),
+          spareMagazine: Boolean(api.viewmodel.spareMagazine),
           hasMuzzle: Boolean(api.viewmodel.root.getObjectByName('tag_flash')),
           muzzle: [muzzle.x, muzzle.y, muzzle.z].map((n) => Number(n.toFixed(1))),
         });
@@ -260,6 +261,14 @@ test('Hijacked viewer loads collision, navigation, and walking controls', { time
       `every rifle should load its clips and authored tags: ${JSON.stringify(rifleLoads)}`);
     assert.ok(rifleLoads.every((rifle) => rifle.muzzle[2] < 0 && Math.abs(rifle.muzzle[0]) < 12),
       `every rifle muzzle should point ahead and stay centered: ${JSON.stringify(rifleLoads)}`);
+    // A mag change needs two magazines whenever the clip animates the empty one
+    // being thrown clear separately from the fresh one coming in, and only these
+    // three rigs do. The rest reuse the single seated magazine for both halves,
+    // and mounting a spare on them would just park a second magazine on the gun.
+    assert.deepEqual(
+      rifleLoads.filter((rifle) => rifle.spareMagazine).map((rifle) => rifle.id),
+      ['an94', 'sa58', 'sig556'],
+      `only the two-magazine rigs should mount a spare: ${JSON.stringify(rifleLoads)}`);
     assert.deepEqual((await page.evaluate(() => globalThis.hijacked.debug.getState().weapon.availableWeapons)), weaponIds);
     assert.equal(await page.evaluate(() => globalThis.hijacked.debug.selectWeapon('hk416')), 'm27',
       'the source hk416 id should remain an alias for the player-facing M27 slot');

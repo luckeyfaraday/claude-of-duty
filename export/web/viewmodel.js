@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { clone as cloneSkinned } from 'three/addons/utils/SkeletonUtils.js';
 import { createMuzzleFlashTexture } from './weapon-effects.js';
 import { parseNotetracks, NotetrackTimeline } from './notetracks.js';
 
@@ -19,6 +20,13 @@ const CUSTOM_CAMOS = Object.freeze({
   claude: './images/claude-camo.webp',
 });
 const CAMO_MATERIAL_PATTERN = /_camo\d*$/i;
+// Names the weapon rigs use for the tag the fresh magazine rides in on. Only
+// the rigs that animate two magazines carry one; see mountSpareMagazine().
+const SPARE_MAGAZINE_TAGS = Object.freeze(['tag_clip_full', 'tag_clip1']);
+// Every magazine channel is authored as a displacement and has to be anchored
+// before it can be played; the two halves of a mag change anchor on opposite
+// ends of the track. See the rebase in loadClips().
+const MAGAZINE_TAGS = Object.freeze(new Set(['tag_clip', ...SPARE_MAGAZINE_TAGS]));
 // The red tritium insert capping the front post is the element the eye lines up
 // on, so it defines where the sight picture points, not the tag authored on the
 // sight base. See computeAdsAlignment().
@@ -154,6 +162,8 @@ export class Viewmodel {
     this.introAdsFireAction = null;
     this.reloading = false;
     this.weaponRoot = null;
+    this.magazineRoot = null;
+    this.spareMagazine = null;
     this.camo = Object.hasOwn(CUSTOM_CAMOS, camo) ? camo : 'openai';
     this.camoTextures = new Map();
     this.camoRoots = [];
@@ -179,6 +189,39 @@ export class Viewmodel {
     const next = names[(names.indexOf(this.camo) + 1) % names.length];
     this.setCamo(next);
     return this.camo;
+  }
+
+  // A mag change involves two magazines: the empty one is pulled out and thrown
+  // clear, and a fresh one is brought up and seated. T6 animates the empty one
+  // on the attachment's own `tag_clip` and the fresh one on a spare tag the
+  // *weapon* rig carries, mounting a second copy of the same magazine xmodel
+  // there for the length of the reload. Rigs that reuse one magazine for both
+  // halves have no spare tag and need none of this; the hk416 is one of them,
+  // which is why nothing missed it until the whole roster shipped. Without it
+  // the only magazine on the gun is the discarded one, so the fresh magazine is
+  // invisible and the hands mime seating nothing — worst on the an94 and sa58,
+  // whose empties are thrown 73 and 95 units clear.
+  mountSpareMagazine(weaponScene, magazineScene) {
+    const tag = SPARE_MAGAZINE_TAGS
+      .map((name) => findNode(weaponScene, name))
+      .find(Boolean);
+    if (!tag) return null;
+
+    const spare = cloneSkinned(magazineScene);
+    // The clone carries its own `tag_clip`, and clips bind by name to the first
+    // match in the tree. Rename it so it cannot capture the empty magazine's
+    // channel: the spare is driven by the weapon's tag, which is already bound.
+    spare.traverse((node) => {
+      if (node.name === 'tag_clip') node.name = 'tag_clip_spare';
+    });
+    // The spare tag is posed by the clip in the weapon's space, so the mount
+    // must not re-apply the magwell offset the seated magazine needs.
+    spare.position.set(0, 0, 0);
+    spare.quaternion.identity();
+    spare.visible = false;
+    tag.add(spare);
+    this.camoRoots.push(spare);
+    return spare;
   }
 
   async load(handsUrl, weaponUrl, magazineUrl, onProgress, {
@@ -223,6 +266,8 @@ export class Viewmodel {
       if (Array.isArray(magazineOffset)) magazine.scene.position.fromArray(magazineOffset);
       if (Array.isArray(magazineRotation)) magazine.scene.rotation.set(...magazineRotation);
       weapon.scene.add(magazine.scene);
+      this.magazineRoot = magazine.scene;
+      this.spareMagazine = this.mountSpareMagazine(weapon.scene, magazine.scene);
     }
     this.root.updateMatrixWorld(true);
 
@@ -489,16 +534,26 @@ export class Viewmodel {
         if (bone.pos?.values?.length) {
           const times = bone.pos.frames.map((frame) => frame / data.fps);
           const values = bone.pos.values.slice();
-          // tag_clip's track is authored as a displacement from wherever the
-          // magazine starts: every reload clip opens it on the origin and walks
-          // it out of the well and back. The attachment carries its own bind
-          // position in the magwell, so anchor the displacement on that rather
-          // than treating it as a placement in this rig's space.
-          if (bone.name === 'tag_clip') {
+          // Magazine channels are authored as displacements, so each one has to
+          // be anchored on the pose it is a displacement *from*. The two halves
+          // of a mag change anchor on opposite ends. The magazine in the weapon
+          // starts seated, so tag_clip anchors its first key on the attachment's
+          // bind in the magwell. The fresh magazine instead *finishes* seated,
+          // arriving from wherever the hand carried it, so a spare tag anchors
+          // its last key on the seated magazine. Anchoring a spare on its first
+          // key assumes it starts in the well, which is only ever true when its
+          // track happens to open on the origin — it does on the sa58 and not on
+          // the an94 or sig556, so that rule fixed one rig and displaced two.
+          if (MAGAZINE_TAGS.has(bone.name)) {
+            const seats = SPARE_MAGAZINE_TAGS.includes(bone.name);
+            const target = seats
+              ? this.seatedMagazineIn(node.parent)
+              : node.position;
+            const from = seats ? values.length - 3 : 0;
             const offset = [
-              node.position.x - values[0],
-              node.position.y - values[1],
-              node.position.z - values[2],
+              target.x - values[from],
+              target.y - values[from + 1],
+              target.z - values[from + 2],
             ];
             for (let i = 0; i < values.length; i += 3) {
               values[i] += offset[0];
@@ -555,6 +610,7 @@ export class Viewmodel {
   onClipFinished(event) {
     if (event.action === this.reloadAction || event.action === this.reloadEmptyAction) {
       this.reloading = false;
+      this.showSpareMagazine(false);
       this.stopNotetracks();
       this.idleAction.reset().fadeIn(0.12).play();
       event.action.fadeOut(0.12);
@@ -577,8 +633,29 @@ export class Viewmodel {
     this.introAdsFireAction?.stop();
     action.reset().fadeIn(0.12).play();
     this.idleAction.fadeOut(0.12);
+    this.showSpareMagazine(true);
     this.startNotetracks(empty && this.reloadEmptyAction ? 'reloadEmpty' : 'reload', action);
     return true;
+  }
+
+  // Where the seated magazine rests, expressed in `space`'s local frame. This is
+  // the pose the fresh magazine has to arrive at, and the two live under
+  // different parents, so it goes through world space rather than assuming any
+  // particular hierarchy.
+  seatedMagazineIn(space) {
+    const seated = new THREE.Vector3();
+    if (!this.magazineRoot || !space) return seated;
+    this.root.updateMatrixWorld(true);
+    this.magazineRoot.getWorldPosition(seated);
+    return space.worldToLocal(seated);
+  }
+
+  // The spare only exists for the mag change. Outside it the clips leave its tag
+  // parked whereever the reload ended, and the seated magazine is back in the
+  // well, so leaving it on would show the gun carrying two.
+  showSpareMagazine(visible) {
+    if (this.spareMagazine) this.spareMagazine.visible = Boolean(visible);
+    return Boolean(this.spareMagazine);
   }
 
   cancelReload() {
@@ -587,6 +664,7 @@ export class Viewmodel {
     this.reloadEmptyAction?.stop();
     this.stopNotetracks();
     this.reloading = false;
+    this.showSpareMagazine(false);
     this.idleAction?.reset().fadeIn(0.08).play();
     return true;
   }
