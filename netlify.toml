@@ -11,5 +11,11 @@
 [build]
   publish = "export/web"
 
+[build.environment]
+  # @netlify/blobs 11 needs Node >= 22.12. A site keeps the default Node it was
+  # created with, and this one predates that, so the version is stated here
+  # rather than inherited -- an older Node cannot install or run the function.
+  NODE_VERSION = "22"
+
 [functions]
   directory = "netlify/functions"
