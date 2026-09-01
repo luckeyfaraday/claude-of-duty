@@ -13,6 +13,11 @@
 [build]
   base = ""
   publish = "export/web"
+  # `export/web` is also the bake workspace, so the publish dir carried ~108 MB
+  # of build inputs -- the source .gltf/.bin the map is baked from and the 359
+  # source PNGs already embedded in the .glb as KTX2. Nothing fetches them;
+  # crawlers pulled them anyway. This strips them from the upload only.
+  command = ".tools/prune-deploy.sh"
 
 [build.environment]
   # @netlify/blobs 11 requires Node >= 22.12, and a site keeps whatever default
