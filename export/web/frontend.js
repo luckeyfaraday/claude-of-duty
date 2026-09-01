@@ -1,5 +1,6 @@
 /**
- * Frontend shell: the loading screen, title screen, and pause menu.
+ * Frontend shell: the loading screen, title screen, pause menu, and class
+ * picker.
  *
  * The art comes from `zone/all/ui_mp.ff` via `.tools/export_ui.py`, layered in
  * the order the original `menu,main` linked it (backdrop, scrolling fog, glow,
@@ -26,13 +27,14 @@ const CAPTIONS = {
   'enemy weapon': 'enemy weapon',
 };
 
-export const SCREENS = ['loading', 'title', 'pause', 'error'];
+export const SCREENS = ['loading', 'title', 'pause', 'class', 'error'];
 
 export class Frontend {
-  constructor({ elements = null, onPlay = null, onResume = null } = {}) {
+  constructor({ elements = null, onPlay = null, onResume = null, onSelectWeapon = null } = {}) {
     this.elements = elements;
     this.onPlay = onPlay;
     this.onResume = onResume;
+    this.onSelectWeapon = onSelectWeapon;
 
     this.screen = 'loading';
     this.playing = false;
@@ -43,6 +45,9 @@ export class Frontend {
     this.peak = 0;
     this.message = '';
     this.controls = [];
+    this.weaponOptions = [];
+    this.selectedWeapon = null;
+    this.classReturnScreen = 'title';
 
     this.bindElements();
     this.render();
@@ -194,6 +199,82 @@ export class Frontend {
     this.render();
   }
 
+  /** Supply the compact card data used by the class screen. */
+  setWeapons(weapons = [], selectedId = null) {
+    this.weaponOptions = (weapons ?? []).map((weapon) => {
+      const entry = typeof weapon === 'string' ? { id: weapon } : weapon ?? {};
+      return {
+        ...entry,
+        id: String(entry.id ?? '').toLowerCase(),
+        ready: entry.ready !== false,
+      };
+    }).filter((weapon) => weapon.id);
+
+    const requested = selectedId == null ? this.selectedWeapon : String(selectedId).toLowerCase();
+    const selected = this.weaponOptions.find((weapon) => weapon.id === requested)
+      ?? this.weaponOptions[0];
+    this.selectedWeapon = selected?.id ?? null;
+    this.render();
+    return this.weaponOptions.map((weapon) => ({ id: weapon.id, ready: weapon.ready }));
+  }
+
+  /** Update one card's load state without exposing the viewmodel object. */
+  setWeaponReady(id, ready = true) {
+    const normalized = String(id ?? '').toLowerCase();
+    const option = this.weaponOptions.find((weapon) => weapon.id === normalized);
+    if (!option) return false;
+    option.ready = Boolean(ready);
+    this.render();
+    return option.ready;
+  }
+
+  /** Open the create-a-class screen from title or pause. */
+  openClass() {
+    if (this.screen !== 'title' && this.screen !== 'pause') return false;
+    this.classReturnScreen = this.screen;
+    this.screen = 'class';
+    this.playing = false;
+    this.render();
+    return true;
+  }
+
+  // Alias reads naturally for callers that describe the screen as a view.
+  showClass() {
+    return this.openClass();
+  }
+
+  /** Return to whichever shell screen opened the class picker. */
+  closeClass() {
+    if (this.screen !== 'class') return false;
+    this.screen = this.classReturnScreen === 'pause' ? 'pause' : 'title';
+    this.playing = false;
+    this.render();
+    return this.screen;
+  }
+
+  /** Select a loaded card; unloaded cards remain visibly unavailable. */
+  chooseWeapon(id) {
+    if (this.screen !== 'class') return false;
+    const normalized = String(id ?? '').toLowerCase();
+    const option = this.weaponOptions.find((weapon) => weapon.id === normalized);
+    if (!option || !option.ready) return false;
+    this.selectedWeapon = option.id;
+    this.render();
+    return this.selectedWeapon;
+  }
+
+  /** Confirm through the existing game-side selector, then return to shell. */
+  confirmClass() {
+    if (this.screen !== 'class') return false;
+    const option = this.weaponOptions.find((weapon) => weapon.id === this.selectedWeapon);
+    if (!option?.ready) return false;
+    const result = this.onSelectWeapon?.(option.id);
+    if (result === false) return false;
+    const selected = option.id;
+    this.closeClass();
+    return result ?? selected;
+  }
+
   fail(message) {
     this.screen = 'error';
     this.playing = false;
@@ -236,6 +317,7 @@ export class Frontend {
       visible: this.visible,
       percent: Math.round(this.fraction * 100),
       caption: this.screen === 'loading' ? this.caption : '',
+      selectedWeapon: this.selectedWeapon,
     };
   }
 
@@ -253,12 +335,21 @@ export class Frontend {
         this.action(button.dataset.action);
       });
     }
+    for (const card of el.classCards ?? []) {
+      card.addEventListener('click', (event) => {
+        event.stopPropagation();
+        this.chooseWeapon(card.dataset.weaponId);
+      });
+    }
   }
 
-  /** Pause-menu buttons. `resume` is the only one the shell handles itself. */
+  /** Shell buttons, including class navigation and card confirmation. */
   action(name) {
-    if (name === 'resume') this.play();
-    else this.elements?.onAction?.(name);
+    if (name === 'resume') return this.play();
+    if (name === 'class') return this.openClass();
+    if (name === 'class-back') return this.closeClass();
+    if (name === 'class-confirm') return this.confirmClass();
+    return this.elements?.onAction?.(name);
   }
 
   render() {
@@ -284,5 +375,19 @@ export class Frontend {
     if (el.caption) el.caption.textContent = loading ? `${this.caption}…` : '';
     if (el.message) el.message.textContent = this.message;
     if (el.controls && this.controls.length) el.controls.textContent = this.controls.join('\n');
+    for (const card of el.classCards ?? []) {
+      const option = this.weaponOptions.find((weapon) => weapon.id === card.dataset.weaponId);
+      const selected = option?.id === this.selectedWeapon;
+      card.dataset.selected = String(selected);
+      card.dataset.ready = String(Boolean(option?.ready));
+      card.disabled = !option?.ready;
+      const state = card.querySelector('[data-card-state]');
+      if (state) state.textContent = option?.ready ? (selected ? 'equipped' : 'ready') : 'loading';
+    }
+    const selected = this.weaponOptions.find((weapon) => weapon.id === this.selectedWeapon);
+    if (el.classSelection) {
+      el.classSelection.textContent = selected ? `${selected.name ?? selected.id} selected` : 'Select a rifle';
+    }
+    if (el.classConfirm) el.classConfirm.disabled = !selected?.ready;
   }
 }

@@ -1,0 +1,1666 @@
+[
+  {
+    "ref": "aircraft_destruction_assist_25",
+    "score": 25,
+    "xp": 25
+  },
+  {
+    "ref": "aircraft_destruction_assist_50",
+    "score": 50,
+    "xp": 50
+  },
+  {
+    "ref": "aircraft_destruction_assist_75",
+    "score": 75,
+    "xp": 75
+  },
+  {
+    "ref": "aircraft_flare_assist",
+    "score": 75,
+    "xp": 75
+  },
+  {
+    "ref": "assist_25",
+    "score": 25,
+    "xp": 25
+  },
+  {
+    "ref": "assist_50",
+    "score": 25,
+    "xp": 50
+  },
+  {
+    "ref": "assist_75",
+    "score": 50,
+    "xp": 75
+  },
+  {
+    "ref": "assist_concussion",
+    "score": 50,
+    "xp": 50
+  },
+  {
+    "ref": "assist_emp",
+    "score": 50,
+    "xp": 50
+  },
+  {
+    "ref": "assist_flash",
+    "score": 50,
+    "xp": 50
+  },
+  {
+    "ref": "assist_proximity",
+    "score": 50,
+    "xp": 50
+  },
+  {
+    "ref": "counter_uav_assist",
+    "score": 10,
+    "xp": 10
+  },
+  {
+    "ref": "destroyed_bouncingbetty",
+    "score": 50,
+    "xp": 50
+  },
+  {
+    "ref": "destroyed_c4",
+    "score": 50,
+    "xp": 50
+  },
+  {
+    "ref": "destroyed_claymore",
+    "score": 50,
+    "xp": 50
+  },
+  {
+    "ref": "destroyed_motion_sensor",
+    "score": 50,
+    "xp": 50
+  },
+  {
+    "ref": "destroyed_proxy",
+    "score": 50,
+    "xp": 50
+  },
+  {
+    "ref": "destroyed_shield",
+    "score": 50,
+    "xp": 50
+  },
+  {
+    "ref": "destroyed_tac_insert",
+    "score": 50,
+    "xp": 50
+  },
+  {
+    "ref": "destroyed_trophy_system",
+    "score": 50,
+    "xp": 50
+  },
+  {
+    "ref": "disarm_hacked_care_package",
+    "score": 50,
+    "xp": 50
+  },
+  {
+    "ref": "emp_assist",
+    "score": 10,
+    "xp": 10
+  },
+  {
+    "ref": "hpm_suppress",
+    "score": 10,
+    "xp": 10
+  },
+  {
+    "ref": "kill",
+    "score": 100,
+    "xp": 100
+  },
+  {
+    "ref": "killed_death_machine_enemy",
+    "score": 50,
+    "xp": 100
+  },
+  {
+    "ref": "killed_dog",
+    "score": 50,
+    "xp": 100
+  },
+  {
+    "ref": "killed_dog_assist",
+    "score": 25,
+    "xp": 25
+  },
+  {
+    "ref": "killed_multiple_grenade_launcher_enemy",
+    "score": 50,
+    "xp": 100
+  },
+  {
+    "ref": "microwave_turret_assist",
+    "score": 10,
+    "xp": 10
+  },
+  {
+    "ref": "satellite_assist",
+    "score": 10,
+    "xp": 10
+  },
+  {
+    "ref": "shield_assist",
+    "score": 50,
+    "xp": 50
+  },
+  {
+    "ref": "shield_blocked_damage",
+    "score": 25,
+    "xp": 25
+  },
+  {
+    "ref": "shield_blocked_damage_reduced",
+    "score": 10,
+    "xp": 10
+  },
+  {
+    "ref": "trophy_defense",
+    "score": 25,
+    "xp": 25
+  },
+  {
+    "ref": "uav_assist",
+    "score": 10,
+    "xp": 10
+  },
+  {
+    "ref": "destroyed_aitank",
+    "key": "MEDAL_DESTROYED_AITANK",
+    "name": "Drone Hunter",
+    "description": "Destroyed an enemy A.G.R.",
+    "material": "hud_medals_dronehunter",
+    "icon": "hud_medals_dronehunter.png",
+    "score": 150,
+    "xp": 250,
+    "category": "antiscorestreaks",
+    "sortkey": 19
+  },
+  {
+    "ref": "destroyed_counter_uav",
+    "key": "MEDAL_DESTROYED_COUNTERUAV",
+    "name": "Fuzzbuster",
+    "description": "Destroyed a Counter-UAV.",
+    "material": "hud_medals_destroyed_cuav",
+    "score": 100,
+    "xp": 100,
+    "category": "antiscorestreaks",
+    "sortkey": 19
+  },
+  {
+    "ref": "destroyed_helicopter_comlink",
+    "key": "MEDAL_DESTROYED_HELI_COMLINK",
+    "name": "Shadow Catcher",
+    "description": "Destroyed a Stealth Chopper.",
+    "material": "hud_medals_destroyed_heli_comlink",
+    "score": 150,
+    "xp": 250,
+    "category": "antiscorestreaks",
+    "sortkey": 19
+  },
+  {
+    "ref": "destroyed_helicopter_guard",
+    "key": "MEDAL_DESTROYED_HELI_GUARD",
+    "name": "Demolished",
+    "description": "Destroyed an Escort Drone.",
+    "material": "hud_medals_destroyed_heli_guard",
+    "score": 150,
+    "xp": 250,
+    "category": "antiscorestreaks",
+    "sortkey": 19
+  },
+  {
+    "ref": "destroyed_helicopter_gunner",
+    "key": "MEDAL_DESTROYED_HELI_GUNNER",
+    "name": "Big Game Hunter",
+    "description": "Destroyed a VTOL Warship.",
+    "material": "hud_medals_destroyed_heli_gunner",
+    "score": 175,
+    "xp": 500,
+    "category": "antiscorestreaks",
+    "sortkey": 19
+  },
+  {
+    "ref": "destroyed_helicopter_supply_drop",
+    "key": "MEDAL_DESTROYED_SUPPLY_DROP",
+    "name": "No Tip",
+    "description": "Destroyed a Care Package delivery drone.",
+    "material": "hud_medals_destroyed_supply_drop",
+    "score": 125,
+    "xp": 100,
+    "category": "antiscorestreaks",
+    "sortkey": 19
+  },
+  {
+    "ref": "destroyed_microwave_turret",
+    "key": "MEDAL_DESTROYED_MICROWAVE_TURRET",
+    "name": "Burn Out",
+    "description": "Destroyed an enemy Guardian.",
+    "material": "hud_medals_scrapped",
+    "icon": "hud_medals_scrapped.png",
+    "score": 125,
+    "xp": 100,
+    "category": "antiscorestreaks",
+    "sortkey": 19
+  },
+  {
+    "ref": "destroyed_missile_drone",
+    "key": "MEDAL_DESTROYED_MISSILE_DRONE",
+    "name": "Rejected",
+    "description": "Destroyed a Hunter Killer.",
+    "material": "hud_medals_destroyed_missile_drone",
+    "score": 125,
+    "xp": 100,
+    "category": "antiscorestreaks",
+    "sortkey": 19
+  },
+  {
+    "ref": "destroyed_missile_swarm",
+    "key": "MEDAL_DESTROYED_MISSILE_SWARM",
+    "name": "Exterminator",
+    "description": "Destroyed a Swarm.",
+    "material": "hud_medals_destroyed_missile_swarm",
+    "score": 200,
+    "xp": 500,
+    "category": "antiscorestreaks",
+    "sortkey": 19
+  },
+  {
+    "ref": "destroyed_plane_mortar",
+    "key": "MEDAL_DESTROYED_PLANE_MORTAR",
+    "name": "TKO",
+    "description": "Destroyed a Lightning Strike en route.",
+    "material": "hud_medals_destroyed_plane_mortar",
+    "score": 125,
+    "xp": 100,
+    "category": "antiscorestreaks",
+    "sortkey": 19
+  },
+  {
+    "ref": "destroyed_qrdrone",
+    "key": "MEDAL_DESTROYED_QRDRONE",
+    "name": "Flyswatter",
+    "description": "Destroyed enemy Dragonfire.",
+    "material": "hud_medals_wasphunter",
+    "icon": "hud_medals_wasphunter.png",
+    "score": 150,
+    "xp": 100,
+    "category": "antiscorestreaks",
+    "sortkey": 19
+  },
+  {
+    "ref": "destroyed_rcbomb",
+    "key": "MEDAL_DESTROYED_RCBOMB",
+    "name": "Road Rage",
+    "description": "Destroyed enemy RC XD.",
+    "material": "hud_medals_roadrage",
+    "icon": "hud_medals_roadrage.png",
+    "score": 125,
+    "xp": 100,
+    "category": "antiscorestreaks",
+    "sortkey": 19
+  },
+  {
+    "ref": "destroyed_remote_missile",
+    "key": "MEDAL_DESTROYED_REMOTE_MISSLE",
+    "name": "Intercepted",
+    "description": "Destroyed enemy Hellstorm Missile.",
+    "material": "hud_medals_intercepted",
+    "icon": "hud_medals_intercepted.png",
+    "score": 125,
+    "xp": 100,
+    "category": "antiscorestreaks",
+    "sortkey": 19
+  },
+  {
+    "ref": "destroyed_remote_mortar",
+    "key": "MEDAL_DESTROYED_REMOTE_MORTAR",
+    "name": "Uppercut",
+    "description": "Destroyed an enemy Lodestar.",
+    "material": "hud_medals_destroyed_remote_mortar",
+    "score": 175,
+    "xp": 250,
+    "category": "antiscorestreaks",
+    "sortkey": 19
+  },
+  {
+    "ref": "destroyed_sentry_gun",
+    "key": "MEDAL_DESTROYED_SENTRY_GUN",
+    "name": "Scrapped",
+    "description": "Destroyed enemy Sentry Gun.",
+    "material": "hud_medals_destroyed_sentry_gun",
+    "score": 125,
+    "xp": 100,
+    "category": "antiscorestreaks",
+    "sortkey": 19
+  },
+  {
+    "ref": "destroyed_strafe_run",
+    "key": "MEDAL_DESTROYED_STRAFERUN",
+    "name": "Hogtied",
+    "description": "Destroyed an enemy Warthog.",
+    "material": "hud_medals_flyswatter",
+    "icon": "hud_medals_flyswatter.png",
+    "score": 200,
+    "xp": 500,
+    "category": "antiscorestreaks",
+    "sortkey": 19
+  },
+  {
+    "ref": "destroyed_uav",
+    "key": "MEDAL_DESTROYED_UAV",
+    "name": "Blackout",
+    "description": "Destroyed an enemy UAV.",
+    "material": "hud_medals_destroyed_uav",
+    "score": 75,
+    "xp": 100,
+    "category": "antiscorestreaks",
+    "sortkey": 19
+  },
+  {
+    "ref": "killstreak_more_than_30",
+    "key": "MEDAL_KILLSTREAK_MORE_THAN_30",
+    "name": "Unstoppable",
+    "description": "Every kill above 30 without dying.",
+    "material": "hud_medals_nuclear",
+    "icon": "hud_medals_nuclear.png",
+    "xp": 100,
+    "category": "combat",
+    "sortkey": 1
+  },
+  {
+    "ref": "killstreak_30",
+    "key": "MEDAL_KILLSTREAK_30",
+    "name": "Nuclear",
+    "description": "Killed 30 enemies without dying.",
+    "material": "hud_medals_unstoppable",
+    "icon": "hud_medals_unstoppable.png",
+    "xp": 1000,
+    "category": "combat",
+    "sortkey": 2
+  },
+  {
+    "ref": "killstreak_25",
+    "key": "MEDAL_KILLSTREAK_25",
+    "name": "Brutal",
+    "description": "Killed 25 enemies without dying.",
+    "material": "hud_medals_brutal",
+    "icon": "hud_medals_brutal.png",
+    "xp": 1000,
+    "category": "combat",
+    "sortkey": 3
+  },
+  {
+    "ref": "killstreak_20",
+    "key": "MEDAL_KILLSTREAK_20",
+    "name": "Relentless",
+    "description": "Killed 20 enemies without dying.",
+    "material": "hud_medals_relentless",
+    "icon": "hud_medals_relentless.png",
+    "xp": 750,
+    "category": "combat",
+    "sortkey": 4
+  },
+  {
+    "ref": "killstreak_15",
+    "key": "MEDAL_KILLSTREAK_15",
+    "name": "Ruthless",
+    "description": "Killed 15 enemies without dying.",
+    "material": "hud_medals_ruthless",
+    "icon": "hud_medals_ruthless.png",
+    "xp": 500,
+    "category": "combat",
+    "sortkey": 5
+  },
+  {
+    "ref": "killstreak_10",
+    "key": "MEDAL_KILLSTREAK_10",
+    "name": "Merciless",
+    "description": "Killed 10 enemies without dying",
+    "material": "hud_medals_merciless",
+    "icon": "hud_medals_merciless.png",
+    "xp": 500,
+    "category": "combat",
+    "sortkey": 6
+  },
+  {
+    "ref": "killstreak_5",
+    "key": "MEDAL_KILLSTREAK_5",
+    "name": "Bloodthirsty",
+    "description": "Killed 5 enemies without dying.",
+    "material": "hud_medals_bloodthirsty",
+    "icon": "hud_medals_bloodthirsty.png",
+    "xp": 250,
+    "category": "combat",
+    "sortkey": 7
+  },
+  {
+    "ref": "multikill_more_than_8",
+    "key": "MEDAL_MULTIKILL_MORE_THAN_8",
+    "name": "Kill Chain",
+    "description": "Killed more than 8 enemies within a short time of one another.",
+    "material": "hud_medals_killchain",
+    "icon": "hud_medals_killchain.png",
+    "xp": 2000,
+    "category": "combat",
+    "sortkey": 8
+  },
+  {
+    "ref": "multikill_8",
+    "key": "MEDAL_MULTIKILL_8",
+    "name": "Ultra Kill",
+    "description": "Killed 8 enemies within a short time of one another.",
+    "material": "hud_medals_ultrakill",
+    "icon": "hud_medals_ultrakill.png",
+    "xp": 1500,
+    "category": "combat",
+    "sortkey": 9
+  },
+  {
+    "ref": "multikill_7",
+    "key": "MEDAL_MULTIKILL_7",
+    "name": "Mega Kill",
+    "description": "Killed 7 enemies within a short time of one another.",
+    "material": "hud_medals_megakill",
+    "icon": "hud_medals_megakill.png",
+    "xp": 1250,
+    "category": "combat",
+    "sortkey": 10
+  },
+  {
+    "ref": "multikill_6",
+    "key": "MEDAL_MULTIKILL_6",
+    "name": "Super Kill",
+    "description": "Killed 6 enemies within a short time of one another.",
+    "material": "hud_medals_superkill",
+    "icon": "hud_medals_superkill.png",
+    "xp": 1000,
+    "category": "combat",
+    "sortkey": 11
+  },
+  {
+    "ref": "multikill_5",
+    "key": "MEDAL_MULTIKILL_5",
+    "name": "Frenzy Kill",
+    "description": "Killed 5 enemies within a short time of one another.",
+    "material": "hud_medals_frenzykill",
+    "icon": "hud_medals_frenzykill.png",
+    "xp": 750,
+    "category": "combat",
+    "sortkey": 12
+  },
+  {
+    "ref": "multikill_4",
+    "key": "MEDAL_MULTIKILL_4",
+    "name": "Fury Kill",
+    "description": "Killed 4 enemies within a short time of one another.",
+    "material": "hud_medals_quadkill",
+    "icon": "hud_medals_quadkill.png",
+    "xp": 500,
+    "category": "combat",
+    "sortkey": 13
+  },
+  {
+    "ref": "multikill_3",
+    "key": "MEDAL_MULTIKILL_3",
+    "name": "Triple Kill",
+    "description": "Killed 3 enemies within a short time of one another.",
+    "material": "hud_medals_triplekill",
+    "icon": "hud_medals_triplekill.png",
+    "xp": 250,
+    "category": "combat",
+    "sortkey": 14
+  },
+  {
+    "ref": "multikill_2",
+    "key": "MEDAL_MULTIKILL_2",
+    "name": "Double Kill",
+    "description": "Killed 2 enemies within a short time of one another.",
+    "material": "hud_medals_doublekill",
+    "icon": "hud_medals_doublekill.png",
+    "xp": 100,
+    "category": "combat",
+    "sortkey": 15
+  },
+  {
+    "ref": "assisted_suicide",
+    "key": "MEDAL_ASSISTED_SUICIDE",
+    "name": "Assisted Suicide",
+    "description": "Did damage to a player that then killed themselves.",
+    "material": "hud_medals_assist_suicide",
+    "icon": "hud_medals_assist_suicide.png",
+    "xp": 100,
+    "category": "combat",
+    "sortkey": 16
+  },
+  {
+    "ref": "backstabber_kill",
+    "key": "MEDAL_BACKSTABBER_KILL",
+    "name": "Back Stabber",
+    "description": "Knife an enemy in the back.",
+    "material": "hud_medals_backstabber",
+    "icon": "hud_medals_backstabber.png",
+    "xp": 100,
+    "category": "combat",
+    "sortkey": 16
+  },
+  {
+    "ref": "ballistic_knife_kill",
+    "key": "MEDAL_BALLISTIC_KNIFE_KILL",
+    "name": "Skewered",
+    "description": "Killed the enemy by shooting them with a Ballistic Knife.",
+    "material": "hud_medals_skewer",
+    "icon": "hud_medals_skewer.png",
+    "xp": 100,
+    "category": "combat",
+    "sortkey": 16
+  },
+  {
+    "ref": "bounce_hatchet_kill",
+    "key": "MEDAL_BOUNCE_HATCHET_KILL",
+    "name": "Bankshot",
+    "description": "Killed an enemy with a hatchet that has bounced.",
+    "material": "hud_medals_bankshot",
+    "icon": "hud_medals_bankshot.png",
+    "xp": 500,
+    "category": "combat",
+    "sortkey": 16
+  },
+  {
+    "ref": "capture_enemy_crate",
+    "key": "MEDAL_CAPTURE_ENEMY_CRATE",
+    "name": "Hijacker",
+    "description": "Captured an enemy Care Package.",
+    "material": "hud_medals_hijacker",
+    "icon": "hud_medals_hijacker.png",
+    "xp": 250,
+    "category": "combat",
+    "sortkey": 16
+  },
+  {
+    "ref": "comeback_from_deathstreak",
+    "key": "MEDAL_COMEBACK_FROM_DEATHSTREAK",
+    "name": "Comeback",
+    "description": "Killed enemy after you died 3 or more times.",
+    "material": "hud_medals_comeback",
+    "icon": "hud_medals_comeback.png",
+    "xp": 100,
+    "category": "combat",
+    "sortkey": 16
+  },
+  {
+    "ref": "crossbow_kill",
+    "key": "MEDAL_CROSSBOW_KILL",
+    "name": "Deadeye",
+    "description": "Killed the enemy with the Crossbow.",
+    "material": "hud_medals_deadeye",
+    "icon": "hud_medals_deadeye.png",
+    "xp": 100,
+    "category": "combat",
+    "sortkey": 16
+  },
+  {
+    "ref": "first_kill",
+    "key": "MEDAL_FIRST_KILL",
+    "name": "First Blood",
+    "description": "Got the first kill in the match.",
+    "material": "hud_medals_firstblood",
+    "icon": "hud_medals_firstblood.png",
+    "xp": 500,
+    "category": "combat",
+    "sortkey": 16
+  },
+  {
+    "ref": "hacked",
+    "key": "MEDAL_HACKED",
+    "name": "Hacked",
+    "description": "Hacked enemy gear or weapon.",
+    "material": "hud_medals_hacked",
+    "icon": "hud_medals_hacked.png",
+    "score": 50,
+    "xp": 50,
+    "category": "combat",
+    "sortkey": 16
+  },
+  {
+    "ref": "hatchet_kill",
+    "key": "MEDAL_HATCHET_KILL",
+    "name": "Chopped Up!",
+    "description": "Killed the enemy with a Combat Axe.",
+    "material": "hud_medals_choppedup",
+    "icon": "hud_medals_choppedup.png",
+    "xp": 100,
+    "category": "combat",
+    "sortkey": 16
+  },
+  {
+    "ref": "headshot",
+    "key": "MEDAL_HEADSHOT",
+    "name": "Headshot",
+    "description": "Killed enemy by shooting them in the head.",
+    "material": "hud_medals_headshot",
+    "icon": "hud_medals_headshot.png",
+    "xp": 100,
+    "category": "combat",
+    "sortkey": 16
+  },
+  {
+    "ref": "kill_enemies_one_bullet",
+    "key": "MEDAL_KILL_ENEMIES_ONE_BULLET",
+    "name": "Efficiency",
+    "description": "Kill multiple enemies with one bullet.  ",
+    "material": "hud_medals_double_penetration",
+    "icon": "hud_medals_double_penetration.png",
+    "xp": 500,
+    "category": "combat",
+    "sortkey": 16
+  },
+  {
+    "ref": "kill_enemy_after_death",
+    "key": "MEDAL_KILL_ENEMY_AFTER_DEATH",
+    "name": "Afterlife",
+    "description": "Killed the enemy after you died.",
+    "material": "hud_medals_afterlife",
+    "icon": "hud_medals_afterlife.png",
+    "xp": 100,
+    "category": "combat",
+    "sortkey": 16
+  },
+  {
+    "ref": "kill_enemy_injuring_teammate",
+    "key": "MEDAL_KILL_ENEMY_INJURING_TEAMMATE",
+    "name": "Savior",
+    "description": "Killed an enemy who is injuring a teammate.  ",
+    "material": "hud_medals_savior",
+    "icon": "hud_medals_savior.png",
+    "xp": 100,
+    "category": "combat",
+    "sortkey": 16
+  },
+  {
+    "ref": "kill_enemy_one_bullet",
+    "key": "MEDAL_KILL_ENEMY_ONE_BULLET",
+    "name": "One Shot, One Kill",
+    "description": "Killed the enemy with one shot.",
+    "material": "hud_medals_oneshot_onekill",
+    "icon": "hud_medals_oneshot_onekill.png",
+    "xp": 100,
+    "category": "combat",
+    "sortkey": 16
+  },
+  {
+    "ref": "kill_enemy_recent_dive_prone",
+    "key": "MEDAL_KILL_ENEMY_RECENT_DIVE_PRONE",
+    "name": "Dropshot",
+    "description": "Killed an enemy shortly after diving to prone.",
+    "material": "hud_medals_dropshot",
+    "icon": "hud_medals_dropshot.png",
+    "xp": 100,
+    "category": "combat",
+    "sortkey": 16
+  },
+  {
+    "ref": "kill_enemy_when_injured",
+    "key": "MEDAL_KILL_ENEMY_WHEN_INJURED",
+    "name": "Survivor",
+    "description": "Killed the enemy when severely injured.",
+    "material": "hud_medals_closecall",
+    "icon": "hud_medals_closecall.png",
+    "xp": 100,
+    "category": "combat",
+    "sortkey": 16
+  },
+  {
+    "ref": "kill_enemy_who_killed_teammate",
+    "key": "MEDAL_KILL_ENEMY_WHO_KILLED_TEAMMATE",
+    "name": "Avenger",
+    "description": "Killed an enemy who recently killed a teammate.",
+    "material": "hud_medals_avenger",
+    "icon": "hud_medals_avenger.png",
+    "xp": 100,
+    "category": "combat",
+    "sortkey": 16
+  },
+  {
+    "ref": "kill_enemy_with_care_package_crush",
+    "key": "MEDAL_KILL_ENEMY_WITH_CARE_PACKAGE_CRUSH",
+    "name": "Pancake",
+    "description": "Killed an enemy by dropping a Care Package or crate on them.",
+    "material": "hud_medals_pancake",
+    "icon": "hud_medals_pancake.png",
+    "score": 25,
+    "xp": 500,
+    "category": "combat",
+    "sortkey": 16
+  },
+  {
+    "ref": "kill_enemy_with_hacked_care_package",
+    "key": "MEDAL_KILL_ENEMY_WITH_HACKED_CARE_PACKAGE",
+    "name": "Bait Taken",
+    "description": "Killed the enemy with a hacked Care Package.",
+    "material": "hud_medals_bait_taken",
+    "icon": "hud_medals_bait_taken.png",
+    "score": 25,
+    "xp": 250,
+    "category": "combat",
+    "sortkey": 16
+  },
+  {
+    "ref": "kill_enemy_with_their_weapon",
+    "key": "MEDAL_KILL_ENEMY_WITH_THEIR_WEAPON",
+    "name": "Backfire",
+    "description": "Killed an enemy with their own weapon.",
+    "material": "hud_medals_backfire",
+    "icon": "hud_medals_backfire.png",
+    "xp": 100,
+    "category": "combat",
+    "sortkey": 16
+  },
+  {
+    "ref": "longshot_kill",
+    "key": "MEDAL_LONGSHOT_KILL",
+    "name": "Long Shot",
+    "description": "Killed an enemy with a long distance shot.",
+    "material": "hud_medals_longshot",
+    "icon": "hud_medals_longshot.png",
+    "xp": 250,
+    "category": "combat",
+    "sortkey": 16
+  },
+  {
+    "ref": "melee_kill_with_riot_shield",
+    "key": "MEDAL_MELEE_KILL_WITH_RIOT_SHIELD",
+    "name": "Shield Bash",
+    "description": "Killed the enemy by melee with an Assault Shield.",
+    "material": "hud_medals_shieldbash",
+    "icon": "hud_medals_shieldbash.png",
+    "xp": 100,
+    "category": "combat",
+    "sortkey": 16
+  },
+  {
+    "ref": "revenge_kill",
+    "key": "MEDAL_REVENGE_KILL",
+    "name": "Revenge",
+    "description": "Killed the enemy who killed you.",
+    "material": "hud_medals_revenge",
+    "icon": "hud_medals_revenge.png",
+    "xp": 100,
+    "category": "combat",
+    "sortkey": 16
+  },
+  {
+    "ref": "stick_explosive_kill",
+    "key": "MEDAL_STICK_EXPLOSIVE_KILL",
+    "name": "Stick",
+    "description": "Stick an enemy with an explosive.",
+    "material": "hud_medals_stick",
+    "icon": "hud_medals_stick.png",
+    "xp": 100,
+    "category": "combat",
+    "sortkey": 16
+  },
+  {
+    "ref": "stop_enemy_killstreak",
+    "key": "MEDAL_STOP_ENEMY_KILLSTREAK",
+    "name": "Buzz Kill",
+    "description": "Killed an enemy to stop their streak.",
+    "material": "hud_medals_buzzkill",
+    "icon": "hud_medals_buzzkill.png",
+    "xp": 100,
+    "category": "combat",
+    "sortkey": 16
+  },
+  {
+    "ref": "uninterrupted_obit_feed_kills",
+    "key": "MEDAL_UNINTERRUPTED_OBIT_FEED_KILLS",
+    "name": "Quad Feed",
+    "description": "Got 4 uninterrupted kills to appear at once in the obituary feed.",
+    "material": "hud_medals_fourpiece",
+    "icon": "hud_medals_fourpiece.png",
+    "xp": 250,
+    "category": "combat",
+    "sortkey": 16
+  },
+  {
+    "ref": "bomb_detonated",
+    "key": "MEDAL_BOMB_DETONATED",
+    "name": "Bomber",
+    "description": "Detonated the Bomb.",
+    "material": "hud_medals_bomber",
+    "icon": "hud_medals_bomber.png",
+    "category": "gamemode",
+    "sortkey": 20
+  },
+  {
+    "ref": "clear_2_attackers",
+    "key": "MEDAL_CLEAR_2_ATTACKERS",
+    "name": "Wipeout",
+    "description": "Clear your objective of 2 or more enemies.",
+    "material": "hud_medals_wipeout",
+    "icon": "hud_medals_wipeout.png",
+    "category": "gamemode",
+    "sortkey": 20
+  },
+  {
+    "ref": "defend_hq_last_man_alive",
+    "key": "MEDAL_DEFEND_HQ_LAST_ALIVE",
+    "name": "Clutch",
+    "description": "Defend the HQ until it times out without dying as the last player alive.",
+    "material": "hud_medals_lastmanstanding",
+    "icon": "hud_medals_lastmanstanding.png",
+    "category": "gamemode",
+    "sortkey": 20
+  },
+  {
+    "ref": "defused_bomb",
+    "key": "MEDAL_DEFUSED_BOMB",
+    "name": "Hero",
+    "description": "Defused the bomb.",
+    "material": "hud_medals_hero",
+    "icon": "hud_medals_hero.png",
+    "category": "gamemode",
+    "sortkey": 20
+  },
+  {
+    "ref": "defused_bomb_last_man_alive",
+    "key": "MEDAL_DEFUSED_BOMB_LAST_MAN_ALIVE",
+    "name": "Clutch",
+    "description": "Defuse the bomb when you are the last player alive and enemies are alive.",
+    "material": "hud_medals_clutch",
+    "icon": "hud_medals_clutch.png",
+    "category": "gamemode",
+    "sortkey": 20
+  },
+  {
+    "ref": "dom_point_neutral_b_secured",
+    "key": "MEDAL_NEUTRAL_B_SECURED",
+    "name": "Opening Move",
+    "description": "Secure the neutral B flag in Domination.",
+    "material": "hud_medals_opening_move",
+    "icon": "hud_medals_opening_move.png",
+    "category": "gamemode",
+    "sortkey": 20
+  },
+  {
+    "ref": "dom_point_secured",
+    "key": "MEDAL_POSITION_SECURE",
+    "name": "Secure",
+    "description": "Secure the point in Domination.",
+    "material": "hud_medals_secured",
+    "icon": "hud_medals_secured.png",
+    "category": "gamemode",
+    "sortkey": 20
+  },
+  {
+    "ref": "eliminate_oic",
+    "key": "MEDAL_ELIMINATE_OIC",
+    "name": "Elimination",
+    "description": "Killed an enemy player on their last life in One in the Chamber",
+    "material": "hud_medals_oic_elimination",
+    "category": "gamemode",
+    "sortkey": 20
+  },
+  {
+    "ref": "elimination_and_last_player_alive",
+    "key": "MEDAL_ELIMINATION_AND_LAST_PLAYER_ALIVE",
+    "name": "Last Man Standing",
+    "description": "Eliminate the last enemy when you are the last man alive.",
+    "material": "hud_medals_lastmanstanding",
+    "icon": "hud_medals_lastmanstanding.png",
+    "category": "gamemode",
+    "sortkey": 20
+  },
+  {
+    "ref": "flag_capture",
+    "key": "MEDAL_FLAG_CAPTURE",
+    "name": "Playmaker",
+    "description": "Captured the flag.",
+    "material": "hud_medals_playmaker",
+    "icon": "hud_medals_playmaker.png",
+    "category": "gamemode",
+    "sortkey": 20
+  },
+  {
+    "ref": "flag_carrier_kill_return_close",
+    "key": "MEDAL_FLAG_CARRIER_KILL_RETURN_CLOSE",
+    "name": "Close Call",
+    "description": "Killed the enemy flag carrier when they are very close to capping.",
+    "material": "hud_medals_closecall_ctf",
+    "icon": "hud_medals_closecall_ctf.png",
+    "category": "gamemode",
+    "sortkey": 20
+  },
+  {
+    "ref": "hack_3_agrs",
+    "key": "MEDAL_HACK_3_AGRS_IN_HACK",
+    "name": "Hackathon",
+    "description": "Hacked 3 A.G.R.s in one life in Hacker",
+    "material": "hud_medals_hack_hackathon",
+    "category": "gamemode",
+    "sortkey": 20
+  },
+  {
+    "ref": "hq_secure",
+    "key": "MEDAL_HQ_SECURE",
+    "name": "Secure",
+    "description": "Secured the Headquarters.",
+    "material": "hud_medals_secured",
+    "icon": "hud_medals_secured.png",
+    "category": "gamemode",
+    "sortkey": 20
+  },
+  {
+    "ref": "humiliation_gun",
+    "key": "MEDAL_HUMILIATION_GUN",
+    "name": "Humiliation",
+    "description": "Knifed an enemy player in Gun Game",
+    "material": "hud_medals_ggame_humiliation",
+    "category": "gamemode",
+    "sortkey": 20
+  },
+  {
+    "ref": "kill_confirmed_multi",
+    "key": "MEDAL_KILL_CONFIRMED_MULTI",
+    "name": "Clean Up",
+    "description": "Collect 3 tags in rapid succession.",
+    "material": "hud_medals_cleanup",
+    "icon": "hud_medals_cleanup.png",
+    "category": "gamemode",
+    "sortkey": 20
+  },
+  {
+    "ref": "kill_enemy_while_capping_dom",
+    "key": "MEDAL_KILL_ENEMY_WHILE_CAPPING",
+    "name": "Aggression",
+    "description": "Take an objective by force.  ",
+    "material": "hud_medals_aggression_dom",
+    "icon": "hud_medals_aggression_dom.png",
+    "category": "gamemode",
+    "sortkey": 20
+  },
+  {
+    "ref": "kill_enemy_while_capping_hq",
+    "key": "MEDAL_KILL_ENEMY_WHILE_CAPPING",
+    "name": "Aggression",
+    "description": "Take an objective by force.  ",
+    "material": "hud_medals_aggression_hq",
+    "icon": "hud_medals_aggression_hq.png",
+    "category": "gamemode",
+    "sortkey": 20
+  },
+  {
+    "ref": "kill_enemy_with_more_ammo_oic",
+    "key": "MEDAL_KILL_ENEMY_WITH_MORE_AMMO_OIC",
+    "name": "Underdog",
+    "description": "Killed an enemy with more ammo than you in One in the Chamber",
+    "material": "hud_medals_oic_underdog",
+    "category": "gamemode",
+    "sortkey": 20
+  },
+  {
+    "ref": "kill_flag_carrier",
+    "key": "MEDAL_KILL_FLAG_CARRIER",
+    "name": "Takedown",
+    "description": "Killed the enemy flag carrier.",
+    "material": "hud_medals_takedown_ctf",
+    "icon": "hud_medals_takedown_ctf.png",
+    "category": "gamemode",
+    "sortkey": 20
+  },
+  {
+    "ref": "kill_hacker",
+    "key": "MEDAL_KILL_HACKER_IN_HACK",
+    "name": "Denied",
+    "description": "Killed an enemy that is hacking your A.G.R. in Hacker",
+    "material": "hud_medals_hack_denied",
+    "category": "gamemode",
+    "sortkey": 20
+  },
+  {
+    "ref": "kill_hacker_then_hack",
+    "key": "MEDAL_KILL_HACKER_THEN_HACK_IN_HACK",
+    "name": "Heist",
+    "description": "Killed an enemy that was hacking and quickly hacked the same A.G.R. in Hacker",
+    "material": "hud_medals_hack_heist",
+    "category": "gamemode",
+    "sortkey": 20
+  },
+  {
+    "ref": "kill_in_3_seconds_gun",
+    "key": "MEDAL_KILL_IN_3_SECONDS_GUN",
+    "name": "Gunslinger",
+    "description": "Killed an enemy within 3 seconds of equipping a new weapon in Gun Game",
+    "material": "hud_medals_ggame_gunslinger",
+    "category": "gamemode",
+    "sortkey": 20
+  },
+  {
+    "ref": "kill_leader_with_axe_sas",
+    "key": "MEDAL_KILL_LEADER_WITH_AXE_SAS",
+    "name": "Regicide",
+    "description": "Killed the player with the highest score with a hatchet in Sticks and Stones",
+    "material": "hud_medals_sticks_regicide",
+    "category": "gamemode",
+    "sortkey": 20
+  },
+  {
+    "ref": "kill_sd",
+    "key": "MEDAL_ELIMINATE_SD",
+    "name": "Elimination",
+    "description": "Killed an enemy player in Search and Destroy.",
+    "material": "hud_medals_oic_elimination",
+    "category": "gamemode",
+    "sortkey": 20
+  },
+  {
+    "ref": "kill_with_axe_sas",
+    "key": "MEDAL_KILL_WITH_AXE_SAS",
+    "name": "Bankrupted",
+    "description": "Killed an enemy with the Combat Axe in Sticks and Stones",
+    "material": "hud_medals_sticks_bankrupt",
+    "category": "gamemode",
+    "sortkey": 20
+  },
+  {
+    "ref": "kill_with_crossbow_and_ballistic_sas",
+    "key": "MEDAL_KILL_WITH_CROSSBOW_AND_BALLISTIC_SAS",
+    "name": "Switch Hitter",
+    "description": "Killed enemies with both the crossbow and Ballistic Knife in one life in Sticks and Stones",
+    "material": "hud_medals_sticks_switchhitter",
+    "category": "gamemode",
+    "sortkey": 20
+  },
+  {
+    "ref": "kill_x2_score_shrp",
+    "key": "MEDAL_KILL_X2_SCORE_SHRP",
+    "name": "Combo Breaker",
+    "description": "Killed a player that has the x2 score bonus in Sharpshooter",
+    "material": "hud_medals_sshooter_cbreaker",
+    "category": "gamemode",
+    "sortkey": 20
+  },
+  {
+    "ref": "killed_bomb_defuser",
+    "key": "MEDAL_KILLED_BOMB_DEFUSER",
+    "name": "Denied",
+    "description": "Killed the enemy while they are defusing the bomb.",
+    "material": "hud_medals_denied",
+    "icon": "hud_medals_denied.png",
+    "category": "gamemode",
+    "sortkey": 20
+  },
+  {
+    "ref": "killed_bomb_planter",
+    "key": "MEDAL_KILLED_BOMB_PLANTER",
+    "name": "Takedown",
+    "description": "Killed the enemy while they are planting the bomb.",
+    "material": "hud_medals_takedown_bomb",
+    "icon": "hud_medals_takedown_bomb.png",
+    "category": "gamemode",
+    "sortkey": 20
+  },
+  {
+    "ref": "killed_enemy_while_carrying_flag",
+    "key": "MEDAL_KILLED_ENEMY_WHILE_CARRYING_FLAG",
+    "name": "Denied",
+    "description": "Killed enemy while carrying the flag.",
+    "material": "hud_medals_aggression_ctf",
+    "icon": "hud_medals_aggression_ctf.png",
+    "category": "gamemode",
+    "sortkey": 20
+  },
+  {
+    "ref": "knife_leader_gun",
+    "key": "MEDAL_KNIFE_LEADER_GUN",
+    "name": "Regicide",
+    "description": "Knifed the player with the highest score in Gun Game",
+    "material": "hud_medals_ggame_regicide",
+    "category": "gamemode",
+    "sortkey": 20
+  },
+  {
+    "ref": "knife_with_ammo_oic",
+    "key": "MEDAL_KNIFE_WITH_AMMO_OIC",
+    "name": "Frugal",
+    "description": "Killed an enemy with the knife while you still have a bullet in One in the Chamber",
+    "material": "hud_medals_oic_frugal",
+    "category": "gamemode",
+    "sortkey": 20
+  },
+  {
+    "ref": "koth_secure",
+    "key": "MEDAL_KOTH_SECURE",
+    "name": "Hardpoint Secure",
+    "description": "Secured a Hardpoint.",
+    "material": "hud_medals_secured",
+    "icon": "hud_medals_secured.png",
+    "category": "gamemode",
+    "sortkey": 20
+  },
+  {
+    "ref": "most_points_shrp",
+    "key": "MEDAL_MOST_POINTS_SHRP",
+    "name": "Gun Expert",
+    "description": "Scored the most points in the game with a particular gun in Sharpshooter",
+    "material": "hud_medals_sshooter_gunexpert",
+    "category": "gamemode",
+    "sortkey": 20
+  },
+  {
+    "ref": "quickly_secure_point",
+    "key": "MEDAL_QUICKLY_SECURE_POINT",
+    "name": "Forward Position",
+    "description": "Quickly capture a hardpoint immediately after your team owned the last hardpoint.",
+    "material": "hud_medals_forward_position",
+    "icon": "hud_medals_forward_position.png",
+    "category": "gamemode",
+    "sortkey": 20
+  },
+  {
+    "ref": "retrieve_own_tags",
+    "key": "MEDAL_RETRIEVE_OWN_TAGS",
+    "name": "Retrieved",
+    "description": "Retrieved your own tags.",
+    "material": "hud_medals_retrieval",
+    "icon": "hud_medals_retrieval.png",
+    "category": "gamemode",
+    "sortkey": 20
+  },
+  {
+    "ref": "x2_score_shrp",
+    "key": "MEDAL_X2_SCORE_SHRP",
+    "name": "Double Down",
+    "description": "Reached the x2 Score bonus in Sharpshooter",
+    "material": "hud_medals_sshooter_ddown",
+    "category": "gamemode",
+    "sortkey": 20
+  },
+  {
+    "ref": "completed_match",
+    "key": "MEDAL_COMPLETED_MATCH",
+    "name": "Strength and Honor",
+    "description": "Completed the match.",
+    "material": "hud_medals_defense",
+    "icon": "hud_medals_defense.png",
+    "xp": 100,
+    "category": "gamemode",
+    "sortkey": 21
+  },
+  {
+    "ref": "won_match",
+    "key": "MEDAL_WON_MATCH",
+    "name": "Victor",
+    "description": "Completed the match with a Victory.",
+    "material": "hud_medals_offense",
+    "icon": "hud_medals_offense.png",
+    "xp": 250,
+    "category": "gamemode",
+    "sortkey": 21
+  },
+  {
+    "ref": "aitank_kill",
+    "key": "MEDAL_AITANK_KILL",
+    "name": "Bouncer",
+    "description": "Killed an enemy with the A.G.R.",
+    "material": "hud_medals_agr",
+    "icon": "hud_medals_agr.png",
+    "score": 25,
+    "xp": 100,
+    "category": "scorestreaks",
+    "sortkey": 17
+  },
+  {
+    "ref": "death_machine_kill",
+    "key": "MEDAL_DEATH_MACHINE_KILL",
+    "name": "Decimated",
+    "description": "Killed an enemy with the Death Machine.",
+    "material": "hud_medals_deathmachine",
+    "icon": "hud_medals_deathmachine.png",
+    "score": 25,
+    "xp": 100,
+    "category": "scorestreaks",
+    "sortkey": 17
+  },
+  {
+    "ref": "dogs_kill",
+    "key": "MEDAL_DOGS_KILL",
+    "name": "Warbeast",
+    "description": "Killed an enemy with the K9 Unit.",
+    "material": "hud_medals_dogs",
+    "icon": "hud_medals_dogs.png",
+    "score": 15,
+    "xp": 100,
+    "category": "scorestreaks",
+    "sortkey": 17
+  },
+  {
+    "ref": "helicopter_comlink_kill",
+    "key": "MEDAL_HELICOPTER_COMLINK_KILL",
+    "name": "Silent Killer",
+    "description": "Killed an enemy with the Stealth Chopper.",
+    "material": "hud_medals_stealthheli",
+    "icon": "hud_medals_stealthheli.png",
+    "score": 25,
+    "xp": 100,
+    "category": "scorestreaks",
+    "sortkey": 17
+  },
+  {
+    "ref": "helicopter_guard_kill",
+    "key": "MEDAL_HELICOPTER_GUARD_KILL",
+    "name": "Wingman",
+    "description": "Killed an enemy with the Escort Drone.",
+    "material": "hud_medals_aq10escort",
+    "icon": "hud_medals_aq10escort.png",
+    "score": 25,
+    "xp": 100,
+    "category": "scorestreaks",
+    "sortkey": 17
+  },
+  {
+    "ref": "helicopter_gunner_kill",
+    "key": "MEDAL_HELICOPTER_GUNNER_KILL",
+    "name": "Death From Above",
+    "description": "Killed an enemy with the VTOL Warship.",
+    "material": "hud_medals_choppergunner",
+    "icon": "hud_medals_choppergunner.png",
+    "score": 15,
+    "xp": 100,
+    "category": "scorestreaks",
+    "sortkey": 17
+  },
+  {
+    "ref": "microwave_turret_kill",
+    "key": "MEDAL_MICROWAVE_TURRET_KILL",
+    "name": "Cooked",
+    "description": "Killed an enemy with the Guardian.",
+    "material": "hud_medals_hpm",
+    "icon": "hud_medals_hpm.png",
+    "score": 25,
+    "xp": 100,
+    "category": "scorestreaks",
+    "sortkey": 17
+  },
+  {
+    "ref": "missile_drone_kill",
+    "key": "MEDAL_MISSILE_DRONE_KILL",
+    "name": "Bullseye",
+    "description": "Killed an enemy with the Hunter Killer.",
+    "material": "hud_medals_drone",
+    "icon": "hud_medals_drone.png",
+    "score": 25,
+    "xp": 100,
+    "category": "scorestreaks",
+    "sortkey": 17
+  },
+  {
+    "ref": "missile_swarm_kill",
+    "key": "MEDAL_MISSILE_SWARM_KILL",
+    "name": "Falling Skies",
+    "description": "Killed an enemy with the Swarm.",
+    "material": "hud_medals_droneswarm",
+    "icon": "hud_medals_droneswarm.png",
+    "score": 15,
+    "xp": 100,
+    "category": "scorestreaks",
+    "sortkey": 17
+  },
+  {
+    "ref": "multiple_grenade_launcher_kill",
+    "key": "MEDAL_MULTIPLE_GRENADE_LAUNCHER_KILL",
+    "name": "Boomstick",
+    "description": "Killed an enemy with the War Machine.",
+    "material": "hud_medals_mgl",
+    "icon": "hud_medals_mgl.png",
+    "score": 25,
+    "xp": 100,
+    "category": "scorestreaks",
+    "sortkey": 17
+  },
+  {
+    "ref": "plane_mortar_kill",
+    "key": "MEDAL_PLANE_MORTAR_KILL",
+    "name": "Strike Delivered",
+    "description": "Killed an enemy with the Lightning Strike.",
+    "material": "hud_medals_lightstrike",
+    "icon": "hud_medals_lightstrike.png",
+    "score": 25,
+    "xp": 100,
+    "category": "scorestreaks",
+    "sortkey": 17
+  },
+  {
+    "ref": "qrdrone_kill",
+    "key": "MEDAL_QRDRONE_KILL",
+    "name": "Red Baron",
+    "description": "Killed an enemy with the Dragonfire.",
+    "material": "hud_medals_wasp",
+    "icon": "hud_medals_wasp.png",
+    "score": 25,
+    "xp": 100,
+    "category": "scorestreaks",
+    "sortkey": 17
+  },
+  {
+    "ref": "rcxd_kill",
+    "key": "MEDAL_RCXD_KILL",
+    "name": "Kaboom",
+    "description": "Killed an enemy with the RC-XD.",
+    "material": "hud_medals_rcxd",
+    "icon": "hud_medals_rcxd.png",
+    "score": 25,
+    "xp": 100,
+    "category": "scorestreaks",
+    "sortkey": 17
+  },
+  {
+    "ref": "remote_missile_kill",
+    "key": "MEDAL_REMOTE_MISSILE_KILL",
+    "name": "Raining Death",
+    "description": "Killed an enemy with the Hellstorm Missile.",
+    "material": "hud_medals_hellstorm",
+    "icon": "hud_medals_hellstorm.png",
+    "score": 25,
+    "xp": 100,
+    "category": "scorestreaks",
+    "sortkey": 17
+  },
+  {
+    "ref": "remote_mortar_kill",
+    "key": "MEDAL_REMOTE_MORTAR_KILL",
+    "name": "Distant Thunder",
+    "description": "Killed an enemy with the Lodestar.",
+    "material": "hud_medals_lodestar",
+    "icon": "hud_medals_lodestar.png",
+    "score": 15,
+    "xp": 100,
+    "category": "scorestreaks",
+    "sortkey": 17
+  },
+  {
+    "ref": "sentry_gun_kill",
+    "key": "MEDAL_SENTRY_GUN_KILL",
+    "name": "Crackdown",
+    "description": "Killed an enemy with the Sentry Gun.",
+    "material": "hud_medals_sentrygun",
+    "icon": "hud_medals_sentrygun.png",
+    "score": 25,
+    "xp": 100,
+    "category": "scorestreaks",
+    "sortkey": 17
+  },
+  {
+    "ref": "strafe_run_kill",
+    "key": "MEDAL_STRAFF_RUN_KILL",
+    "name": "Cropduster",
+    "description": "Killed an enemy with the Warthog.",
+    "material": "hud_medals_warthog",
+    "icon": "hud_medals_warthog.png",
+    "score": 25,
+    "xp": 100,
+    "category": "scorestreaks",
+    "sortkey": 17
+  },
+  {
+    "ref": "share_package_aitank",
+    "key": "MEDAL_SHARE_PACKAGE_AITANK",
+    "name": "Shared A.G.R.",
+    "description": "Shared an A.G.R. Care Package.",
+    "material": "hud_medals_share_agr",
+    "icon": "hud_medals_share_agr.png",
+    "score": 50,
+    "xp": 100,
+    "category": "scorestreaks",
+    "sortkey": 18
+  },
+  {
+    "ref": "share_package_counter_uav",
+    "key": "MEDAL_SHARE_PACKAGE_COUNTER_UAV",
+    "name": "Shared Counter-UAV",
+    "description": "Shared a Counter-UAV Care Package.",
+    "material": "hud_medals_share_counteruav",
+    "icon": "hud_medals_share_counteruav.png",
+    "score": 50,
+    "xp": 100,
+    "category": "scorestreaks",
+    "sortkey": 18
+  },
+  {
+    "ref": "share_package_death_machine",
+    "key": "MEDAL_SHARE_PACKAGE_DEATH_MACHINE",
+    "name": "Shared Death Machine",
+    "description": "Shared a Death Machine Care Package.",
+    "material": "hud_medals_share_deathmachine",
+    "icon": "hud_medals_share_deathmachine.png",
+    "score": 50,
+    "xp": 100,
+    "category": "scorestreaks",
+    "sortkey": 18
+  },
+  {
+    "ref": "share_package_dogs",
+    "key": "MEDAL_SHARE_PACKAGE_DOGS",
+    "name": "Shared K9 Unit",
+    "description": "Shared a K9 Unit Care Package.",
+    "material": "hud_medals_share_dogs",
+    "icon": "hud_medals_share_dogs.png",
+    "score": 50,
+    "xp": 100,
+    "category": "scorestreaks",
+    "sortkey": 18
+  },
+  {
+    "ref": "share_package_emp",
+    "key": "MEDAL_SHARE_PACKAGE_EMP",
+    "name": "Shared EMP Systems",
+    "description": "Shared an EMP Systems Care Package.",
+    "material": "hud_medals_share_emp",
+    "icon": "hud_medals_share_emp.png",
+    "score": 50,
+    "xp": 100,
+    "category": "scorestreaks",
+    "sortkey": 18
+  },
+  {
+    "ref": "share_package_helicopter_comlink",
+    "key": "MEDAL_SHARE_PACKAGE_HELICOPTER_COMLINK",
+    "name": "Shared Stealth Chopper",
+    "description": "Shared a Stealth Chopper Care Package.",
+    "material": "hud_medals_share_stealthheli",
+    "score": 50,
+    "xp": 100,
+    "category": "scorestreaks",
+    "sortkey": 18
+  },
+  {
+    "ref": "share_package_helicopter_guard",
+    "key": "MEDAL_SHARE_PACKAGE_HELICOPTER_GUARD",
+    "name": "Shared Escort Drone",
+    "description": "Shared an Escort Drone Care Package.",
+    "material": "hud_medals_share_aq10escort",
+    "icon": "hud_medals_share_aq10escort.png",
+    "score": 50,
+    "xp": 100,
+    "category": "scorestreaks",
+    "sortkey": 18
+  },
+  {
+    "ref": "share_package_helicopter_gunner",
+    "key": "MEDAL_SHARE_PACKAGE_HELICOPTER_GUNNER",
+    "name": "Shared VTOL Warship",
+    "description": "Shared a VTOL Warship Care Package..",
+    "material": "hud_medals_share_choppergunner",
+    "icon": "hud_medals_share_choppergunner.png",
+    "score": 50,
+    "xp": 100,
+    "category": "scorestreaks",
+    "sortkey": 18
+  },
+  {
+    "ref": "share_package_microwave_turret",
+    "key": "MEDAL_SHARE_PACKAGE_MICROWAVE_TURRET",
+    "name": "Shared Guardian",
+    "description": "Shared a Guardian Care Package.",
+    "material": "hud_medals_share_hpm",
+    "icon": "hud_medals_share_hpm.png",
+    "score": 50,
+    "xp": 100,
+    "category": "scorestreaks",
+    "sortkey": 18
+  },
+  {
+    "ref": "share_package_missile_drone",
+    "key": "MEDAL_SHARE_PACKAGE_MISSILE_DRONE",
+    "name": "Shared Hunter Killer",
+    "description": "Shared a Hunter Killer Care Package.",
+    "material": "hud_medals_share_drone",
+    "icon": "hud_medals_share_drone.png",
+    "score": 50,
+    "xp": 100,
+    "category": "scorestreaks",
+    "sortkey": 18
+  },
+  {
+    "ref": "share_package_missile_swarm",
+    "key": "MEDAL_SHARE_PACKAGE_MISSLE_SWARM",
+    "name": "Shared Swarm",
+    "description": "Shared a Swarm Care Package.",
+    "material": "hud_medals_share_droneswarm",
+    "icon": "hud_medals_share_droneswarm.png",
+    "score": 50,
+    "xp": 100,
+    "category": "scorestreaks",
+    "sortkey": 18
+  },
+  {
+    "ref": "share_package_multiple_grenade_launcher",
+    "key": "MEDAL_SHARE_PACKAGE_MULTIPLE_GRENADE_LAUNCHER",
+    "name": "Shared War Machine",
+    "description": "Shared a War Machine Care Package.",
+    "material": "hud_medals_share_mgl",
+    "icon": "hud_medals_share_mgl.png",
+    "score": 50,
+    "xp": 100,
+    "category": "scorestreaks",
+    "sortkey": 18
+  },
+  {
+    "ref": "share_package_plane_mortar",
+    "key": "MEDAL_SHARE_PACKAGE_PLANE_MORTAR",
+    "name": "Shared Lightning Strike",
+    "description": "Shared a Lightning Strike Care Package.",
+    "material": "hud_medals_share_lightstrike",
+    "icon": "hud_medals_share_lightstrike.png",
+    "score": 50,
+    "xp": 100,
+    "category": "scorestreaks",
+    "sortkey": 18
+  },
+  {
+    "ref": "share_package_qrdrone",
+    "key": "MEDAL_SHARE_PACKAGE_QRDRONE",
+    "name": "Shared Dragonfire",
+    "description": "Shared a Dragonfire Care Package.",
+    "material": "hud_medals_share_wasp",
+    "icon": "hud_medals_share_wasp.png",
+    "score": 50,
+    "xp": 100,
+    "category": "scorestreaks",
+    "sortkey": 18
+  },
+  {
+    "ref": "share_package_rcbomb",
+    "key": "MEDAL_SHARE_PACKAGE_RCBOMB",
+    "name": "Shared RC-XD",
+    "description": "Shared an RC-XD Care Package.",
+    "material": "hud_medals_share_rcxd",
+    "icon": "hud_medals_share_rcxd.png",
+    "score": 50,
+    "xp": 100,
+    "category": "scorestreaks",
+    "sortkey": 18
+  },
+  {
+    "ref": "share_package_remote_missile",
+    "key": "MEDAL_SHARE_PACKAGE_REMOTE_MISSILE",
+    "name": "Shared Hellstorm Missile",
+    "description": "Shared a Hellstorm Missile Care Package.",
+    "material": "hud_medals_share_hellstorm",
+    "icon": "hud_medals_share_hellstorm.png",
+    "score": 50,
+    "xp": 100,
+    "category": "scorestreaks",
+    "sortkey": 18
+  },
+  {
+    "ref": "share_package_remote_mortar",
+    "key": "MEDAL_SHARE_PACKAGE_REMOTE_MORTAR",
+    "name": "Shared Lodestar",
+    "description": "Shared a Lodestar Care Package.",
+    "material": "hud_medals_share_lodestar",
+    "icon": "hud_medals_share_lodestar.png",
+    "score": 50,
+    "xp": 100,
+    "category": "scorestreaks",
+    "sortkey": 18
+  },
+  {
+    "ref": "share_package_satellite",
+    "key": "MEDAL_SHARE_PACKAGE_SATELLITE",
+    "name": "Shared Orbital VSAT",
+    "description": "Shared an Orbital VSAT Care Package.",
+    "material": "hud_medals_share_satrecon",
+    "icon": "hud_medals_share_satrecon.png",
+    "score": 50,
+    "xp": 100,
+    "category": "scorestreaks",
+    "sortkey": 18
+  },
+  {
+    "ref": "share_package_sentry_gun",
+    "key": "MEDAL_SHARE_PACKAGE_SENTRY_GUN",
+    "name": "Shared Sentry Gun",
+    "description": "Shared a Sentry Gun Care Package.",
+    "material": "hud_medals_share_sentrygun",
+    "icon": "hud_medals_share_sentrygun.png",
+    "score": 50,
+    "xp": 100,
+    "category": "scorestreaks",
+    "sortkey": 18
+  },
+  {
+    "ref": "share_package_strafe_run",
+    "key": "MEDAL_SHARE_PACKAGE_STRAFE_RUN",
+    "name": "Shared Warthog",
+    "description": "Shared a Warthog Care Package.",
+    "material": "hud_medals_share_warthog",
+    "icon": "hud_medals_share_warthog.png",
+    "score": 50,
+    "xp": 100,
+    "category": "scorestreaks",
+    "sortkey": 18
+  },
+  {
+    "ref": "share_package_uav",
+    "key": "MEDAL_SHARE_PACKAGE_UAV",
+    "name": "Shared UAV",
+    "description": "Shared a UAV Care Package.",
+    "material": "hud_medals_share_uav",
+    "icon": "hud_medals_share_uav.png",
+    "score": 50,
+    "xp": 100,
+    "category": "scorestreaks",
+    "sortkey": 18
+  }
+]

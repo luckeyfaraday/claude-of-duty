@@ -14,6 +14,28 @@ test('automatic fire starts immediately and respects its cadence', () => {
   assert.equal(shots.length, 2);
 });
 
+test('AN-94 hyperburst uses its fast opening interval on every trigger pull', () => {
+  const triggerShots = [];
+  const weapon = new WeaponController({
+    roundsPerMinute: 625,
+    initialRoundsPerMinute: 937.5,
+    initialShotCount: 2,
+    onFire: ({ triggerShotCount }) => triggerShots.push(triggerShotCount),
+  });
+  weapon.setTrigger(true);
+
+  assert.equal(weapon.update(0), 1, 'the first round is immediate');
+  assert.equal(weapon.update(0.063), 0);
+  assert.equal(weapon.update(0.002), 1, 'the second round follows after 64 ms');
+  assert.equal(weapon.update(0.094), 0);
+  assert.equal(weapon.update(0.003), 1, 'sustained fire settles to the 96 ms interval');
+
+  weapon.setTrigger(false);
+  weapon.setTrigger(true);
+  assert.equal(weapon.update(0), 1, 'a fresh pull starts a fresh hyperburst');
+  assert.deepEqual(triggerShots, [1, 2, 3, 1]);
+});
+
 test('fire is blocked while sprinting or reloading', () => {
   const weapon = new WeaponController();
   weapon.setTrigger(true);

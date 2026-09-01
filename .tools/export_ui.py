@@ -5,6 +5,10 @@
 images and 584 materials. The menu only needs a dozen of them, so this dumps
 the zone once and converts just that subset to PNG under `export/web/ui/`.
 
+The weapon cards live in the code-post graphics zone rather than ui_mp.ff;
+the hk416/M27 card is a patch asset.  They are included here so the exact same
+named-subset export path handles all of the frontend art.
+
 The `.menu` layout definitions in the same zone are deliberately not used --
 the Unlinker lists them but writes nothing for T6 menudefs, so the browser
 rebuilds the layout itself and takes only the art from here.
@@ -19,6 +23,8 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TOOLS = f"{ROOT}/.tools"
 OUT = f"{ROOT}/export/web/ui"
 ZONE = f"{ROOT}/zone/all/ui_mp.ff"
+CODE_POST_GFX_ZONE = f"{ROOT}/zone/all/code_post_gfx_mp.ff"
+PATCH_ZONE = f"{ROOT}/zone/all/patch_mp.ff"
 
 # Asset name -> output size, or None to keep the authored resolution. The
 # originals are power-of-two and mostly small; only the fog strip is worth
@@ -39,7 +45,46 @@ ASSETS = {
     "menu_select_highlight": None,
     # The map card, for the title screen.
     "menu_mp_map_select_hijacked_final": None,
+
+    # Authentic weapon card art.  The small cards use the authored `_big`
+    # plates because they include the full silhouette and transparent margin.
+    # hk416/M27 is patched into patch_mp.ff; the remaining AR cards are in
+    # code_post_gfx_mp.ff.
+    "menu_mp_weapons_hk416": None,
+    "menu_mp_weapons_an94": None,
+    "menu_mp_weapons_an94_big": None,
+    "menu_mp_weapons_sa58": None,
+    "menu_mp_weapons_sa58_big": None,
+    "menu_mp_weapons_saritch": None,
+    "menu_mp_weapons_saritch_big": None,
+    "menu_mp_weapons_scar": None,
+    "menu_mp_weapons_scar_big": None,
+    "menu_mp_weapons_sig556": None,
+    "menu_mp_weapons_sig556_big": None,
+    "menu_mp_weapons_tar21": None,
+    "menu_mp_weapons_tar21_big": None,
+    "menu_mp_weapons_type95": None,
+    "menu_mp_weapons_type95_big": None,
+    "menu_mp_weapons_xm8": None,
+    "menu_mp_weapons_xm8_big": None,
 }
+
+# patch_mp.ff only contains the hk416 base plate.  Keep the card template
+# uniform by publishing that authentic plate under the `_big` filename too;
+# no placeholder art is invented for the missing variant.
+ASSET_ALIASES = {
+    "menu_mp_weapons_hk416_big": "menu_mp_weapons_hk416",
+}
+
+ASSET_ZONES = {
+    name: PATCH_ZONE
+    for name in ("menu_mp_weapons_hk416",)
+}
+ASSET_ZONES.update({
+    name: CODE_POST_GFX_ZONE
+    for name in ASSETS
+    if name.startswith("menu_mp_weapons_") and name not in ASSET_ZONES
+})
 
 
 def run(args, **kwargs):
@@ -50,7 +95,7 @@ def run(args, **kwargs):
     return result.stdout
 
 
-def dump_zone(destination):
+def dump_zone(destination, zone=ZONE):
     """Unlink ui_mp.ff, writing its images as DDS into `destination`."""
     run(
         [
@@ -58,7 +103,7 @@ def dump_zone(destination):
             "--include-assets", "image,material",
             "--image-format", "DDS",
             "-o", destination,
-            ZONE,
+            zone,
         ],
         cwd=TOOLS,
     )
@@ -84,22 +129,32 @@ def main():
     for tool in ("Unlinker.exe", "texconv.exe"):
         if not os.path.isfile(f"{TOOLS}/{tool}"):
             raise SystemExit(f"missing {TOOLS}/{tool}")
-    if not os.path.isfile(ZONE):
-        raise SystemExit(f"missing {ZONE}")
+    for zone in {ZONE, *ASSET_ZONES.values()}:
+        if not os.path.isfile(zone):
+            raise SystemExit(f"missing {zone}")
 
     os.makedirs(OUT, exist_ok=True)
-    with tempfile.TemporaryDirectory(prefix="ui_mp_") as scratch:
-        images = dump_zone(scratch)
+    by_zone = {}
+    for name, size in ASSETS.items():
+        zone = ASSET_ZONES.get(name, ZONE)
+        by_zone.setdefault(zone, []).append((name, size))
 
-        # Group by output size so the common case is a single texconv call.
-        batches = {}
-        for name, size in ASSETS.items():
-            source = f"{images}/{name}.dds"
-            if not os.path.isfile(source):
-                raise SystemExit(f"{name} is not in {os.path.basename(ZONE)}")
-            batches.setdefault(size, []).append(source)
-        for size, sources in batches.items():
-            convert(sources, size)
+    for zone, assets in by_zone.items():
+        with tempfile.TemporaryDirectory(prefix="ui_mp_") as scratch:
+            images = dump_zone(scratch, zone)
+
+            # Group by output size so the common case is a single texconv call.
+            batches = {}
+            for name, size in assets:
+                source = f"{images}/{name}.dds"
+                if not os.path.isfile(source):
+                    raise SystemExit(f"{name} is not in {os.path.basename(zone)}")
+                batches.setdefault(size, []).append(source)
+            for size, sources in batches.items():
+                convert(sources, size)
+
+    for alias, source in ASSET_ALIASES.items():
+        shutil.copyfile(f"{OUT}/{source}.png", f"{OUT}/{alias}.png")
 
     written = 0
     for name in ASSETS:
@@ -107,7 +162,9 @@ def main():
         if not os.path.isfile(target):
             raise SystemExit(f"texconv did not write {target}")
         written += os.path.getsize(target)
-    print(f"{len(ASSETS)} images -> {os.path.relpath(OUT, ROOT)} ({written / 1024:.0f} KB)")
+    for name in ASSET_ALIASES:
+        written += os.path.getsize(f"{OUT}/{name}.png")
+    print(f"{len(ASSETS) + len(ASSET_ALIASES)} images -> {os.path.relpath(OUT, ROOT)} ({written / 1024:.0f} KB)")
 
 
 if __name__ == "__main__":

@@ -11,7 +11,7 @@ const browserPath = [
 ].find((candidate) => fs.existsSync(candidate));
 const browserTestUrl = process.env.BROWSER_TEST_URL ?? 'http://127.0.0.1:8000/';
 
-test('Hijacked viewer loads collision, navigation, and walking controls', { timeout: 180_000 }, async () => {
+test('Hijacked viewer loads collision, navigation, and walking controls', { timeout: 240_000 }, async () => {
   assert.ok(browserPath, 'Chrome or Edge is required for the browser smoke test');
   const browser = await chromium.launch({
     executablePath: browserPath,
@@ -26,6 +26,16 @@ test('Hijacked viewer loads collision, navigation, and walking controls', { time
     ],
   });
   const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
+  // The README's plain Python server has no optional play-counter endpoint.
+  // Fulfill it in the browser test so its expected 404/501 cannot obscure
+  // genuine page errors or failed game-asset requests.
+  await page.route('**/api/plays', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ players: 1, plays: 1 }),
+    });
+  });
   const errors = [];
   page.on('pageerror', (error) => errors.push(error.message));
   page.on('console', (message) => {
@@ -59,7 +69,8 @@ test('Hijacked viewer loads collision, navigation, and walking controls', { time
       barWidth: document.getElementById('fe-bar').style.width,
     }));
     assert.equal(menu.screen, 'title', 'a finished load lands on the title screen');
-    assert.deepEqual(menu.state, { screen: 'title', visible: true, percent: 100, caption: '' });
+    assert.deepEqual(menu.state,
+      { screen: 'title', visible: true, percent: 100, caption: '', selectedWeapon: 'm27' });
     assert.match(menu.backdrop, /menu_mp_background_main2\.png/, 'the frontend backdrop should be the extracted plate');
     assert.equal(menu.cardLoaded, 256, 'the Hijacked map card should decode at its authored width');
     assert.equal(menu.barWidth, '100%', 'a finished load fills the bar');
@@ -92,6 +103,221 @@ test('Hijacked viewer loads collision, navigation, and walking controls', { time
     assert.equal(viewmodel.ready, true, 'weapon viewmodel should be loaded');
     assert.ok(viewmodel.muzzle[2] < 0, `muzzle should point ahead of the camera, got ${viewmodel.muzzle}`);
     assert.ok(Math.abs(viewmodel.muzzle[0]) < 12, `weapon should be roughly centered, got ${viewmodel.muzzle}`);
+
+    const an94 = await page.evaluate(async () => {
+      const api = globalThis.hijacked;
+      const selected = api.debug.selectWeapon('an94');
+      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      const state = api.debug.getState();
+      const muzzle = api.viewmodel.muzzlePosition();
+      return {
+        selected,
+        state: state.weapon,
+        ready: api.viewmodel.ready,
+        visible: api.viewmodel.scene.visible,
+        hasIntroFire: Boolean(api.viewmodel.introFireAction),
+        hasIntroAdsFire: Boolean(api.viewmodel.introAdsFireAction),
+        hasMagazineTag: Boolean(api.viewmodel.root.getObjectByName('tag_clip')),
+        hasMuzzleTag: Boolean(api.viewmodel.root.getObjectByName('tag_flash')),
+        muzzle: [muzzle.x, muzzle.y, muzzle.z].map((n) => Number(n.toFixed(1))),
+        hudName: document.getElementById('hud-weapon-name').textContent,
+      };
+    });
+    assert.equal(an94.selected, 'an94');
+    assert.equal(an94.state.id, 'an94');
+    assert.equal(an94.state.name, 'AN-94');
+    assert.deepEqual(an94.state.availableWeapons,
+      ['m27', 'an94', 'sa58', 'saritch', 'scar', 'sig556', 'tar21', 'type95', 'xm8']);
+    assert.equal(an94.ready, true, 'AN-94 viewmodel should be loaded');
+    assert.equal(an94.visible, true, 'AN-94 viewmodel should be visible after selection');
+    assert.equal(an94.hasIntroFire, true, 'AN-94 should load its hyperburst intro animation');
+    assert.equal(an94.hasIntroAdsFire, true, 'AN-94 should load its ADS hyperburst intro animation');
+    assert.equal(an94.hasMagazineTag, true, 'AN-94 should retain its animated magazine tag');
+    assert.equal(an94.hasMuzzleTag, true, 'AN-94 should expose its authored muzzle tag');
+    assert.equal(an94.hudName, 'AN-94');
+    assert.ok(an94.muzzle[2] < 0, `AN-94 muzzle should point ahead of the camera, got ${an94.muzzle}`);
+    assert.ok(Math.abs(an94.muzzle[0]) < 12, `AN-94 should be roughly centered, got ${an94.muzzle}`);
+
+    const an94Reload = await page.evaluate(() => {
+      const api = globalThis.hijacked;
+      const cues = [];
+      const originalNotetrack = api.viewmodel.onNotetrack;
+      api.viewmodel.onNotetrack = (cue) => {
+        cues.push(cue.name);
+        originalNotetrack?.(cue);
+      };
+      api.debug.setWeaponAmmo(27, 240);
+      const started = api.reloadWeapon();
+      for (let i = 0; i < 300 && (api.weapon.reloading || api.viewmodel.reloading); i += 1) {
+        api.viewmodel.update(1 / 60, { speed: 0, grounded: true, moving: false });
+        if (api.weapon.reloading && !api.viewmodel.reloading) api.weapon.finishReload();
+      }
+      api.viewmodel.onNotetrack = originalNotetrack;
+      return {
+        started,
+        controllerReloading: api.weapon.reloading,
+        viewmodelReloading: api.viewmodel.reloading,
+        magazine: api.weapon.magazine,
+        reserveAmmo: api.weapon.reserveAmmo,
+        cues,
+      };
+    });
+    assert.equal(an94Reload.started, true);
+    assert.equal(an94Reload.controllerReloading, false, 'AN-94 controller reload should finish');
+    assert.equal(an94Reload.viewmodelReloading, false, 'AN-94 authored reload clip should finish');
+    assert.equal(an94Reload.magazine, 30);
+    assert.equal(an94Reload.reserveAmmo, 237);
+    assert.ok(an94Reload.cues.includes('fly_an94_mag_out'));
+    assert.ok(an94Reload.cues.includes('fly_an94_mag_in'));
+    assert.equal(await page.evaluate(() => globalThis.hijacked.debug.selectWeapon('m27')), 'm27');
+
+    const classFromTitle = await page.evaluate(() => {
+      document.querySelector('.fe-start .fe-btn[data-action="class"]').click();
+      const state = globalThis.hijacked.debug.getState();
+      return {
+        screen: state.menu.screen,
+        selectedWeapon: state.menu.selectedWeapon,
+        cards: [...document.querySelectorAll('.fe-class-card')].map((card) => ({
+          id: card.dataset.weaponId,
+          ready: card.dataset.ready,
+          art: card.querySelector('[data-card-art]')?.naturalWidth ?? 0,
+          name: card.querySelector('[data-card-name]')?.textContent,
+          rpm: card.querySelector('[data-card-rpm]')?.textContent,
+          fireType: card.querySelector('[data-card-fire-type]')?.src ?? '',
+        })),
+      };
+    });
+    await page.screenshot({ path: path.join(os.tmpdir(), 'hijacked-class-title.png') });
+    assert.equal(classFromTitle.screen, 'class', 'title should expose the create-a-class screen');
+    assert.equal(classFromTitle.selectedWeapon, 'm27');
+    assert.deepEqual(classFromTitle.cards.map((card) => card.id),
+      ['m27', 'an94', 'sa58', 'saritch', 'scar', 'sig556', 'tar21', 'type95', 'xm8']);
+    assert.ok(classFromTitle.cards.every((card) => card.ready === 'true'),
+      `every eager-loaded card should be ready: ${JSON.stringify(classFromTitle.cards)}`);
+    assert.ok(classFromTitle.cards.every((card) => card.art > 0), 'authentic weapon card art should decode');
+    assert.equal(classFromTitle.cards.find((card) => card.id === 'sa58').name, 'FAL OSW');
+    assert.equal(classFromTitle.cards.find((card) => card.id === 'xm8').rpm, '1250');
+    assert.match(classFromTitle.cards.find((card) => card.id === 'sig556').fireType, /hud_mp_firerate_burst\.png$/);
+
+    await page.locator('.fe-class-card[data-weapon-id="xm8"]').click();
+    await page.screenshot({ path: path.join(os.tmpdir(), 'hijacked-class-xm8-selected.png') });
+    await page.locator('.fe-class-actions .fe-btn[data-action="class-confirm"]').click();
+    const equippedFromTitle = await page.evaluate(() => globalThis.hijacked.debug.getState());
+    assert.equal(equippedFromTitle.menu.screen, 'title');
+    assert.equal(equippedFromTitle.menu.selectedWeapon, 'xm8');
+    assert.equal(equippedFromTitle.weapon.id, 'xm8', 'class confirmation should call selectWeapon');
+
+    const classFromPause = await page.evaluate(() => {
+      const api = globalThis.hijacked;
+      api.frontend.enter();
+      api.frontend.suspend();
+      const paused = api.debug.getState().menu.screen;
+      document.querySelector('.fe-pause .fe-btn[data-action="class"]').click();
+      return {
+        paused,
+        screen: api.debug.getState().menu.screen,
+        selectedWeapon: api.debug.getState().menu.selectedWeapon,
+      };
+    });
+    await page.screenshot({ path: path.join(os.tmpdir(), 'hijacked-class-pause.png') });
+    assert.equal(classFromPause.paused, 'pause');
+    assert.equal(classFromPause.screen, 'class', 'pause should expose the same create-a-class screen');
+    assert.equal(classFromPause.selectedWeapon, 'xm8');
+    await page.locator('.fe-class-actions .fe-btn[data-action="class-back"]').click();
+    assert.equal((await page.evaluate(() => globalThis.hijacked.debug.getState().menu.screen)), 'pause');
+    await page.evaluate(() => globalThis.hijacked.frontend.enter());
+
+    const weaponIds = ['m27', 'an94', 'sa58', 'saritch', 'scar', 'sig556', 'tar21', 'type95', 'xm8'];
+    const rifleLoads = await page.evaluate(async (ids) => {
+      const api = globalThis.hijacked;
+      const waitFrames = () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      const result = [];
+      for (const id of ids) {
+        const selected = api.debug.selectWeapon(id);
+        await waitFrames();
+        const muzzle = api.viewmodel.muzzlePosition();
+        result.push({
+          id,
+          selected,
+          active: api.debug.getState().weapon.id,
+          name: api.debug.getState().weapon.name,
+          ready: api.viewmodel.ready,
+          clips: api.viewmodel.clips.size,
+          hasMagazine: Boolean(api.viewmodel.root.getObjectByName('tag_clip')),
+          spareMagazine: Boolean(api.viewmodel.spareMagazine),
+          hasMuzzle: Boolean(api.viewmodel.root.getObjectByName('tag_flash')),
+          muzzle: [muzzle.x, muzzle.y, muzzle.z].map((n) => Number(n.toFixed(1))),
+        });
+      }
+      return result;
+    }, weaponIds);
+    for (const rifle of rifleLoads.filter(({ id }) => ['sa58', 'xm8'].includes(id))) {
+      await page.screenshot({ path: path.join(os.tmpdir(), `hijacked-${rifle.id}.png`) });
+    }
+    assert.deepEqual(rifleLoads.map((rifle) => rifle.selected), weaponIds);
+    assert.ok(rifleLoads.every((rifle) => rifle.active === rifle.id && rifle.ready),
+      `every rifle should select its ready viewmodel: ${JSON.stringify(rifleLoads)}`);
+    assert.ok(rifleLoads.every((rifle) => rifle.clips >= 5 && rifle.hasMagazine && rifle.hasMuzzle),
+      `every rifle should load its clips and authored tags: ${JSON.stringify(rifleLoads)}`);
+    assert.ok(rifleLoads.every((rifle) => rifle.muzzle[2] < 0 && Math.abs(rifle.muzzle[0]) < 12),
+      `every rifle muzzle should point ahead and stay centered: ${JSON.stringify(rifleLoads)}`);
+    // A mag change needs two magazines whenever the clip animates the empty one
+    // being thrown clear separately from the fresh one coming in, and only these
+    // three rigs do. The rest reuse the single seated magazine for both halves,
+    // and mounting a spare on them would just park a second magazine on the gun.
+    assert.deepEqual(
+      rifleLoads.filter((rifle) => rifle.spareMagazine).map((rifle) => rifle.id),
+      ['an94', 'sa58', 'sig556'],
+      `only the two-magazine rigs should mount a spare: ${JSON.stringify(rifleLoads)}`);
+    // A gun never carries two magazines. The fresh one waits for the mag_out cue
+    // before it takes the well over, because its track parks it wherever the hand
+    // is about to collect it, and on the sig556 -- the worst of the three, so the
+    // one worth the reload this costs -- that is the magwell itself for the first
+    // 1.6s of a 2.5s clip. Showing it for the whole reload put a second magazine
+    // on the gun.
+    const magazines = await page.evaluate(async () => {
+      const api = globalThis.hijacked;
+      const drawn = (node) => {
+        for (let n = node; n; n = n.parent) if (!n.visible) return false;
+        return true;
+      };
+      api.debug.selectWeapon('sig556');
+      // The swap replaces the viewmodel, so it has to land before the instance
+      // driving the reload can be read off it.
+      for (let i = 0; i < 60 && api.debug.getState().weapon.id !== 'sig556'; i += 1) {
+        await new Promise((r) => setTimeout(r, 100));
+      }
+      await new Promise((r) => setTimeout(r, 400));
+      const vm = api.viewmodel;
+      const seated = vm.root.getObjectByName('tag_clip');
+      let both = 0;
+      let neither = 0;
+      api.debug.setWeaponAmmo(5, 240);
+      const started = api.reloadWeapon();
+      await new Promise((resolve) => {
+        const tick = setInterval(() => {
+          if (!vm.reloading) { clearInterval(tick); resolve(); return; }
+          const empty = drawn(seated);
+          const fresh = drawn(vm.spareMagazine);
+          if (empty && fresh) both += 1;
+          if (!empty && !fresh) neither += 1;
+        }, 20);
+      });
+      return { started, both, neither, endedSeated: drawn(seated) && !drawn(vm.spareMagazine) };
+    });
+    assert.equal(magazines.started, true, 'the sig556 should reload on demand');
+    assert.equal(magazines.both, 0, 'the sig556 drew two magazines at once');
+    assert.equal(magazines.neither, 0, 'the sig556 drew no magazine at all');
+    assert.ok(magazines.endedSeated,
+      `the sig556 should end on the seated magazine alone: ${JSON.stringify(magazines)}`);
+    await page.evaluate(() => globalThis.hijacked.debug.selectWeapon('m27'));
+
+    assert.deepEqual((await page.evaluate(() => globalThis.hijacked.debug.getState().weapon.availableWeapons)), weaponIds);
+    assert.equal(await page.evaluate(() => globalThis.hijacked.debug.selectWeapon('hk416')), 'm27',
+      'the source hk416 id should remain an alias for the player-facing M27 slot');
+    assert.equal(await page.evaluate(() => globalThis.hijacked.debug.selectWeapon('m27')), 'm27');
+    await page.evaluate(() => globalThis.hijacked.frontend.suspend());
+    await page.evaluate(() => globalThis.hijacked.debug.respawnEnemies());
 
     const enemySetup = await page.evaluate(() => {
       const api = globalThis.hijacked;
@@ -459,6 +685,7 @@ test('Hijacked viewer loads collision, navigation, and walking controls', { time
 
       // Drive one enemy shot through the real firing path and watch the world
       // flash pool and the panner cache it is supposed to drive.
+      effects.update(1);
       const beforeFlashes = effects.flashes.filter((flash) => flash.life > 0).length;
       const beforePanners = effects.audio.panners.size;
       api.enemies.enemyFire(enemy);
@@ -546,8 +773,17 @@ test('Hijacked viewer loads collision, navigation, and walking controls', { time
       };
     });
     assert.equal(audio.ready, true, 'authentic weapon audio should be decoded before play');
-    assert.deepEqual(audio.layers, ['exteriorDecay', 'interiorDecay', 'lfe', 'shot']);
+    // `shot` stays the shared fallback enemy reports use; each rifle also loads
+    // its own recorded report under `shot:<id>`.
+    assert.deepEqual(audio.layers,
+      ['exteriorDecay', 'interiorDecay', 'lfe', 'shot', 'shot:an94', 'shot:hk416', 'shot:m27',
+        'shot:sa58', 'shot:saritch', 'shot:scar', 'shot:sig556', 'shot:tar21', 'shot:type95', 'shot:xm8']);
     assert.ok(audio.durations.shot > 1.1 && audio.durations.shot < 1.2);
+    assert.equal(audio.durations['shot:m27'], audio.durations.shot,
+      'the shared report is the M27 sample the export shipped');
+    // The AN-94's own report, extracted from the game rather than stood in for.
+    assert.ok(audio.durations['shot:an94'] > 1.2 && audio.durations['shot:an94'] < 1.3,
+      `unexpected AN-94 report length: ${audio.durations['shot:an94']}`);
 
     const firing = await page.evaluate(() => {
       const api = globalThis.hijacked;
@@ -568,7 +804,10 @@ test('Hijacked viewer loads collision, navigation, and walking controls', { time
     assert.equal(firing.effects, 1, 'shot should create weapon effects');
     assert.equal(firing.flashStarted, true, 'shot should start the muzzle flash');
 
-    await page.locator('#blocker').click({ force: true });
+    // The pause menu now has the class-picker button as well; its center can
+    // overlap the shell's old click point. Click a visible non-button shell
+    // element so the real root handler requests pointer lock.
+    await page.locator('.fe-pause .fe-heading').click();
     await page.waitForTimeout(250);
     const beforeInputShots = await page.evaluate(() => globalThis.hijacked.weaponEffects.shotCount);
     await page.mouse.down({ button: 'left' });
@@ -643,7 +882,7 @@ test('Hijacked viewer loads collision, navigation, and walking controls', { time
       // track, so a working reload physically moves it out of the magwell.
       const clip = viewmodel.root.getObjectByName('tag_clip');
       const rest = clip?.position.clone() ?? null;
-      // Idle never animates tag_clip, so this is the attachment's bind pose.
+      // The hk416 idle carries no tag_clip channel, so this is the bind pose.
       const bindQuat = clip?.quaternion.clone() ?? null;
       let magTravel = 0;
       let magSwing = 0;
@@ -703,19 +942,34 @@ test('Hijacked viewer loads collision, navigation, and walking controls', { time
       assert.ok(Math.abs(cue.at - authored[cue.name]) < 0.09,
         `${cue.name} fired at ${cue.at}, authored ${authored[cue.name]}`);
     }
-    assert.deepEqual(reload.played.map((p) => p.ok), Array(4).fill(true),
-      `every reload cue should find a decoded buffer: ${JSON.stringify(reload.played)}`);
+    // `futz` is authored by the clip but mapped by no soundbank, so it is
+    // correctly silent; every other cue must reach a decoded buffer.
+    assert.deepEqual(
+      Object.fromEntries(reload.played.map((p) => [p.name, p.ok])),
+      {
+        fly_reload_cloth_sm: true,
+        fly_hk416_mag_out: true,
+        fly_hk416_futz: false,
+        fly_hk416_mag_in: true,
+      },
+      `reload cues should resolve as mapped: ${JSON.stringify(reload.played)}`,
+    );
     assert.equal(reload.timelineCleared, true, 'the timeline should be released when the reload ends');
     assert.equal(reload.hasMagazine, true, 'the magazine attachment model should be mounted at tag_clip');
-    // The clip's tag_clip position track is a constant source-scene placement,
-    // so once rebased the magazine must stay seated for the whole reload
-    // rather than being thrown 163 units out of the world by the raw track.
-    assert.ok(reload.magTravel < 0.5,
-      `the magazine should stay in the magwell, drifted ${reload.magTravel}`);
+    // A mag change physically removes the magazine, so the tag_clip position
+    // track has to carry it clear of the weapon. This guarded the opposite for
+    // as long as the xanim trans decode divided by the quantization range twice
+    // (see .tools/xanim_to_json.mjs): every translation in every clip came out
+    // at about 1/65535 of its authored size, the magazine only jittered in the
+    // well, and the constant it degenerated to was read back as an authored
+    // source-scene placement. The hk416 track spans 167 units; anything past
+    // the length of the weapon means it actually left.
+    assert.ok(reload.magTravel > 20,
+      `the magazine should leave the magwell, drifted only ${reload.magTravel}`);
     assert.ok(reload.magReseated < 0.5,
       `the magazine should end seated, ended ${reload.magReseated} from rest`);
-    // The clip's rotation channel is what actually takes the magazine out of
-    // the well and puts it back, in step with the mag_out/mag_in cues.
+    // The clip's rotation channel turns the magazine as it comes out and lines
+    // it back up going in, in step with the mag_out/mag_in cues.
     assert.ok(reload.magSwingDeg > 60,
       `the magazine should swing out of the well, peaked at ${reload.magSwingDeg} deg`);
     assert.ok(reload.magEndAngleDeg < 2,

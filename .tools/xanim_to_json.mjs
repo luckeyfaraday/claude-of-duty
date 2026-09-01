@@ -15,15 +15,14 @@
 // Quat tracks store 3 int16 components (x,y,z); w is reconstructed positive
 // and the flipQuat bit / dot-product continuity picks the hemisphere. Half
 // (2-component) quats describe a rotation about X only. Trans tracks are
-// min/size-quantized vectors (u8 or u16 per component).
+// min/size-quantized vectors (u8 or u16 per component), where size is the full
+// range the samples cover rather than a per-step increment.
 
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const QUAT_ONE_SQUARED = 0x3fff0001;
-const HALF_TRANS_SCALE = 1 / 255;
-const FULL_TRANS_SCALE = 1 / 65535;
 
 class Reader {
   constructor(buffer) {
@@ -150,14 +149,19 @@ function readTransTrack(reader, useBytes, numLoopFrames) {
   const frames = readIndices(reader, count, useBytes, numLoopFrames);
   const small = reader.u8() !== 0;
   const mins = [reader.f32(), reader.f32(), reader.f32()];
-  const rawSize = [reader.f32(), reader.f32(), reader.f32()];
-  const scale = small ? HALF_TRANS_SCALE : FULL_TRANS_SCALE;
-  const size = rawSize.map((v) => v * scale);
+  // `size` is the full extent the samples span, not a per-step increment: the
+  // encoder normalizes each axis so its samples run the whole 0..max quantized
+  // range, so the axis is recovered as mins + size * (sample / max). Folding an
+  // extra 1/max into size as well divided by the range twice, which crushed
+  // every translation in every clip to about 1/65535 of its authored size —
+  // magazines never left the magwell, they only jittered in it.
+  const size = [reader.f32(), reader.f32(), reader.f32()];
+  const max = small ? 255 : 65535;
   const values = [];
   for (let i = 0; i < count; i += 1) {
     for (let axis = 0; axis < 3; axis += 1) {
       const sample = small ? reader.u8() : reader.u16();
-      values.push(mins[axis] + size[axis] * (sample / (small ? 255 : 65535)));
+      values.push(mins[axis] + size[axis] * (sample / max));
     }
   }
   return { frames, values };

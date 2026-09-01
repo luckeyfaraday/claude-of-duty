@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import foleyMap from './audio/foley-map.json' with { type: 'json' };
 
 const center = new THREE.Vector2(0, 0);
 const surfaceNormal = new THREE.Vector3();
@@ -13,24 +14,12 @@ const PANNER_REFERENCE_DISTANCE = 180;
 
 let flashTexture = null;
 
-// The reload xanim names its audio cues by alias, but the shipped soundbanks
-// key entries by a 32-bit hash with no name table, and the alias-to-file map
-// lives in a common bank this export does not include. These files were
-// recovered structurally instead: the five HK416 mechanical sounds are the
-// contiguous run of mono entries that follows the M27's stereo shot cluster in
-// cmn_root.all.sabl, taken in the bank's own order.
-//
-// UNVERIFIED: the run is the right one, but which entry is which cue is
-// inferred, not confirmed by ear. To correct one, swap its filename here --
-// nothing else reads these names.
-export const FOLEY_URLS = {
-  fly_hk416_bolt_back: './audio/fly_hk416_bolt_back.wav',
-  fly_hk416_bolt_release: './audio/fly_hk416_bolt_release.wav',
-  fly_hk416_futz: './audio/fly_hk416_futz.wav',
-  fly_hk416_mag_in: './audio/fly_hk416_mag_in.wav',
-  fly_hk416_mag_out: './audio/fly_hk416_mag_out.wav',
-  fly_reload_cloth_sm: './audio/fly_reload_cloth_sm.wav',
-};
+// Generated from the nine assault-rifle notetracks and merged soundbank alias
+// tables by `.tools/weapon_audio_manifest.mjs`; keep the authored cue mapping
+// and explicitly silent set in sync with the extracted files.
+export const FOLEY_URLS = Object.freeze(foleyMap.samples);
+export const FOLEY_ALIASES = Object.freeze(foleyMap.aliases);
+export const SILENT_CUES = Object.freeze(new Set(foleyMap.silentCues));
 
 // A soft radial core crossed by two thin spikes. Shared by the viewmodel's
 // first-person flash and the world flashes fired by enemies so both weapons
@@ -73,6 +62,21 @@ function setAudioPosition(target, x, y, z) {
 export class GunAudio {
   constructor({
     shotUrl = './audio/wpn_m27_shot_plr.wav',
+    // Each rifle's own player-perspective report. Keyed by weapon id and loaded
+    // under `shot:<id>`, which also gives every weapon its own voice pool, so a
+    // weapon switch mid-burst cannot steal the outgoing gun's tails.
+    shotUrls = {
+      m27: './audio/wpn_m27_shot_plr.wav',
+      an94: './audio/wpn_an94_shot_plr.wav',
+      hk416: './audio/wpn_m27_shot_plr.wav',
+      sa58: './audio/wpn_sa58_shot_plr.wav',
+      saritch: './audio/wpn_saritch_shot_plr.wav',
+      scar: './audio/wpn_scar_shot_plr.wav',
+      sig556: './audio/wpn_sig556_shot_plr.wav',
+      tar21: './audio/wpn_tar21_shot_plr.wav',
+      type95: './audio/wpn_type95_shot_plr.wav',
+      xm8: './audio/wpn_xm8_shot_plr.wav',
+    },
     exteriorDecayUrl = './audio/wpn_assault_decay_ext.wav',
     interiorDecayUrl = './audio/wpn_assault_decay_int.wav',
     lfeUrl = './audio/wpn_mp7_fire_lfe.wav',
@@ -88,11 +92,21 @@ export class GunAudio {
     this.panners = new Map();
     this.listenerPosition = new THREE.Vector3();
     this.urls = {
+      // `shot` stays the unkeyed default: enemy reports and any caller that
+      // does not name a weapon still resolve to the M27 the export shipped.
       shot: shotUrl,
+      ...Object.fromEntries(Object.entries(shotUrls).map(([id, url]) => [`shot:${id}`, url])),
       exteriorDecay: exteriorDecayUrl,
       interiorDecay: interiorDecayUrl,
       lfe: lfeUrl,
     };
+  }
+
+  // Falls back to the shared report rather than going silent, so a weapon added
+  // without its own recovered shot alias still fires audibly.
+  shotLayer(weapon) {
+    const keyed = `shot:${weapon}`;
+    return weapon && this.buffers[keyed] ? keyed : 'shot';
   }
 
   ensureContext() {
@@ -136,7 +150,8 @@ export class GunAudio {
     // cost that one layer, not the gunfire the weapon depends on.
     const foley = Promise.allSettled(
       Object.entries(FOLEY_URLS).map(async ([name, url]) => {
-        this.foleyBuffers[name] = await decode(url);
+        const urls = Array.isArray(url) ? url : [url];
+        this.foleyBuffers[name] = await Promise.all(urls.map(decode));
       }),
     ).then((results) => {
       const failed = results.filter((r) => r.status === 'rejected');
@@ -159,7 +174,10 @@ export class GunAudio {
   // panned, so it sits in the head the way the viewmodel does on screen.
   playFoley(name, { gain = 0.85 } = {}) {
     const context = this.ensureContext();
-    const buffer = this.foleyBuffers[name];
+    // Cues hold a variant list; T6 picks one per play rather than always
+    // firing the first, so a repeated reload does not sound looped.
+    const variants = this.foleyBuffers[FOLEY_ALIASES[name] ?? name];
+    const buffer = variants?.[Math.floor(Math.random() * variants.length)];
     if (!context || !buffer || !this.output) return false;
     if (context.state === 'suspended') void context.resume();
 
@@ -263,7 +281,7 @@ export class GunAudio {
     source.start();
   }
 
-  play({ indoors = false } = {}) {
+  play({ indoors = false, weapon = null } = {}) {
     const context = this.ensureContext();
     if (!context) return;
     if (context.state === 'suspended') void context.resume();
@@ -272,7 +290,7 @@ export class GunAudio {
       return;
     }
 
-    this.playLayer('shot', 1, 3);
+    this.playLayer(this.shotLayer(weapon), 1, 3);
     this.playLayer('lfe', 0.45, 8);
     this.playLayer(indoors ? 'interiorDecay' : 'exteriorDecay', 0.32, 3);
   }
@@ -396,9 +414,9 @@ export class WeaponEffects {
     return this.ceilingRaycaster.intersectObject(collisionRoot, true).length > 0;
   }
 
-  fire(camera, collisionRoot, muzzleCameraPosition = null, { targets = [] } = {}) {
+  fire(camera, collisionRoot, muzzleCameraPosition = null, { targets = [], weapon = null } = {}) {
     this.lastIndoors = this.isIndoors(camera, collisionRoot);
-    this.audio.play({ indoors: this.lastIndoors });
+    this.audio.play({ indoors: this.lastIndoors, weapon });
     this.shotCount += 1;
     this.raycaster.setFromCamera(center, camera);
     this.raycaster.near = 0;

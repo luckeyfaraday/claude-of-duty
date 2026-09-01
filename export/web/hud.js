@@ -186,7 +186,7 @@ export class Hud {
       this.renderNumber(this.reserveDigits, weapon.reserveAmmo);
       this.lastReserve = weapon.reserveAmmo;
     }
-    this.weaponName.textContent = weapon.ready ? 'M27' : '';
+    this.weaponName.textContent = weapon.ready ? (weapon.name ?? 'M27') : '';
 
     // Damage: the hit flash rides the same vignette art the game fades in as
     // health drops, so a hard hit reads as a pulse of the low-health state.
