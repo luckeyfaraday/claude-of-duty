@@ -36,12 +36,13 @@ try {
     '--simplify', 'false',
     '--texture-compress', 'false',
   ]);
+  // ETC1S, not UASTC. Every texture in this map is a baseColor map -- there are
+  // no normal or metal-rough maps, which are the maps ETC1S actually degrades.
+  // UASTC was costing ~34 MB of the 45 MB export for quality nothing here uses.
   await run([
-    'uastc', intermediate, output,
-    '--level', '2',
-    '--rdo',
-    '--rdo-lambda', '0.75',
-    '--zstd', '10',
+    'etc1s', intermediate, output,
+    '--quality', '200',
+    '--compression', '5',
     '--jobs', '8',
   ]);
 } finally {
