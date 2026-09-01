@@ -27,6 +27,10 @@ const SPARE_MAGAZINE_TAGS = Object.freeze(['tag_clip_full', 'tag_clip1']);
 // before it can be played; the two halves of a mag change anchor on opposite
 // ends of the track. See the rebase in loadClips().
 const MAGAZINE_TAGS = Object.freeze(new Set(['tag_clip', ...SPARE_MAGAZINE_TAGS]));
+// The cue the clips fire as the empty magazine is released, which is the instant
+// the fresh one takes over as the magazine the reload is about; see
+// handOverMagazine().
+const MAGAZINE_HANDOVER_CUE = /mag_out/;
 // The red tritium insert capping the front post is the element the eye lines up
 // on, so it defines where the sight picture points, not the tag authored on the
 // sight base. See computeAdsAlignment().
@@ -633,7 +637,8 @@ export class Viewmodel {
     this.introAdsFireAction?.stop();
     action.reset().fadeIn(0.12).play();
     this.idleAction.fadeOut(0.12);
-    this.showSpareMagazine(true);
+    // The empty magazine still holds the well; the fresh one waits for mag_out.
+    this.showSpareMagazine(false);
     this.startNotetracks(empty && this.reloadEmptyAction ? 'reloadEmpty' : 'reload', action);
     return true;
   }
@@ -650,12 +655,30 @@ export class Viewmodel {
     return space.worldToLocal(seated);
   }
 
-  // The spare only exists for the mag change. Outside it the clips leave its tag
-  // parked whereever the reload ended, and the seated magazine is back in the
-  // well, so leaving it on would show the gun carrying two.
+  // Exactly one magazine is ever on the gun. The empty one holds the well until
+  // the clip releases it, the fresh one owns the rest of the reload, and the
+  // swap happens on the mag_out cue, which is authored at the moment of release.
+  //
+  // Showing the fresh one for the whole reload instead put two magazines on the
+  // gun: the tracks park it wherever the hand is about to pick it up, and on the
+  // sig556 that is the magwell itself for the first 1.6s of a 2.5s clip. Timing
+  // the swap off the cue keeps it correct without per-rig tuning, since the cue
+  // is authored against the same motion on every rig.
+  handOverMagazine() {
+    if (!this.spareMagazine) return false;
+    this.spareMagazine.visible = true;
+    if (this.magazineRoot) this.magazineRoot.visible = false;
+    return true;
+  }
+
+  // Back to the resting state: the empty magazine's track has run itself out to
+  // wherever it was thrown, but the action stops with it and the node returns to
+  // its bind in the well, so the seated magazine is the right one to show again.
   showSpareMagazine(visible) {
-    if (this.spareMagazine) this.spareMagazine.visible = Boolean(visible);
-    return Boolean(this.spareMagazine);
+    if (!this.spareMagazine) return false;
+    this.spareMagazine.visible = Boolean(visible);
+    if (this.magazineRoot) this.magazineRoot.visible = !visible;
+    return true;
   }
 
   cancelReload() {
@@ -733,6 +756,7 @@ export class Viewmodel {
     this.mixer?.update(dt);
     if (this.activeTimeline && this.notetrackAction) {
       for (const cue of this.activeTimeline.advance(this.notetrackAction.time)) {
+        if (MAGAZINE_HANDOVER_CUE.test(cue.name)) this.handOverMagazine();
         this.onNotetrack?.(cue);
       }
     }

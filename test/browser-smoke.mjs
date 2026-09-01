@@ -11,7 +11,7 @@ const browserPath = [
 ].find((candidate) => fs.existsSync(candidate));
 const browserTestUrl = process.env.BROWSER_TEST_URL ?? 'http://127.0.0.1:8000/';
 
-test('Hijacked viewer loads collision, navigation, and walking controls', { timeout: 180_000 }, async () => {
+test('Hijacked viewer loads collision, navigation, and walking controls', { timeout: 240_000 }, async () => {
   assert.ok(browserPath, 'Chrome or Edge is required for the browser smoke test');
   const browser = await chromium.launch({
     executablePath: browserPath,
@@ -269,6 +269,49 @@ test('Hijacked viewer loads collision, navigation, and walking controls', { time
       rifleLoads.filter((rifle) => rifle.spareMagazine).map((rifle) => rifle.id),
       ['an94', 'sa58', 'sig556'],
       `only the two-magazine rigs should mount a spare: ${JSON.stringify(rifleLoads)}`);
+    // A gun never carries two magazines. The fresh one waits for the mag_out cue
+    // before it takes the well over, because its track parks it wherever the hand
+    // is about to collect it, and on the sig556 -- the worst of the three, so the
+    // one worth the reload this costs -- that is the magwell itself for the first
+    // 1.6s of a 2.5s clip. Showing it for the whole reload put a second magazine
+    // on the gun.
+    const magazines = await page.evaluate(async () => {
+      const api = globalThis.hijacked;
+      const drawn = (node) => {
+        for (let n = node; n; n = n.parent) if (!n.visible) return false;
+        return true;
+      };
+      api.debug.selectWeapon('sig556');
+      // The swap replaces the viewmodel, so it has to land before the instance
+      // driving the reload can be read off it.
+      for (let i = 0; i < 60 && api.debug.getState().weapon.id !== 'sig556'; i += 1) {
+        await new Promise((r) => setTimeout(r, 100));
+      }
+      await new Promise((r) => setTimeout(r, 400));
+      const vm = api.viewmodel;
+      const seated = vm.root.getObjectByName('tag_clip');
+      let both = 0;
+      let neither = 0;
+      api.debug.setWeaponAmmo(5, 240);
+      const started = api.reloadWeapon();
+      await new Promise((resolve) => {
+        const tick = setInterval(() => {
+          if (!vm.reloading) { clearInterval(tick); resolve(); return; }
+          const empty = drawn(seated);
+          const fresh = drawn(vm.spareMagazine);
+          if (empty && fresh) both += 1;
+          if (!empty && !fresh) neither += 1;
+        }, 20);
+      });
+      return { started, both, neither, endedSeated: drawn(seated) && !drawn(vm.spareMagazine) };
+    });
+    assert.equal(magazines.started, true, 'the sig556 should reload on demand');
+    assert.equal(magazines.both, 0, 'the sig556 drew two magazines at once');
+    assert.equal(magazines.neither, 0, 'the sig556 drew no magazine at all');
+    assert.ok(magazines.endedSeated,
+      `the sig556 should end on the seated magazine alone: ${JSON.stringify(magazines)}`);
+    await page.evaluate(() => globalThis.hijacked.debug.selectWeapon('m27'));
+
     assert.deepEqual((await page.evaluate(() => globalThis.hijacked.debug.getState().weapon.availableWeapons)), weaponIds);
     assert.equal(await page.evaluate(() => globalThis.hijacked.debug.selectWeapon('hk416')), 'm27',
       'the source hk416 id should remain an alias for the player-facing M27 slot');
