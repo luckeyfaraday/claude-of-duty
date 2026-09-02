@@ -12,6 +12,16 @@ const command = process.argv[2] ?? 'help';
 const commandArgument = process.argv[3];
 const commandOption = process.argv[4];
 
+// The page defers its ~40 MB load until a real visitor moves a pointer or
+// presses a key (see the boot gate in index.html). This harness drives the page
+// through `globalThis.hijacked` without ever generating input, so it asks for
+// the old load-on-sight behaviour explicitly.
+function autostartUrl(url) {
+  const parsed = new URL(url);
+  parsed.searchParams.set('autostart', '1');
+  return String(parsed);
+}
+
 const mimeTypes = new Map([
   ['.bin', 'application/octet-stream'],
   ['.glb', 'model/gltf-binary'],
@@ -126,7 +136,7 @@ async function run() {
   await fs.promises.mkdir(artifactRoot, { recursive: true });
 
   const ownedServer = process.env.BROWSER_TEST_URL ? null : await staticServer();
-  const gameUrl = process.env.BROWSER_TEST_URL ?? ownedServer.url;
+  const gameUrl = autostartUrl(process.env.BROWSER_TEST_URL ?? ownedServer.url);
   const consoleMessages = [];
   const errors = [];
   const recordSeconds = Math.max(1, Math.min(60, Number(commandArgument) || 5));
@@ -189,6 +199,11 @@ async function run() {
       null,
       { timeout: 180_000 },
     );
+
+    // Boot loads only the equipped rifle; the rest are fetched when a player
+    // opens the class screen. Nothing here opens it, so ask for them directly
+    // or `screenshot <weapon>` finds only one entry in availableWeapons.
+    await page.evaluate(() => globalThis.hijacked.debug.loadAllWeapons());
 
     await page.evaluate(() => {
       globalThis.hijacked.debug.setActive(true);

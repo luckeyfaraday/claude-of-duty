@@ -9,7 +9,19 @@ const browserPath = [
   'C:/Program Files/Google/Chrome/Application/chrome.exe',
   'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',
 ].find((candidate) => fs.existsSync(candidate));
-const browserTestUrl = process.env.BROWSER_TEST_URL ?? 'http://127.0.0.1:8000/';
+// The page defers its ~40 MB load until a real visitor moves a pointer or
+// presses a key (see the boot gate in index.html). These harnesses drive the
+// page through `globalThis.hijacked` without ever generating input, so they ask
+// for the old load-on-sight behaviour explicitly.
+function autostartUrl(url) {
+  const parsed = new URL(url);
+  parsed.searchParams.set('autostart', '1');
+  return String(parsed);
+}
+
+const browserTestUrl = autostartUrl(process.env.BROWSER_TEST_URL ?? 'http://127.0.0.1:8000/');
+// The same page with the gate left in place, for the test that covers it.
+const uninteractedUrl = process.env.BROWSER_TEST_URL ?? 'http://127.0.0.1:8000/';
 
 test('Hijacked viewer loads collision, navigation, and walking controls', { timeout: 240_000 }, async () => {
   assert.ok(browserPath, 'Chrome or Edge is required for the browser smoke test');
@@ -75,6 +87,11 @@ test('Hijacked viewer loads collision, navigation, and walking controls', { time
     assert.equal(menu.cardLoaded, 256, 'the Hijacked map card should decode at its authored width');
     assert.equal(menu.barWidth, '100%', 'a finished load fills the bar');
     assert.equal(mapAssetRequests, 1, 'the optimized map must be downloaded exactly once');
+
+    // Boot now loads only the equipped rifle; the other eight are fetched when
+    // a player opens the class screen. Automation never opens it, so it asks
+    // for the whole set here and the weapon assertions below stay meaningful.
+    await page.evaluate(() => globalThis.hijacked.debug.loadAllWeapons());
 
     const simulation = await page.evaluate(() => {
       const api = globalThis.hijacked;
@@ -193,7 +210,7 @@ test('Hijacked viewer loads collision, navigation, and walking controls', { time
     assert.deepEqual(classFromTitle.cards.map((card) => card.id),
       ['m27', 'an94', 'sa58', 'saritch', 'scar', 'sig556', 'tar21', 'type95', 'xm8']);
     assert.ok(classFromTitle.cards.every((card) => card.ready === 'true'),
-      `every eager-loaded card should be ready: ${JSON.stringify(classFromTitle.cards)}`);
+      `every loaded card should be ready: ${JSON.stringify(classFromTitle.cards)}`);
     assert.ok(classFromTitle.cards.every((card) => card.art > 0), 'authentic weapon card art should decode');
     assert.equal(classFromTitle.cards.find((card) => card.id === 'sa58').name, 'FAL OSW');
     assert.equal(classFromTitle.cards.find((card) => card.id === 'xm8').rpm, '1250');
@@ -989,6 +1006,57 @@ test('Hijacked viewer loads collision, navigation, and walking controls', { time
     assert.match(hud, /(grounded|air)/);
     await page.screenshot({ path: path.join(os.tmpdir(), 'hijacked-smoke.png') });
     assert.deepEqual(errors, []);
+  } finally {
+    await browser.close();
+  }
+});
+
+// The boot gate is the whole reason the site fits inside its bandwidth limit:
+// without it every crawler, link preview and three-second bounce pulled the
+// full map. Netlify bills those bytes, so a silent revert costs real money and
+// is invisible from the game itself -- hence a test rather than a comment.
+test('the map payload waits for a sign of a real visitor', { timeout: 120_000 }, async () => {
+  assert.ok(browserPath, 'Chrome or Edge is required for the browser smoke test');
+  const browser = await chromium.launch({
+    executablePath: browserPath,
+    headless: true,
+    args: ['--enable-webgl', '--ignore-gpu-blocklist', '--use-angle=swiftshader'],
+  });
+  const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
+  await page.route('**/api/plays', (route) => route.fulfill({
+    status: 200, contentType: 'application/json', body: JSON.stringify({ players: 0, plays: 0 }),
+  }));
+
+  const gated = ['hijacked_optimized.glb', 'hijacked_collision_bvh.bin', 'hijacked_probes.bin',
+    'hijacked.navmesh.bin', 'textures/env/'];
+  const fetched = new Set();
+  let bytes = 0;
+  page.on('response', (response) => {
+    const url = response.url();
+    if (!url.startsWith(new URL(uninteractedUrl).origin)) return;
+    bytes += Number(response.headers()['content-length'] ?? 0);
+    const hit = gated.find((asset) => url.includes(asset));
+    if (hit) fetched.add(hit);
+  });
+
+  try {
+    // No autostart: this is exactly what a crawler does -- render the page,
+    // run its scripts, and never touch the mouse or keyboard.
+    await page.goto(uninteractedUrl, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+    await page.waitForTimeout(8000);
+    assert.deepEqual([...fetched], [],
+      'nothing heavy may be fetched before the visitor interacts');
+    assert.ok(bytes < 6 * 1024 * 1024,
+      `an untouched page should stay small, pulled ${(bytes / 1048576).toFixed(2)} MB`);
+    assert.equal(await page.evaluate(() => globalThis.hijacked === undefined), true,
+      'the game must not boot without input');
+
+    // One pointer move is all a real visitor needs to start the download.
+    await page.mouse.move(400, 300);
+    await page.waitForResponse(
+      (response) => response.url().includes('hijacked_optimized.glb'),
+      { timeout: 30_000 },
+    );
   } finally {
     await browser.close();
   }

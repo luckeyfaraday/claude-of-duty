@@ -30,11 +30,16 @@ const CAPTIONS = {
 export const SCREENS = ['loading', 'title', 'pause', 'class', 'error'];
 
 export class Frontend {
-  constructor({ elements = null, onPlay = null, onResume = null, onSelectWeapon = null } = {}) {
+  constructor({
+    elements = null, onPlay = null, onResume = null, onSelectWeapon = null, onOpenClass = null,
+  } = {}) {
     this.elements = elements;
     this.onPlay = onPlay;
     this.onResume = onResume;
     this.onSelectWeapon = onSelectWeapon;
+    // Fired when the class screen opens so the game can fetch the rifles it
+    // has not loaded yet. Only a player who browses classes pays for them.
+    this.onOpenClass = onOpenClass;
 
     this.screen = 'loading';
     this.playing = false;
@@ -234,6 +239,10 @@ export class Frontend {
     this.classReturnScreen = this.screen;
     this.screen = 'class';
     this.playing = false;
+    // The rifles other than the equipped one are only fetched from here, so
+    // opening the screen is what starts them. Cards report `loading` until
+    // each one calls back through setWeaponReady().
+    this.onOpenClass?.();
     this.render();
     return true;
   }

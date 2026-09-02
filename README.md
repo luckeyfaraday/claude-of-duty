@@ -116,6 +116,31 @@ npx netlify dev
 restates the `export/web` the site already served, since a `netlify.toml`
 overrides the Netlify UI's settings.
 
+### Bandwidth
+
+Nothing heavy is fetched until the page sees a pointer move, key press, wheel
+or touch. A visit that never gets that far costs about 2.6 MB; one that plays
+costs about 47 MB. The gate exists because the account went over its Netlify
+bandwidth limit twice on traffic that was not players: the play counter read
+867 plays all-time while September burned 125 GB in two days, so the bytes were
+going to crawlers, link previews and people who bounced off the title screen.
+Shrinking the files (`.tools/prune-deploy.sh`, the ETC1S re-bake) had already
+been tried and was not enough on its own.
+
+Two consequences worth knowing:
+
+- Automation has to opt out with `?autostart=1`, which `browser-smoke.mjs` and
+  `ai-game.mjs` both do. Without it they wait forever for a game that is
+  deliberately not loading.
+- Only the equipped rifle loads at boot. The other eight are fetched when the
+  class screen opens, so scripted runs that select a rifle directly need
+  `await hijacked.debug.loadAllWeapons()` first.
+
+`export/web/_headers` caches art for a week and leaves the baked map set
+revalidating, because the .glb, the collision BVH, the navmesh and the probes
+are baked together and have to stay in step. Pinning them needs content-hashed
+filenames first. `export/web/robots.txt` keeps crawlers off the asset tree.
+
 ## First-person viewmodel
 
 The viewer renders selectable M27/HK416 and AN-94 weapon viewmodels with FBI

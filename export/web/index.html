@@ -850,14 +850,22 @@ const viewmodelProbe = new THREE.LightProbe();
 viewmodel.scene.add(viewmodelProbe);
 let probeVolume = null;
 let lightingApplied = null;
-loadProbeVolume()
-  .then((volume) => {
-    probeVolume = volume;
-    hemi.intensity = 0;
-    for (const slot of weaponSlots.values()) slot.viewmodel.hemi.intensity = 0;
-    console.info('probe volume:', volume.layout.dims.join('x'), 'cells');
-  })
-  .catch((error) => console.warn('probe volume unavailable:', error));
+// Started from loadEnvironment(), not on load: the volume is 1.1 MB and at
+// module scope it sat outside the boot gate, so every crawler bought the map's
+// ambient lighting. Nothing awaits it -- probes apply whenever they land.
+let probeVolumeStarted = false;
+function beginProbeVolume() {
+  if (probeVolumeStarted) return;
+  probeVolumeStarted = true;
+  loadProbeVolume()
+    .then((volume) => {
+      probeVolume = volume;
+      hemi.intensity = 0;
+      for (const slot of weaponSlots.values()) slot.viewmodel.hemi.intensity = 0;
+      console.info('probe volume:', volume.layout.dims.join('x'), 'cells');
+    })
+    .catch((error) => console.warn('probe volume unavailable:', error));
+}
 
 // Sampling is cheap but not free, and ambient changes slowly relative to the
 // camera, so refresh on movement rather than every frame.
@@ -950,34 +958,45 @@ loadGradeLut().then((lut) => {
 
 // Sky, probe, tone mapping and fog tint all come from the map's own assets.
 // See export/web/lighting.js and .tools/bake_env.mjs.
-const environmentReady = applyEnvironmentLighting(renderer, scene)
-  .then((applied) => {
-    lightingApplied = applied;
-    // Feed the vision set's split tone into the post pass once it is built.
-    if (applied.vision) {
-      visionTone = applied.vision;
-      if (gradeMaterial) applyVisionTone(gradeMaterial, visionTone);
-    }
-    if (applied.environmentTexture) {
-      for (const slot of weaponSlots.values()) slot.viewmodel.setEnvironment(applied.environmentTexture);
-    } else {
-      // No probe/sky: restore the standalone lighting levels.
+//
+// Kicked off from start() rather than on load. The probe set and the sky faces
+// are about 2.2 MB, and running this at module scope put them outside the boot
+// gate at the end of the file -- a crawler that never interacted still paid for
+// the map's lighting. Memoized, because start() is what awaits it.
+let environmentReady = null;
+function loadEnvironment() {
+  if (environmentReady) return environmentReady;
+  beginProbeVolume();
+  environmentReady = applyEnvironmentLighting(renderer, scene)
+    .then((applied) => {
+      lightingApplied = applied;
+      // Feed the vision set's split tone into the post pass once it is built.
+      if (applied.vision) {
+        visionTone = applied.vision;
+        if (gradeMaterial) applyVisionTone(gradeMaterial, visionTone);
+      }
+      if (applied.environmentTexture) {
+        for (const slot of weaponSlots.values()) slot.viewmodel.setEnvironment(applied.environmentTexture);
+      } else {
+        // No probe/sky: restore the standalone lighting levels.
+        hemi.intensity = 1.1;
+        sun.intensity = 1.6;
+        for (const slot of weaponSlots.values()) {
+          slot.viewmodel.hemi.intensity = 1.3;
+          slot.viewmodel.lamp.intensity = 1.7;
+        }
+      }
+      console.info('environment lighting:', applied);
+      return applied;
+    })
+    .catch((error) => {
+      console.warn('environment lighting unavailable:', error);
       hemi.intensity = 1.1;
       sun.intensity = 1.6;
-      for (const slot of weaponSlots.values()) {
-        slot.viewmodel.hemi.intensity = 1.3;
-        slot.viewmodel.lamp.intensity = 1.7;
-      }
-    }
-    console.info('environment lighting:', applied);
-    return applied;
-  })
-  .catch((error) => {
-    console.warn('environment lighting unavailable:', error);
-    hemi.intensity = 1.1;
-    sun.intensity = 1.6;
-    return null;
-  });
+      return null;
+    });
+  return environmentReady;
+}
 
 const blocker = document.getElementById('blocker');
 const menuButtons = [...blocker.querySelectorAll('.fe-btn')];
@@ -1010,6 +1029,7 @@ const frontend = new Frontend({
   onPlay: () => renderer.domElement.requestPointerLock(),
   onResume: () => renderer.domElement.requestPointerLock(),
   onSelectWeapon: (id) => selectWeapon(id),
+  onOpenClass: () => loadAllWeaponSlots(),
 });
 frontend.setWeapons(Object.values(WEAPON_DEFINITIONS).map((definition) => ({
   id: definition.id,
@@ -1146,6 +1166,43 @@ for (const slot of weaponSlots.values()) {
   });
 }
 weapon = activeWeaponSlot.controller;
+
+// Viewmodels load one rifle at a time. Loading all nine up front spent about
+// 6 MB on every boot to draw the one the player is holding, so the other eight
+// wait for the class screen to open -- a player who never browses classes never
+// fetches them. Memoized on the slot, so reopening the screen or confirming a
+// card mid-load does not start a second transfer.
+function loadWeaponSlot(slot) {
+  if (slot.loading) return slot.loading;
+  const { definition, viewmodel: slotViewmodel } = slot;
+  slot.loading = (async () => {
+    try {
+      await slotViewmodel.load(
+        VIEWMODEL_HANDS,
+        definition.viewmodelUrl,
+        definition.magazineUrl,
+        (label, event) => progress(label, event),
+        {
+          magazineOffset: definition.magazineOffset,
+          magazineRotation: definition.magazineRotation,
+        },
+      );
+      await slotViewmodel.loadClips(definition.clips);
+      frontend.setWeaponReady(definition.id, true);
+    } catch (error) {
+      frontend.setWeaponReady(definition.id, false);
+      console.warn(`${definition.name} viewmodel unavailable:`, error);
+      // Dropping the memo lets the next class-screen open retry the rifle.
+      slot.loading = null;
+    }
+  })();
+  return slot.loading;
+}
+
+/** Every rifle the class screen can offer, loaded and settled. */
+function loadAllWeaponSlots() {
+  return Promise.all([...weaponSlots.values()].map((slot) => loadWeaponSlot(slot)));
+}
 
 function selectWeapon(id) {
   const requested = String(id).toLowerCase();
@@ -1525,6 +1582,9 @@ function getDebugState() {
 function createDebugApi() {
   return {
     getState: getDebugState,
+    // Rifles other than the equipped one load from the class screen, which
+    // automation never opens. Awaiting this is the scripted equivalent.
+    loadAllWeapons: () => loadAllWeaponSlots(),
     setActive: setAutomationActive,
     pause() {
       automationPaused = true;
@@ -1699,6 +1759,8 @@ document.addEventListener('keyup', (event) => {
 
 async function start() {
   try {
+    // Started here so the sky and probes still transfer alongside the map.
+    loadEnvironment();
     const navPromise = loadNavigation({
       source: 'hijacked.navmesh.bin',
       maxAgents: 32,
@@ -1708,26 +1770,9 @@ async function start() {
       console.error('Navigation unavailable:', error);
       return null;
     }).finally(() => frontend.stage('navigation'));
-    const viewmodelPromise = Promise.all([...weaponSlots.values()].map(async (slot) => {
-      const { definition, viewmodel: slotViewmodel } = slot;
-      try {
-        await slotViewmodel.load(
-          VIEWMODEL_HANDS,
-          definition.viewmodelUrl,
-          definition.magazineUrl,
-          (label, event) => progress(label, event),
-          {
-            magazineOffset: definition.magazineOffset,
-            magazineRotation: definition.magazineRotation,
-          },
-        );
-        await slotViewmodel.loadClips(definition.clips);
-        frontend.setWeaponReady(definition.id, true);
-      } catch (error) {
-        frontend.setWeaponReady(definition.id, false);
-        console.warn(`${definition.name} viewmodel unavailable:`, error);
-      }
-    }))
+    // Only the equipped rifle is on the boot path; the rest load from the
+    // class screen. See loadWeaponSlot().
+    const viewmodelPromise = loadWeaponSlot(activeWeaponSlot)
       .finally(() => frontend.stage('viewmodel'));
     const [renderGltf, loadedCollisionWorld, hints, ladders] = await Promise.all([
       loadGltf('hijacked_optimized.glb', 'map').then((gltf) => {
@@ -1815,7 +1860,7 @@ async function start() {
       : Promise.resolve()
     ).finally(() => frontend.stage('enemy'));
 
-    await Promise.all([viewmodelPromise, weaponEffects.loadAudio(), enemyPromise, environmentReady]);
+    await Promise.all([viewmodelPromise, weaponEffects.loadAudio(), enemyPromise, loadEnvironment()]);
 
     const botNames = ['ADMIRAL', 'CORSAIR', 'DEADEYE', 'MARINER', 'ROGUE', 'VIPER'];
     for (const enemy of enemies?.enemies ?? []) {
@@ -2056,7 +2101,25 @@ function renderFrame() {
   viewmodel.render(renderer);
 }
 
-start();
+// Booting is deferred until something suggests a real visitor is present.
+// `start()` used to run on page load, so every open -- crawler, scraper, link
+// preview, or somebody who bounced off the title screen -- pulled the whole
+// payload before touching anything. The play counter made the waste plain: 867
+// plays all time against 125 GB of bandwidth in the first two days of
+// September. A visit that never starts a match now costs ~2.6 MB, not ~47 MB.
+//
+// Any of these events means someone is on the other end, and a person emits one
+// within a second or so of arriving, so the load still overlaps with reading the
+// title screen. A headless crawler emits none of them.
+const BOOT_EVENTS = ['pointermove', 'pointerdown', 'keydown', 'wheel', 'touchstart'];
+function boot() {
+  for (const type of BOOT_EVENTS) removeEventListener(type, boot);
+  start();
+}
+// `browser-smoke.mjs` and `ai-game.mjs` drive the page without ever moving a
+// pointer, so they opt back into loading on sight.
+if (new URLSearchParams(location.search).has('autostart')) boot();
+else for (const type of BOOT_EVENTS) addEventListener(type, boot, { passive: true });
 tick();
 
 addEventListener('resize', () => {

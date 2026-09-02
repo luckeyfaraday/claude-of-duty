@@ -1,0 +1,39 @@
+# Netlify's default for every file here is `public,max-age=0,must-revalidate`,
+# which spends a conditional request on each asset per visit and re-downloads
+# in full anything the browser has evicted. A 23 MB .glb is exactly what a
+# browser drops first, so a returning player could pay for the whole map again.
+#
+# The split below is about which files can go stale safely. Art is addressed by
+# a name that changes when the art changes, so a week-old copy is only ever the
+# art that name meant. The baked map data is different: hijacked_optimized.glb,
+# the collision BVH, the navmesh and the probes are baked as a set and have to
+# agree with each other and with the code that reads them. Caching one of those
+# past a rebake desyncs collision from geometry, so they keep revalidating until
+# their filenames carry a content hash.
+
+# Art and audio: named by content, safe to pin.
+/viewmodel/*
+  cache-control: public,max-age=604800,stale-while-revalidate=86400
+/enemies/*
+  cache-control: public,max-age=604800,stale-while-revalidate=86400
+/textures/*
+  cache-control: public,max-age=604800,stale-while-revalidate=86400
+/audio/*
+  cache-control: public,max-age=604800,stale-while-revalidate=86400
+/images/*
+  cache-control: public,max-age=604800,stale-while-revalidate=86400
+/ui/*
+  cache-control: public,max-age=604800,stale-while-revalidate=86400
+/social/*
+  cache-control: public,max-age=604800,stale-while-revalidate=86400
+
+# Baked map set: revalidate, so a rebake can never half-land on a returning
+# player. The 304 still costs a request but almost no bandwidth.
+/hijacked*
+  cache-control: public,max-age=0,must-revalidate
+
+# The entry point has to be revalidated or a deploy never reaches anyone.
+/
+  cache-control: public,max-age=0,must-revalidate
+/index.html
+  cache-control: public,max-age=0,must-revalidate
