@@ -16,6 +16,11 @@
 !/netlify/
 !/netlify/functions/
 !/netlify/functions/**
+!/wrangler.jsonc
+!/functions/
+!/functions/**
+!/migrations/
+!/migrations/**
 !/test/
 !/test/**
 !/tests/
@@ -31,6 +36,7 @@
 !/.tools/bake_env.mjs
 !/.tools/bake_probes.mjs
 !/.tools/prune-deploy.sh
+!/.tools/stage_cloudflare.mjs
 !/.tools/perf_probe.mjs
 !/.tools/xanim_to_json.mjs
 !/.tools/extract_t6_sab_audio.mjs

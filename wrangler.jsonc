@@ -1,0 +1,20 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "claude-of-duty",
+  "compatibility_date": "2026-09-02",
+  "pages_build_output_dir": "./.work/cloudflare-pages",
+  "d1_databases": [
+    {
+      "binding": "PLAY_COUNTER",
+      "database_name": "claude-of-duty-counter",
+      "database_id": "bb28d112-b018-4d5f-97fd-02a97ddebc82",
+      "preview_database_id": "PLAY_COUNTER"
+    },
+    {
+      "binding": "PLAY_COUNTER_PREVIEW",
+      "database_name": "claude-of-duty-counter-preview",
+      "database_id": "1cd90339-44ac-4450-baab-a09478d4a42d",
+      "preview_database_id": "PLAY_COUNTER_PREVIEW"
+    }
+  ]
+}
