@@ -111,6 +111,26 @@ The title screen shows how many people have played, under the prompt:
 3 PLAYERS · 8 PLAYS
 ```
 
+Production is being migrated from Netlify to Cloudflare Pages. The Cloudflare
+backend is `functions/api/plays.js`, with separate D1 databases for production
+and branch previews so automated checks and preview visits cannot change the
+public totals. `wrangler.jsonc` is the source of truth for those bindings.
+
+Cloudflare cannot upload the bake inputs that live beside the runtime export:
+some are unused and one exceeds Pages' per-file limit. The staging command
+copies only the same runtime package Netlify publishes, without deleting files
+from the working tree:
+
+```powershell
+npm run cloudflare:stage
+npm run cloudflare:dev
+```
+
+Apply `migrations/0001_play_counter.sql` to both D1 databases once, then deploy
+the staged package with `npm run cloudflare:deploy`. Branch deployments select
+the preview database through `CF_PAGES_BRANCH`; only `main` uses the production
+counter.
+
 `players` counts browsers that have started a match, `plays` counts sessions
 that have. The split is deliberate: `players` is the honest answer to "how many
 people have played", and `plays` is the one that moves.
