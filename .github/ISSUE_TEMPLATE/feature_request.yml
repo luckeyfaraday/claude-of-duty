@@ -1,0 +1,30 @@
+name: Feature request
+description: Suggest a focused improvement to Claude of Duty.
+title: "[Feature]: "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or opportunity
+      description: What would this improve for players or contributors?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+      description: Describe the behavior and any relevant tradeoffs.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: checkboxes
+    id: rights
+    attributes:
+      label: Asset rights
+      options:
+        - label: This proposal does not require contributors to upload material they cannot redistribute.
+          required: true

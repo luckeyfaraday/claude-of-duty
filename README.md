@@ -1,7 +1,36 @@
 # Claude of Duty: Vibe Slops II
 
+[![CI](https://github.com/luckeyfaraday/claude-of-duty/actions/workflows/ci.yml/badge.svg)](https://github.com/luckeyfaraday/claude-of-duty/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/code-MIT-7fffc4.svg)](LICENSE)
+[![Play](https://img.shields.io/badge/play-online-7fffc4.svg)](https://vibeslops.luckeysystems.com/)
+
 A browser-based Three.js first-person shooter played on the Black Ops II
 Hijacked map export, with capsule collision and a baked Recast navigation mesh.
+
+**[Play Claude of Duty](https://vibeslops.luckeysystems.com/)**
+
+> [!IMPORTANT]
+> This is an unofficial, non-commercial fan project. It is not affiliated with,
+> endorsed by, or sponsored by Activision, Treyarch, Microsoft, Anthropic, or
+> the Call of Duty or Claude brands. The MIT license covers the project's
+> original code and documentation only. Exported game art, audio, maps, models,
+> animations, names, and other third-party material remain the property of
+> their respective owners and are not relicensed. See [Asset rights](ASSET_NOTICE.md).
+
+## Give a shout-out
+
+If you use this code, learn from it, stream it, or build something with it,
+please shout out **[Luckey Faraday (@luckeyfaraday)](https://github.com/luckeyfaraday)**
+and link back to this repository. That credit is sincerely appreciated and
+helps people find the original project. The request is not an extra restriction
+on the MIT license; the license's copyright and permission notice still needs
+to be preserved in copies or substantial portions of the code. GitHub's
+**Cite this repository** control is configured through [CITATION.cff](CITATION.cff).
+
+Contributions are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) before
+opening a pull request, use the issue templates for bugs and ideas, and follow
+the [Code of Conduct](CODE_OF_CONDUCT.md). Security reports should follow
+[SECURITY.md](SECURITY.md), not a public issue.
 
 ## Run it
 

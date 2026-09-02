@@ -1,7 +1,15 @@
 *
 !/.gitignore
+!/.github/
+!/.github/**
 !/AGENTS.md
+!/ASSET_NOTICE.md
+!/CODE_OF_CONDUCT.md
+!/CONTRIBUTING.md
+!/CITATION.cff
+!/LICENSE
 !/README.md
+!/SECURITY.md
 !/package.json
 !/package-lock.json
 !/netlify.toml

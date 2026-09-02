@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/luckeyfaraday/claude-of-duty/security/advisories/new
+    about: Report security issues privately instead of opening a public issue.
+  - name: Asset-rights concern
+    url: https://github.com/luckeyfaraday
+    about: Contact the maintainer privately about rights or takedown concerns.

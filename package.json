@@ -1,5 +1,5 @@
 {
-  "name": "pluto_t6_full_game",
+  "name": "claude-of-duty",
   "version": "1.0.0",
   "private": true,
   "description": "Claude of Duty: Vibe Slops II — a browser-based Three.js shooter on the Hijacked map export.",
@@ -24,16 +24,25 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/luckeyfaraday/hijacked-web-viewer.git"
+    "url": "git+https://github.com/luckeyfaraday/claude-of-duty.git"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "threejs",
+    "browser-game",
+    "first-person-shooter",
+    "game-ai",
+    "recast-navigation"
+  ],
+  "author": "Luckey Faraday",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
   "type": "module",
   "bugs": {
-    "url": "https://github.com/luckeyfaraday/hijacked-web-viewer/issues"
+    "url": "https://github.com/luckeyfaraday/claude-of-duty/issues"
   },
-  "homepage": "https://github.com/luckeyfaraday/hijacked-web-viewer#readme",
+  "homepage": "https://vibeslops.luckeysystems.com/",
   "dependencies": {
     "@netlify/blobs": "^11.0.2",
     "@recast-navigation/core": "0.43.1",
