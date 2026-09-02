@@ -593,6 +593,7 @@ import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { PlayerController } from './player-controller.js';
 import { loadNavigation } from './navigation.js';
 import { Viewmodel } from './viewmodel.js';
+import { ViewBob } from './view-bob.js';
 import { WeaponController } from './weapon-controller.js';
 import { WeaponEffects } from './weapon-effects.js';
 import { EnemyManager } from './enemy-system.js';
@@ -872,6 +873,7 @@ const weaponSlots = new Map(Object.values(WEAPON_DEFINITIONS).map((definition) =
 let activeWeaponId = 'm27';
 let activeWeaponSlot = weaponSlots.get(activeWeaponId);
 let viewmodel = activeWeaponSlot.viewmodel;
+const viewBob = new ViewBob();
 let weapon = null;
 const WEAPON_ALIASES = Object.freeze({ hk416: 'm27' });
 
@@ -2107,6 +2109,12 @@ function tick() {
       sprinting,
       moving,
     });
+    viewBob.update(dt, {
+      speed,
+      grounded: player.isGrounded,
+      sprinting,
+      moving,
+    });
     if (weapon.reloading && !viewmodel.reloading) weapon.finishReload();
     weapon.update(dt, { canFire: simulationActive && !sprinting && !playerHealth?.dead });
 
@@ -2195,7 +2203,11 @@ function tick() {
   updateMedalPopups();
 
   updateLightProbes(camera.position);
+  // The stride bob lives on the camera only for the draw; gameplay reads the
+  // steady camera before and after.
+  viewBob.apply(camera);
   renderFrame();
+  viewBob.restore(camera);
   if (ready && performance.now() >= frameWorkWarmupUntil) {
     frameWorkSamples[frameWorkSampleIndex] = performance.now() - frameWorkStartedAt;
     frameWorkSampleIndex = (frameWorkSampleIndex + 1) % frameWorkSamples.length;
