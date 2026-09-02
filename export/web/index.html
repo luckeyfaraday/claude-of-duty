@@ -386,6 +386,52 @@
   }
   .killfeed-entry { padding: 3px 7px; background: rgba(2, 8, 12, .58); }
   .killfeed-entry .killer { color: var(--fe-accent); }
+  /* Medal popups -- the game's own `hud_medal_burst_orange` flash behind the
+     `hud_medals_*` icon from ui/medals/, name and +XP in HUD type. They stack
+     downwards under the crosshair line, newest on top. */
+  #medals {
+    position: fixed; z-index: 2; right: 9%; top: 40%;
+    display: flex; flex-direction: column; align-items: flex-end; gap: 10px;
+    pointer-events: none;
+  }
+  .medal-popup {
+    position: relative; display: flex; align-items: center; gap: 11px;
+    padding: 5px 12px 5px 7px; background: rgba(2, 8, 12, .55);
+    border-left: 2px solid rgba(255, 176, 66, .8);
+    opacity: 0; transform: translateX(26px);
+    filter: drop-shadow(0 1px 4px rgba(0, 0, 0, .85));
+    transition: opacity .12s ease-out, transform .2s cubic-bezier(.18, 1.2, .35, 1);
+  }
+  .medal-popup.show { opacity: 1; transform: translateX(0); }
+  .medal-popup.hide {
+    opacity: 0; transform: translateX(14px) scale(.96);
+    transition: opacity .45s ease-in, transform .45s ease-in;
+  }
+  .medal-icon {
+    width: 58px; height: 58px; flex: none;
+    background: center/contain no-repeat;
+  }
+  .medal-burst {
+    position: absolute; left: -18px; top: 50%; width: 104px; height: 104px;
+    margin-top: -52px; background: url('ui/hud/hud_medal_burst_orange.png') center/contain no-repeat;
+    opacity: 0; transform: scale(.4) rotate(-30deg); pointer-events: none;
+  }
+  .medal-popup.show .medal-burst { animation: medal-burst .6s ease-out .04s; }
+  @keyframes medal-burst {
+    0% { opacity: 0; transform: scale(.4) rotate(-30deg); }
+    35% { opacity: .95; }
+    100% { opacity: 0; transform: scale(1.25) rotate(10deg); }
+  }
+  .medal-text { display: flex; flex-direction: column; gap: 1px; min-width: 96px; }
+  .medal-text b {
+    color: #ffe3b0; font: 700 16px/1.1 var(--fe-ui); font-stretch: condensed;
+    letter-spacing: .14em; text-transform: uppercase; text-shadow: 0 1px 3px #000;
+    white-space: nowrap;
+  }
+  .medal-text small {
+    color: #ffb042; font: 600 13px/1 var(--fe-ui); letter-spacing: .1em;
+    text-shadow: 0 1px 3px #000;
+  }
   #death-card {
     position: fixed; z-index: 4; left: 50%; bottom: 14%; transform: translateX(-50%);
     min-width: 330px; padding: 14px 24px; display: none; text-align: center;
@@ -521,6 +567,7 @@
 </div>
 <div id="match-status"></div>
 <div id="killfeed"></div>
+<div id="medals"></div>
 <div id="death-card"><strong id="death-killer"></strong><span id="respawn-copy"></span></div>
 <div id="scoreboard">
   <div class="scoreboard-panel">
@@ -551,6 +598,7 @@ import { WeaponEffects } from './weapon-effects.js';
 import { EnemyManager } from './enemy-system.js';
 import { PlayerHealth } from './player-health.js';
 import { FreeForAllMatch } from './free-for-all-match.js';
+import { MedalTracker } from './medals.js';
 import { Hud } from './hud.js';
 import { Frontend } from './frontend.js';
 import { PlayCounter } from './play-counter.js';
@@ -1091,6 +1139,7 @@ const crosshair = document.getElementById('crosshair');
 const hitmarker = document.getElementById('hitmarker');
 const matchStatus = document.getElementById('match-status');
 const killfeed = document.getElementById('killfeed');
+const medalLayer = document.getElementById('medals');
 const deathCard = document.getElementById('death-card');
 const deathKiller = document.getElementById('death-killer');
 const respawnCopy = document.getElementById('respawn-copy');
@@ -1139,6 +1188,10 @@ let lastAdsState = false;
 let deathSource = null;
 let scoreboardHeld = false;
 let matchEndedHandled = false;
+let medals = null;
+const medalPopups = [];
+const MEDAL_HOLD_SECONDS = 2.1;
+const MEDAL_FADE_SECONDS = 0.45;
 
 const match = new FreeForAllMatch({ scoreLimit: 30, timeLimitSeconds: 300 });
 match.register('player', 'YOU', { human: true });
@@ -1273,6 +1326,9 @@ function resetPlayerLife() {
 
 function restartMatch() {
   match.reset();
+  medals?.reset();
+  for (const { popup } of medalPopups) popup.remove();
+  medalPopups.length = 0;
   matchEndedHandled = false;
   scoreboardHeld = false;
   scoreboard.classList.remove('visible');
@@ -1313,6 +1369,47 @@ function renderMatchUi() {
     ? `${winner?.id === 'player' ? 'VICTORY' : `${winner?.name ?? 'Unknown'} wins`} · press Enter to play again`
     : `First to ${state.scoreLimit} kills · hold Tab for scores`;
   scoreboard.classList.toggle('visible', scoreboardHeld || state.phase === 'ended');
+}
+
+// Build immediately, then enter on the next frame so the browser paints the
+// pre-transition state. Expiry stays on the game tick like the hitmarker.
+function showMedalPopup(def) {
+  if (!medalLayer || !def) return null;
+  const popup = document.createElement('div');
+  popup.className = 'medal-popup';
+  const burst = document.createElement('span');
+  burst.className = 'medal-burst';
+  const icon = document.createElement('span');
+  icon.className = 'medal-icon';
+  if (def.icon) icon.style.backgroundImage = `url('ui/medals/${def.icon}')`;
+  const text = document.createElement('span');
+  text.className = 'medal-text';
+  const name = document.createElement('b');
+  name.textContent = def.name ?? def.ref;
+  text.appendChild(name);
+  if (def.xp) {
+    const xp = document.createElement('small');
+    xp.textContent = `+${def.xp}`;
+    text.appendChild(xp);
+  }
+  popup.append(burst, icon, text);
+  medalLayer.prepend(popup);
+  requestAnimationFrame(() => popup.classList.add('show'));
+  medalPopups.unshift({ popup, bornAt: performance.now() });
+  return popup;
+}
+
+function updateMedalPopups() {
+  const now = performance.now();
+  for (let i = medalPopups.length - 1; i >= 0; i -= 1) {
+    const age = (now - medalPopups[i].bornAt) / 1000;
+    const { popup } = medalPopups[i];
+    if (age > MEDAL_HOLD_SECONDS && !popup.classList.contains('hide')) popup.classList.add('hide');
+    if (age > MEDAL_HOLD_SECONDS + MEDAL_FADE_SECONDS) {
+      popup.remove();
+      medalPopups.splice(i, 1);
+    }
+  }
 }
 
 // Pause-menu buttons drive the same state the keyboard shortcuts do, so the
@@ -1575,6 +1672,7 @@ function getDebugState() {
     },
     menu: frontend.getState(),
     match: match.getState(),
+    medals: medals?.getState() ?? null,
     hud: hud.textContent,
   };
 }
@@ -1664,6 +1762,15 @@ function createDebugApi() {
       if (!enemies || !player) return 0;
       enemies.alert(player.position, Math.max(0, Number(radius) || 0), player.position);
       return enemies.enemies.filter((enemy) => enemy.engaged).length;
+    },
+    // Stage a popup without changing the streak or chain, for deterministic
+    // rendered verification through the automation API.
+    grantMedal(ref) {
+      const def = medals?.def(ref);
+      if (!def) return false;
+      showMedalPopup(def);
+      medals.noteEarned([def]);
+      return { ref: def.ref, name: def.name ?? null };
     },
   };
 }
@@ -1774,7 +1881,7 @@ async function start() {
     // class screen. See loadWeaponSlot().
     const viewmodelPromise = loadWeaponSlot(activeWeaponSlot)
       .finally(() => frontend.stage('viewmodel'));
-    const [renderGltf, loadedCollisionWorld, hints, ladders] = await Promise.all([
+    const [renderGltf, loadedCollisionWorld, hints, ladders, medalDefs] = await Promise.all([
       loadGltf('hijacked_optimized.glb', 'map').then((gltf) => {
         // KTX2 texture decoding is complete when GLTFLoader resolves.
         frontend.stage('textures');
@@ -1795,7 +1902,17 @@ async function start() {
         console.warn('Ladders unavailable:', error);
         return null;
       }),
+      // Missing medal data must never block startup; an empty table leaves the
+      // tracker inert while retaining the rest of the deferred loading path.
+      fetch('ui/medals/medals.json').then((response) => {
+        if (!response.ok) throw new Error(`medals HTTP ${response.status}`);
+        return response.json();
+      }).catch((error) => {
+        console.warn('Medals unavailable:', error);
+        return [];
+      }),
     ]);
+    medals = new MedalTracker({ defs: medalDefs });
     mapOptimization = optimizeStaticScene(renderGltf.scene);
     scene.add(renderGltf.scene);
     collisionWorld = loadedCollisionWorld;
@@ -1827,6 +1944,7 @@ async function start() {
       onDeath: ({ source }) => {
         deathSource = source;
         match.recordKill(combatantId(source), 'player');
+        medals?.onDeath();
         player.setEnabled(false);
         weapon.setTrigger(false);
         viewmodel.setAiming(false);
@@ -1855,6 +1973,10 @@ async function start() {
           count: 6,
           onDeath: (victim, source) => {
             match.recordKill(combatantId(source), `bot-${victim.index}`);
+            // Bot-on-bot kills stay out of the human player's medal chain.
+            if (medals && combatantId(source) === 'player') {
+              for (const def of medals.onKill()) showMedalPopup(def);
+            }
           },
         })).load({ onProgress: (label, event) => progress(label, event) })
       : Promise.resolve()
@@ -2069,6 +2191,8 @@ function tick() {
   } else if (hitmarker.style.opacity !== '0') {
     hitmarker.style.opacity = '0';
   }
+
+  updateMedalPopups();
 
   updateLightProbes(camera.position);
   renderFrame();
