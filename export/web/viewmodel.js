@@ -30,6 +30,8 @@ const MAGAZINE_TAGS = Object.freeze(new Set(['tag_clip', ...SPARE_MAGAZINE_TAGS]
 // The cue the clips fire as the empty magazine is released, which is the instant
 // the fresh one takes over as the magazine the reload is about; see
 // handOverMagazine().
+const BOB_GROUND_GRACE = 0.25;
+
 const MAGAZINE_HANDOVER_CUE = /mag_out/;
 // The red tritium insert capping the front post is the element the eye lines up
 // on, so it defines where the sight picture points, not the tag authored on the
@@ -134,6 +136,7 @@ export class Viewmodel {
     this.sprintBlend = 0;
     this.bobTime = 0;
     this.bobAmp = 0;
+    this.airTime = 0;
     this.pendingLook = new THREE.Vector2();
     this.lookVel = new THREE.Vector2();
     this.swayRot = new THREE.Vector2();
@@ -783,8 +786,11 @@ export class Viewmodel {
     this.swayPos.x = damp(this.swayPos.x, clamp(-this.lookVel.x * 0.004, -1.2, 1.2), 10, dt);
     this.swayPos.y = damp(this.swayPos.y, clamp(this.lookVel.y * 0.004, -1.2, 1.2), 10, dt);
 
-    // Walk bob: figure-eight drift scaled by ground speed.
-    const movingGrounded = moving && grounded;
+    // Walk bob: figure-eight drift scaled by ground speed. Ground contact
+    // drops for a few physics steps on every stair riser and lip, so the
+    // stride carries on briefly after the last contact instead of hitching.
+    this.airTime = grounded ? 0 : this.airTime + dt;
+    const movingGrounded = moving && this.airTime < BOB_GROUND_GRACE;
     const speedFactor = clamp(speed / 300, 0, 1.4);
     this.bobAmp = damp(this.bobAmp, movingGrounded ? speedFactor : 0, 8, dt);
     if (movingGrounded) this.bobTime += dt * (5.5 + 4 * speedFactor);
