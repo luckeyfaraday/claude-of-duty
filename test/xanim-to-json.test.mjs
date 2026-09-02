@@ -17,6 +17,9 @@ const xanimDirs = [
 const hk416Dir = xanimDirs.find((directory) => fs.readdirSync(directory)
   .some((name) => name.startsWith('viewmodel_hk416_')));
 const animsDir = path.join(repo, 'export', 'web', 'viewmodel', 'anims');
+const sourceAnimations = {
+  skip: hk416Dir ? false : 'requires local T6 XANIM dumps',
+};
 
 function readXanim(name) {
   const directory = xanimDirs.find((candidate) => fs.existsSync(path.join(candidate, name)));
@@ -24,7 +27,7 @@ function readXanim(name) {
   return fs.readFileSync(path.join(directory, name));
 }
 
-test('every hk416 viewmodel xanim parses to exactly the end of file', () => {
+test('every hk416 viewmodel xanim parses to exactly the end of file', sourceAnimations, () => {
   const files = fs.readdirSync(hk416Dir).filter((name) => name.startsWith('viewmodel_hk416_'));
   assert.ok(files.length > 100, `expected the hk416 anim set, found ${files.length}`);
   for (const name of files) {
@@ -34,7 +37,7 @@ test('every hk416 viewmodel xanim parses to exactly the end of file', () => {
   }
 });
 
-test('reload clip carries hands, gun motion, and notetracks', () => {
+test('reload clip carries hands, gun motion, and notetracks', sourceAnimations, () => {
   const parsed = parseXAnim(readXanim('viewmodel_hk416_reload'));
   const clip = toJsonClip('viewmodel_hk416_reload', parsed);
 
@@ -75,7 +78,7 @@ test('reload clip carries hands, gun motion, and notetracks', () => {
 // entire trip out of the magwell and the bolt its whole cycle, and it survived
 // because the round-trip test above reads both sides through this same decoder.
 // So assert the decode against magnitudes measured off the source bytes.
-test('quantized translation tracks decode at their authored scale', () => {
+test('quantized translation tracks decode at their authored scale', sourceAnimations, () => {
   const parsed = parseXAnim(readXanim('viewmodel_hk416_reload'));
   const span = (bone, axis) => {
     const values = [];
@@ -100,7 +103,7 @@ test('quantized translation tracks decode at their authored scale', () => {
     `tag_weapon should kick its authored 6.8 units, got ${span(weapon, 2).toFixed(3)}`);
 });
 
-test('exported web clips match the source binaries', () => {
+test('exported web clips match the source binaries', sourceAnimations, () => {
   for (const name of fs.readdirSync(animsDir).filter((file) => file.endsWith('.json'))) {
     const clip = JSON.parse(fs.readFileSync(path.join(animsDir, name), 'utf8'));
     const parsed = parseXAnim(readXanim(clip.name));

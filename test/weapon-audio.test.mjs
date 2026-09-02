@@ -7,6 +7,10 @@ import { FOLEY_ALIASES, FOLEY_URLS, GunAudio, SILENT_CUES } from '../export/web/
 
 const webRoot = path.resolve('export/web');
 const animRoot = path.join(webRoot, 'viewmodel/anims');
+const weaponDefinitions = path.resolve('artifacts/weapon-data/weapons');
+const sourceWeaponData = {
+  skip: fs.existsSync(weaponDefinitions) ? false : 'requires local T6 weapon definitions',
+};
 
 // './audio/x.wav' as written in the module is relative to export/web.
 function resolveWebUrl(url) {
@@ -68,7 +72,7 @@ test('both rifles share the assault-class mechanical samples', () => {
   }
 });
 
-test('every assault-rifle notetrack is mapped or explicitly silent', () => {
+test('every assault-rifle notetrack is mapped or explicitly silent', sourceWeaponData, () => {
   const { weapons } = buildManifest();
   for (const id of ASSAULT_RIFLE_IDS) {
     for (const [cue, sources] of Object.entries(weapons[id].cues)) {

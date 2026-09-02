@@ -6,8 +6,11 @@ import { test } from 'node:test';
 import { extractT6SabPcm16, findT6SabEntry } from '../.tools/extract_t6_sab_audio.mjs';
 
 const bank = path.resolve('sound/cmn_root.all.sabl');
+const sourceBank = {
+  skip: fs.existsSync(bank) ? false : 'requires a local T6 common sound bank dump',
+};
 
-test('finds the authentic M27 player-shot entry in the T6 common bank', () => {
+test('finds the authentic M27 player-shot entry in the T6 common bank', sourceBank, () => {
   const entry = findT6SabEntry(bank, 0x31b17f1b);
   assert.deepEqual(
     {
@@ -21,7 +24,7 @@ test('finds the authentic M27 player-shot entry in the T6 common bank', () => {
   );
 });
 
-test('wraps T6 PCM16 sound data in a browser-decodable WAV container', () => {
+test('wraps T6 PCM16 sound data in a browser-decodable WAV container', sourceBank, () => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 't6-sab-'));
   const output = path.join(directory, 'm27.wav');
   try {
