@@ -30,6 +30,34 @@ const MAGAZINE_TAGS = Object.freeze(new Set(['tag_clip', ...SPARE_MAGAZINE_TAGS]
 // The cue the clips fire as the empty magazine is released, which is the instant
 // the fresh one takes over as the magazine the reload is about; see
 // handOverMagazine().
+// Sprint carry pose, blended in by sprintBlend. Rotations are radians, offsets
+// are rig units (inches), both in camera space (X right, Y up, -Z forward).
+// The rotation is applied about `pivot`, roughly the firing hand, so the gun
+// visibly turns across the body (muzzle down-left, stock up-right) instead of
+// orbiting the camera as a whole.
+const SPRINT_POSE = Object.freeze({
+  pitch: -0.45,
+  yaw: 0.65,
+  roll: -0.38,
+  x: 0.2,
+  y: -1.2,
+  z: -0.5,
+  // Close to the camera so the arms behind it barely move while the
+  // muzzle out front does the travelling.
+  pivot: new THREE.Vector3(0, -3, -6),
+});
+
+// How the walk bob changes as sprintBlend rises: stride rate drops by `slow`,
+// lateral and vertical travel grow by `widen` and `lift`, and the gun rolls
+// and nods with the stride by up to `roll` and `pitch` radians.
+const SPRINT_BOB = Object.freeze({
+  slow: 0.45,
+  widen: 0.9,
+  lift: 0.5,
+  roll: 0.05,
+  pitch: 0.025,
+});
+
 const MAGAZINE_HANDOVER_CUE = /mag_out/;
 // The red tritium insert capping the front post is the element the eye lines up
 // on, so it defines where the sight picture points, not the tag authored on the
@@ -132,6 +160,8 @@ export class Viewmodel {
     this.aiming = false;
     this.aimBlend = 0;
     this.sprintBlend = 0;
+    this.pivotShift = new THREE.Vector3();
+    this.sprintEuler = new THREE.Euler();
     this.bobTime = 0;
     this.bobAmp = 0;
     this.pendingLook = new THREE.Vector2();
@@ -778,7 +808,7 @@ export class Viewmodel {
     this.lookVel.x = damp(this.lookVel.x, this.pendingLook.x / safeDt, 10, dt);
     this.lookVel.y = damp(this.lookVel.y, this.pendingLook.y / safeDt, 10, dt);
     this.pendingLook.set(0, 0);
-    this.swayRot.x = damp(this.swayRot.x, clamp(-this.lookVel.y * 0.00035, -0.26, 0.26), 12, dt);
+    this.swayRot.x = damp(this.swayRot.x, clamp(-this.lookVel.y * 0.00035, -0.2, 0.2), 12, dt);
     this.swayRot.y = damp(this.swayRot.y, clamp(-this.lookVel.x * 0.00035, -0.3, 0.3), 12, dt);
     this.swayPos.x = damp(this.swayPos.x, clamp(-this.lookVel.x * 0.004, -1.2, 1.2), 10, dt);
     this.swayPos.y = damp(this.swayPos.y, clamp(this.lookVel.y * 0.004, -1.2, 1.2), 10, dt);
@@ -786,11 +816,6 @@ export class Viewmodel {
     // Walk bob: figure-eight drift scaled by ground speed.
     const movingGrounded = moving && grounded;
     const speedFactor = clamp(speed / 300, 0, 1.4);
-    this.bobAmp = damp(this.bobAmp, movingGrounded ? speedFactor : 0, 8, dt);
-    if (movingGrounded) this.bobTime += dt * (5.5 + 4 * speedFactor);
-    const bobX = Math.sin(this.bobTime) * 0.85 * this.bobAmp;
-    const bobY = Math.sin(this.bobTime * 2) * 0.45 * this.bobAmp;
-
     this.sprintBlend = damp(
       this.sprintBlend,
       sprinting && !this.aiming && !this.reloading ? 1 : 0,
@@ -799,18 +824,44 @@ export class Viewmodel {
     );
     // Reloading cancels the sight picture, as in the game.
     this.aimBlend = damp(this.aimBlend, this.aiming && !this.reloading ? 1 : 0, 12, dt);
+    const sprint = this.sprintBlend;
+
+    this.bobAmp = damp(this.bobAmp, movingGrounded ? speedFactor : 0, 8, dt);
+    // The sprint stride is slower and heavier than the walk: fewer, longer
+    // steps that throw the gun further across the body and roll it with them.
+    if (movingGrounded) this.bobTime += dt * (5.5 + 4 * speedFactor) * (1 - SPRINT_BOB.slow * sprint);
+    const bobX = Math.sin(this.bobTime) * 0.85 * this.bobAmp * (1 + SPRINT_BOB.widen * sprint);
+    const bobY = Math.sin(this.bobTime * 2) * 0.45 * this.bobAmp * (1 + SPRINT_BOB.lift * sprint);
+    const bobRoll = Math.sin(this.bobTime) * SPRINT_BOB.roll * this.bobAmp * sprint;
+    const bobPitch = Math.sin(this.bobTime * 2) * SPRINT_BOB.pitch * this.bobAmp * sprint;
 
     const aimScale = 1 - this.aimBlend * 0.88;
-    const sprint = this.sprintBlend;
-    this.swayGroup.rotation.set(
-      this.swayRot.x * aimScale + 0.3 * sprint,
-      this.swayRot.y * aimScale + 0.42 * sprint,
-      this.swayRot.y * -0.4 * aimScale - 0.28 * sprint,
+    // Sprinting tightens the grip, so look lag eases off while the stride
+    // bob carries on at full strength.
+    const lagScale = aimScale * (1 - sprint * 0.6);
+    this.sprintEuler.set(
+      SPRINT_POSE.pitch * sprint,
+      SPRINT_POSE.yaw * sprint,
+      SPRINT_POSE.roll * sprint,
     );
+    this.swayGroup.rotation.set(
+      this.swayRot.x * lagScale + this.sprintEuler.x + bobPitch,
+      this.swayRot.y * lagScale + this.sprintEuler.y,
+      this.swayRot.y * -0.4 * lagScale + this.sprintEuler.z + bobRoll,
+    );
+    // Re-centre every rotation on the hand pivot: p + R(-p) keeps the pivot
+    // fixed in camera space while the rest of the gun swings around it. That
+    // covers look lag too, so a fast pitch swings the muzzle rather than
+    // tilting the whole rig and pushing the shoulders through the near plane.
+    this.pivotShift
+      .copy(SPRINT_POSE.pivot)
+      .negate()
+      .applyEuler(this.swayGroup.rotation)
+      .add(SPRINT_POSE.pivot);
     this.swayGroup.position.set(
-      this.swayPos.x * aimScale + bobX * aimScale,
-      this.swayPos.y * aimScale + bobY * aimScale + 0.8 * sprint,
-      0,
+      this.swayPos.x * lagScale + bobX * aimScale + SPRINT_POSE.x * sprint + this.pivotShift.x,
+      this.swayPos.y * lagScale + bobY * aimScale + SPRINT_POSE.y * sprint + this.pivotShift.y,
+      SPRINT_POSE.z * sprint + this.pivotShift.z,
     );
 
     this.adsGroup.position.copy(this.adsPos).multiplyScalar(this.aimBlend);
